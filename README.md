@@ -1,2 +1,2 @@
-## Visit my portfolio here: https://saloni-garg.github.io
+## Visit portfolio here: https://saloni-garg.github.io
 
