@@ -118,7 +118,7 @@ $(document).ready(function() {
 	// <li><i class="fa fa-suitcase"></i> <a href="https://www.vretta.com/" target="_blank">work</a></li>
 
 
-	let shortBio = 'Sophomore at LNMIIT, majoring in Computer Science. Self-taught web developer, absolutely passionate about coding and the future of technology.';
+	let shortBio = 'Sophomore, majoring in Computer Science. Self-taught web developer, absolutely passionate about coding and the future of technology.';
 	let typeSpeedSuperFast = 30;
 	let typeSpeedSlow = 75;
 	let typeSpeedFast = 60; // in ms
