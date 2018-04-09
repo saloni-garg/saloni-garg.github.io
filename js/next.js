@@ -24,7 +24,7 @@ $(document).ready(function() {
 	quote = "There is no spoon.",
 	listCommands = 'Available commands - [about] [bio] [clear] [contact] [skills] [social] [quote]',
 	commandNotFound = 'Command not found. Don\'t worry, it\'s probably just a glitch in the Matrix. Gli Glitch in the Matrix trix.',
-	skills = "Main: JavaScript, HTML5, CSS3, Java, C, GIT. \n Familiar with: Google Cloud Services, Amazon Web Services, Node.js, Ruby, Python, MySQL, Github, C++",
+	skills = "Main: JavaScript, HTML5, CSS3, Java, C, GIT and Github.\n Familiar with: Node.js, Ruby, Python, MySQL, C++",
 	contact = "Feel free to contact me on salonigarg2310@gmail.com. It can be for a project or a chit-chat about Web Dev.";
 	// let
 
@@ -118,9 +118,9 @@ $(document).ready(function() {
 	// <li><i class="fa fa-suitcase"></i> <a href="https://www.vretta.com/" target="_blank">work</a></li>
 
 
-	let shortBio = 'Sophomore, majoring in Computer Science. Self-taught web developer, absolutely passionate about coding and the future of technology.';
-	let typeSpeedSuperFast = 30;
-	let typeSpeedSlow = 75;
+	let shortBio = 'Sophomore at LNMIIT, majoring in Computer Science. Self-taught web developer, absolutely passionate about coding and the future of technology.';
+	let typeSpeedSuperFast = 20;
+	let typeSpeedSlow = 75
 	let typeSpeedFast = 60; // in ms
 
 	var autotype = function(el, text, i, interval) {
@@ -167,11 +167,11 @@ $(document).ready(function() {
 				let aboutEl = addToTerminal(about, typeSpeedSlow, false);
 				break;
 			case 'bio':
-				let bioEl = addToTerminal(shortBio, typeSpeedSlow, false);
+				let bioEl = addToTerminal(shortBio, typeSpeedSuperFast, false);
 				break;
 			case 'clear':
 				clearTerminal();
-				let listEl = addToTerminal(list, typeSpeedFast, true);
+				let listEl = addToTerminal(list, typeSpeedSuperFast, false);
 				break;
 			case 'contact':
 				let contactEl = addToTerminal(contact, typeSpeedFast, true);
