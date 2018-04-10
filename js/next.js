@@ -1,7 +1,7 @@
 // GOAL: To imitate terminal to the fullest extent possible
 
 // TODO A wall of available commands
-// TODO Run it through Babel (for Safari) !!
+// TODO Run it through Babel (for Mac Safari) !!
 // TODO Maybe go into the mode of listening to ARROW_UP and ARROW_DOWN when the last result was a list (or a specific option from the available commands)
 // TODO Scroll down to the input automatically
 // TODO If the quote is already being displayed, don't show it and choose a different one.
