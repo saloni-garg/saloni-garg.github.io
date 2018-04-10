@@ -216,7 +216,7 @@ $(document).ready(function() {
 				console.log("I don't understand, please choose between these options:");
 				let commandNotFoundEl = addToTerminal(commandNotFound, typeSpeedSuperFast, true);
 				let unknownEl = addToTerminal(listCommands, typeSpeedFast, false);
-				// unknownEl
+				
 				setTimeout(function() {
 
 				}, 4000);
