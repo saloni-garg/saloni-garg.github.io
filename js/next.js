@@ -19,7 +19,7 @@ $(document).ready(function() {
 	let wakeUp = "Wake up, Neo...",
 	knock = "Knock, knock, Neo...",
 	about = 'A final year Computer Science student, studying at LNMIIT, Jaipur. I completed my summer internship at Red Hat, and also won the International Women In Open Source Award 2019.',
-	extraabout= 'I love Open-Source and advocating for it. I was selected as a Mozilla Open Leader 2019. I love to deliver talks and attend conferences. I prefer my pizza thin-crust, and if if I will ever have a pet, it will be a hamster.',
+	extraabout= 'I love Open-Source and advocating for it. I received Google Scholarship and was selected as a Mozilla Open Leader 2019. I love to deliver talks and attend conferences. I prefer my pizza thin-crust, and if if I will ever have a pet, it will be a hamster.',
 	writeCode = "I write code",
 	learnMore = "Learn more",
 	quote = "There is no spoon.",
