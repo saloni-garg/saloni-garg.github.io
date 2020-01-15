@@ -18,14 +18,15 @@ $(document).ready(function() {
 	// Text Options
 	let wakeUp = "Wake up, Neo...",
 	knock = "Knock, knock, Neo...",
-	about = 'My name is Saloni Garg, an evolving Front End Developer.',
+	about = 'A final year Computer Science student, studying at LNMIIT, Jaipur. I completed my summer internship at Red Hat, and also won the International Women In Open Source Award 2019.',
+	extraabout= 'I love Open-Source and advocating for it. I was selected as a Mozilla Open Leader 2019. I love to deliver talks and attend conferences. I prefer my pizza thin-crust, and if if I will ever have a pet, it will be a hamster.',
 	writeCode = "I write code",
 	learnMore = "Learn more",
 	quote = "There is no spoon.",
-	listCommands = 'Available commands - [about] [bio] [contact] [skills] [social] [quote] [clear]',
+	listCommands = 'Available commands - [about] [contact] [social] [quote] [clear]',
 	commandNotFound = 'Command not found. Don\'t worry, it\'s probably just a glitch in the Matrix. Gli Glitch in the Matrix trix.',
-	skills = "Main: JavaScript, HTML5, CSS3, Java, C, GIT and Github.\n Familiar with: Node.js, Ruby, Python, MySQL, C++",
-	contact = "Feel free to contact me on salonigarg2310@gmail.com. It can be for a project or a chit-chat about Web Dev.";
+	// skills = "Main: JavaScript, HTML5, CSS3, Java, C, GIT and Github.\n Familiar with: Node.js, Ruby, Python, MySQL, C++",
+	contact = "Reachable at salonigarg2310@gmail.com.";
 	// let
 
 	let arrowNavigationMode = false;
@@ -76,8 +77,8 @@ $(document).ready(function() {
 			'target': '_blank'
 		});
 
-		let instagramLink = $('<a>instagram</a>').attr({
-			'href': 'https://instagram.com/galoni_sarg',
+		let instagramLink = $('<a>Instagram</a>').attr({
+			'href': 'https://instagram.com/salonigarg23',
 			'target': '_blank'
 		});
 
@@ -118,8 +119,8 @@ $(document).ready(function() {
 	// <li><i class="fa fa-suitcase"></i> <a href="https://www.vretta.com/" target="_blank">work</a></li>
 
 
-	let shortBio = 'Sophomore at LNMIIT, majoring in Computer Science. Self-taught web developer, absolutely passionate about coding and the future of technology.';
-	let typeSpeedSuperFast = 20;
+	// let shortBio = 'Sophomore at LNMIIT, majoring in Computer Science. Self-taught web developer, absolutely passionate about coding and the future of technology.';
+	let typeSpeedSuperFast = 10;
 	let typeSpeedSlow = 75
 	let typeSpeedFast = 60; // in ms
 
@@ -164,7 +165,8 @@ $(document).ready(function() {
 
 		switch (value.toLowerCase()) {
 			case 'about':
-				let aboutEl = addToTerminal(about, typeSpeedSlow, false);
+				let aboutEl = addToTerminal(about, typeSpeedSuperFast, true);
+				let aboutE2 = addToTerminal(extraabout, typeSpeedSuperFast, true);
 				break;
 			case 'bio':
 				let bioEl = addToTerminal(shortBio, typeSpeedSuperFast, false);
@@ -232,19 +234,19 @@ $(document).ready(function() {
 
 		// improve this code
 		setTimeout(function() {
-			let wakeupEl = addToTerminal(wakeUp, typeSpeedSlow, true);
+			let wakeupEl = addToTerminal(wakeUp, typeSpeedFast, true);
 		}, 200);
 
 		setTimeout(function() {
 			let listEl = addToTerminal(list, typeSpeedFast, true);
-		}, 3500);
+		}, 1200);
 
 		setTimeout(function() {
 			$('#term-prompt').html('&#9612;');
 			$('#terminal-line').show();
 			$('#term-prompt').focus();
 
-		}, 6500);
+		}, 2000);
 
 		// make "I write code" to be text first, and then change it to link?
 
