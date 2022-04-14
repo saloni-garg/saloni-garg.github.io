@@ -19,14 +19,14 @@ $(document).ready(function() {
 	let wakeUp = "Wake up, Neo...",
 	knock = "Knock, knock, Neo...",
 	about = 'A final year Computer Science student, studying at LNMIIT, Jaipur. I completed my summer internship at Red Hat, and also won the International Women In Open Source Award 2019.',
-	extraabout= 'I love Open-Source and advocating for it. I received Google Scholarship and was selected as a Mozilla Open Leader 2019. I love to deliver talks and attend conferences. I prefer my pizza thin-crust, and if if I will ever have a pet, it will be a hamster.',
+	extraabout= 'I love Open-Source. I received Google Scholarship and was selected as a Mozilla Open Leader 2019. I love to attend conferences and speak on ML related topics. I prefer my pizza thin-crust, and if I ever own a pet, it will be a hamster.',
 	writeCode = "I write code",
 	learnMore = "Learn more",
 	quote = "There is no spoon.",
 	listCommands = 'Available commands - [about] [contact] [social] [quote] [clear]',
 	commandNotFound = 'Command not found. Don\'t worry, it\'s probably just a glitch in the Matrix. Gli Glitch in the Matrix trix.',
 	// skills = "Main: JavaScript, HTML5, CSS3, Java, C, GIT and Github.\n Familiar with: Node.js, Ruby, Python, MySQL, C++",
-	contact = "Reachable at salonigarg2310@gmail.com.";
+	contact = "Reach me at salonigarg2310@gmail.com.";
 	// let
 
 	let arrowNavigationMode = false;
@@ -78,7 +78,7 @@ $(document).ready(function() {
 		});
 
 		let instagramLink = $('<a>Instagram</a>').attr({
-			'href': 'https://instagram.com/salonigarg23',
+			'href': 'https://instagram.com/galoni_sarg',
 			'target': '_blank'
 		});
 
