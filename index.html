@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Person","name":"Saloni Garg","jobTitle":"Staff Machine Learning Engineer","worksFor":{"@type":"Organization","name":"Adobe","department":"Firefly Services"},"address":{"@type":"PostalAddress","addressLocality":"San Jose","addressRegion":"CA","addressCountry":"US"},"url":"https://saloni-garg.github.io/","image":"https://github.com/saloni-garg.png","email":"mailto:salonigarg2318@gmail.com","alumniOf":{"@type":"CollegeOrUniversity","name":"The LNM Institute of Information Technology, Jaipur"},"knowsAbout":["Generative AI","GPU-accelerated inference","LLM post-training","RLHF and RLVR","Retrieval-Augmented Generation","Vector search"],"sameAs":["https://www.linkedin.com/in/saloni-garg","https://github.com/saloni-garg","https://openreview.net/profile?id=~Saloni_Garg3","https://huggingface.co/sluuu"]}
+{"@context":"https://schema.org","@type":"Person","name":"Saloni Garg","jobTitle":"Staff Machine Learning Engineer","worksFor":{"@type":"Organization","name":"Adobe","department":"Firefly Services"},"address":{"@type":"PostalAddress","addressLocality":"San Jose","addressRegion":"CA","addressCountry":"US"},"url":"https://saloni-garg.github.io/","image":"https://github.com/saloni-garg.png","email":"mailto:salonigarg2318@gmail.com","alumniOf":{"@type":"CollegeOrUniversity","name":"The LNM Institute of Information Technology, Jaipur"},"knowsAbout":["Generative AI","GPU-accelerated inference","LLM post-training","RLHF and RLVR","Retrieval-Augmented Generation","Vector search"],"sameAs":["https://www.linkedin.com/in/saloni-garg","https://github.com/saloni-garg","https://scholar.google.com/citations?user=-kidbB0AAAAJ","https://openreview.net/profile?id=~Saloni_Garg3","https://huggingface.co/sluuu"]}
 </script>
 <style>
 :root{
@@ -44,7 +44,9 @@ a:hover{color:#fff;text-decoration:none}
 /* header block: factual only */
 .head{padding:40px 0 8px}
 .photo{float:right;width:150px;margin:4px 0 12px 24px}
-.photo img{width:100%;display:block;border:1px solid var(--rule2)}
+.photo img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;object-position:center;display:block;border:1px solid var(--rule2)}
+.mailbtn{display:inline-block;border:1px solid var(--accent);border-radius:999px;padding:3px 18px;color:var(--accent-soft);text-decoration:none;font-family:var(--mono);font-size:14px}
+.mailbtn:hover{background:#2a2113;color:#fff}
 .photo figcaption{font-family:var(--mono);font-size:11.5px;color:var(--faint);text-align:center;padding-top:6px}
 @media(max-width:560px){.photo{float:none;margin:0 0 16px}}
 h1{font-family:var(--disp);font-weight:700;font-size:50px;line-height:1.05;color:#fff;margin-bottom:8px}
@@ -89,7 +91,7 @@ footer{margin-top:58px;border-top:1px solid var(--rule2);padding-top:16px;font-f
 
 <div class="head">
   <figure class="photo">
-    <img src="https://github.com/saloni-garg.png" alt="Portrait of Saloni Garg" width="300" height="300" onerror="this.closest('figure').style.display='none'">
+    <img src="https://avatars.githubusercontent.com/u/26901250?s=300&amp;v=4" alt="Portrait of Saloni Garg" width="300" height="300" onerror="this.closest('figure').style.display='none'">
     <figcaption>San Jose, CA</figcaption>
   </figure>
   <h1>Saloni Garg</h1>
@@ -101,9 +103,11 @@ footer{margin-top:58px;border-top:1px solid var(--rule2);padding-top:16px;font-f
   <p class="links">
     <a href="https://www.linkedin.com/in/saloni-garg">LinkedIn</a> &nbsp;/&nbsp;
     <a href="https://github.com/saloni-garg">GitHub</a> &nbsp;/&nbsp;
+    <a href="https://scholar.google.com/citations?user=-kidbB0AAAAJ">Google Scholar</a> &nbsp;/&nbsp;
+    <a href="https://doi.org/10.1515/9783112226780">Book</a> &nbsp;/&nbsp;
     <a href="https://huggingface.co/sluuu">Hugging Face</a> &nbsp;/&nbsp;
     <a href="https://openreview.net/profile?id=~Saloni_Garg3">OpenReview</a> &nbsp;/&nbsp;
-    <a href="mailto:salonigarg2318@gmail.com">salonigarg2318@gmail.com</a>
+    <a href="mailto:salonigarg2318@gmail.com" title="salonigarg2318@gmail.com">Email</a>
   </p>
 </div>
 
@@ -137,7 +141,7 @@ footer{margin-top:58px;border-top:1px solid var(--rule2);padding-top:16px;font-f
 <section id="publications">
   <h2><span class="no">03</span>Publications and IP</h2>
   <ul class="plain">
-    <li><b>Book: Retrieval-Augmented Generation (RAG) for Enhancing AI Applications.</b> De Gruyter, 2026.</li>
+    <li><b>Book: <a href="https://doi.org/10.1515/9783112226780">Retrieval-Augmented Generation (RAG) for Enhancing AI Applications</a>.</b> De Gruyter, 2026. Publisher page via the book link.</li>
     <li><b>Patent:</b> A System and Method for Automated Drift Detection and Model Retraining in Machine Learning Pipelines. Indian Patent Office, 2025.</li>
     <li><b>Patent:</b> AI and Computer Vision-Based Animal Surveillance System. Indian Patent Office, 2024.</li>
     <li><b>Unsolvability Ceiling in Multi-LLM Routing: An Empirical Study of Evaluation Artifacts.</b> arXiv.</li>
@@ -156,7 +160,10 @@ footer{margin-top:58px;border-top:1px solid var(--rule2);padding-top:16px;font-f
     <li><span class="when">2025</span><div><p><b>CloudX.</b> How to Build a Blameless Debugging Culture with Observability Tools.</p></div></li>
     <li><span class="when">2024</span><div><p><b>NDC London.</b> Neural Style Transfer: The Art and Science of Generative AI.</p></div></li>
     <li><span class="when">2023</span><div><p><b>BuildStuff, Vilnius.</b> Can You Guess Which Song Snippets Are Written by AI?</p></div></li>
-    <li><span class="when">2019</span><div><p><b>Red Hat Summit; Linux App Summit; UseData Conf.</b> Open source and machine learning talks, including an on-stage interview segment at Red Hat Summit, Boston.</p></div></li>
+    <li><span class="when">2023</span><div><p><b>CloudX PRO.</b> Serverless: Because Managing Servers Is So 2022.</p></div></li>
+    <li><span class="when">2019</span><div><p><b>Red Hat Summit, Boston.</b> Women in Open Source Award segment, and an interview on theCUBE.</p></div></li>
+    <li><span class="when">2019</span><div><p><b>Linux App Summit, Barcelona.</b> Lightning talk, "Open Source is great, how can we spread it?", with Amit Sagtani; filmed interview with Nextcloud founder Frank Karlitschek.</p></div></li>
+    <li><span class="when">2019</span><div><p><b>UseData Conf, Moscow.</b> Machine Learning Based Autonomous Car Driving Algorithms.</p></div></li>
     <li><span class="when">Also</span><div><p><b>PyCon; ILP Summit.</b> Tech speaker.</p></div></li>
   </ul>
 </section>
@@ -175,22 +182,12 @@ footer{margin-top:58px;border-top:1px solid var(--rule2);padding-top:16px;font-f
   </ul>
 </section>
 
-<section id="service">
-  <h2><span class="no">06</span>Reviewing, judging, and mentoring</h2>
-  <ul class="plain">
-    <li><b>Reviewer</b> for IEEE-affiliated conference papers and for scholarly books published by Manning Publications.</li>
-    <li><b>Judge</b> for the NASA Space Apps Challenge and for hackathons.</li>
-    <li><b>Mentor</b> with Women Who Code, 1 Million Women to Tech, and Google Women Techmakers.</li>
-    <li><b>Founder, MozForce</b> (2019), a community of young developers in India, started during the Mozilla Open Leaders program.</li>
-    <li><b>Guest lecturer (invited)</b> on production LLMs for a university NLP course.</li>
-  </ul>
-</section>
-
 <section id="contact">
-  <h2><span class="no">07</span>Contact</h2>
+  <h2><span class="no">06</span>Contact</h2>
   <p style="color:var(--soft)">LinkedIn: <a href="https://www.linkedin.com/in/saloni-garg">linkedin.com/in/saloni-garg</a><br>
-  Email: <a href="mailto:salonigarg2318@gmail.com">salonigarg2318@gmail.com</a><br>
+  Google Scholar: <a href="https://scholar.google.com/citations?user=-kidbB0AAAAJ">Google Scholar profile</a><br>
   GitHub: <a href="https://github.com/saloni-garg">github.com/saloni-garg</a></p>
+  <p style="margin-top:14px"><a class="mailbtn" href="mailto:salonigarg2318@gmail.com">Email</a> <span style="font-family:var(--mono);font-size:14px;color:var(--faint)">salonigarg2318@gmail.com</span></p>
 </section>
 
 <footer>
