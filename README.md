@@ -11,4 +11,4 @@ Public links:
 - GitHub: https://github.com/saloni-garg
 - OpenReview: https://openreview.net/profile?id=~Saloni_Garg3
 - Hugging Face: https://huggingface.co/sluuu
-- Email: saloni7094@gmail.com
+- Email: salonigarg2318@gmail.com
