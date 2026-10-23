@@ -1,87 +1,211 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-	<!--Use Three.js to design background-->
-	<meta charset="utf-8">
-	<meta http-equiv="x-ua-compatible" content="ie=edge">
-	<title>Meet Saloni Garg</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saloni Garg: machine learning engineer in San Jose</title>
+<meta name="description" content="Personal page of Saloni Garg, Senior Machine Learning Engineer at Adobe Firefly. GPU systems for generative models, post-training, inference, RL environments and verifiers. Co-author of the De Gruyter textbook on Retrieval-Augmented Generation.">
+<meta property="og:title" content="Saloni Garg">
+<meta property="og:description" content="Senior ML Engineer at Adobe Firefly. I work on GPU systems for generative models, and on the verifiers that tell us if a model really improved.">
+<meta property="og:type" content="profile">
+<meta property="og:url" content="https://saloni-garg.github.io/">
+<meta property="og:image" content="https://github.com/saloni-garg.png">
+<link rel="icon" href="https://github.com/saloni-garg.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Person","name":"Saloni Garg","jobTitle":"Senior Machine Learning Engineer","worksFor":{"@type":"Organization","name":"Adobe","department":"Firefly Services"},"address":{"@type":"PostalAddress","addressLocality":"San Jose","addressRegion":"CA","addressCountry":"US"},"url":"https://saloni-garg.github.io/","image":"https://github.com/saloni-garg.png","email":"mailto:saloni8996@gmail.com","alumniOf":{"@type":"CollegeOrUniversity","name":"The LNM Institute of Information Technology, Jaipur"},"knowsAbout":["Generative AI","GPU-accelerated inference","LLM post-training","RLHF and RLVR","Retrieval-Augmented Generation","Vector search"],"sameAs":["https://www.linkedin.com/in/saloni-garg","https://github.com/saloni-garg","https://openreview.net/profile?id=~Saloni_Garg3","https://huggingface.co/sluuu"]}
+</script>
+<style>
+:root{
+  --paper:#faf7f1; --ink:#211d18; --soft:#575046; --faint:#8a8172;
+  --rust:#b0491f; --rust-dark:#8c3814; --rule:#e2dac9; --wash:#f1ebdf;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:"Newsreader",Georgia,"Times New Roman",serif;font-size:19px;line-height:1.62;padding:0 22px 70px}
+.page{max-width:740px;margin:0 auto}
+a{color:var(--rust-dark);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{background:var(--wash);text-decoration:none}
+::selection{background:#f3d9a4}
 
-	<meta name="description" content="Saloni Garg, a Front End Web Developer">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+/* masthead */
+.masthead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:26px 0 14px;border-bottom:3px double var(--ink);flex-wrap:wrap}
+.masthead .site{font-family:var(--mono);font-size:13px;letter-spacing:.04em;color:var(--soft)}
+.masthead nav{font-family:var(--mono);font-size:13px;color:var(--soft)}
+.masthead nav a{color:var(--soft);text-decoration:none;margin-left:14px}
+.masthead nav a:hover{color:var(--rust-dark);background:none;text-decoration:underline}
 
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-	<link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
-	<link rel="stylesheet" href="css/normalize.css">
-	<link rel="stylesheet" type="text/css" href="css/style.css">
-	<link rel="shortcut icon" href="Profile Pic.jpg">
+/* intro */
+.intro{padding:38px 0 6px}
+.photo{float:right;width:172px;margin:6px 0 14px 26px;transform:rotate(1.6deg)}
+.photo img{width:100%;display:block;border:1px solid var(--rule);box-shadow:4px 5px 0 rgba(33,29,24,.08)}
+.photo figcaption{font-family:var(--mono);font-size:11.5px;color:var(--faint);text-align:center;padding-top:7px;transform:rotate(-1.6deg)}
+@media(max-width:560px){.photo{float:none;margin:0 auto 18px}}
+h1{font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:54px;line-height:1.04;letter-spacing:-.01em;margin-bottom:14px}
+@media(max-width:560px){h1{font-size:42px;text-align:center}}
+.intro p{margin-bottom:15px;max-width:640px}
+.intro .first{font-size:21.5px}
+.dropcap:first-letter{font-family:"Fraunces",Georgia,serif;font-size:52px;line-height:.85;float:left;padding:5px 8px 0 0;color:var(--rust)}
+.findme{font-family:var(--mono);font-size:13.5px;color:var(--soft);margin-top:20px;line-height:2}
+.findme a{white-space:nowrap}
+
+/* sections */
+section{margin-top:44px}
+h2{font-family:"Fraunces",Georgia,serif;font-size:26px;font-weight:700;display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+h2 .no{font-family:var(--mono);font-size:13px;font-weight:400;color:var(--rust)}
+h2:after{content:"";flex:1;border-top:1px solid var(--rule);transform:translateY(-4px)}
+.note{color:var(--soft);font-style:italic;margin-bottom:16px;font-size:18px}
+
+/* dated log + lists */
+.log{list-style:none}
+.log li{display:flex;gap:18px;padding:9px 0;border-bottom:1px dotted var(--rule)}
+.log li:last-child{border-bottom:0}
+.log .when{font-family:var(--mono);font-size:13px;color:var(--faint);min-width:86px;padding-top:5px;flex-shrink:0}
+.log p{font-size:18.5px}
+.work{list-style:none}
+.work li{padding:13px 0;border-bottom:1px dotted var(--rule)}
+.work li:last-child{border-bottom:0}
+.work h3{font-family:"Fraunces",Georgia,serif;font-size:20.5px;font-weight:700;display:inline}
+.work p{color:var(--soft);font-size:18.5px;margin-top:3px}
+.work .tech{font-family:var(--mono);font-size:12.5px;color:var(--faint);margin-top:5px}
+.talks{list-style:none}
+.talks li{display:flex;gap:18px;padding:8px 0;border-bottom:1px dotted var(--rule);font-size:18.5px}
+.talks li:last-child{border-bottom:0}
+.talks .yr{font-family:var(--mono);font-size:13px;color:var(--faint);min-width:52px;padding-top:5px;flex-shrink:0}
+.talks .venue{font-variant:small-caps;letter-spacing:.02em}
+.plain{list-style:none}
+.plain li{padding:7px 0 7px 20px;position:relative;font-size:18.5px;color:var(--soft)}
+.plain li:before{content:"*";position:absolute;left:2px;color:var(--rust);font-family:var(--mono)}
+.plain li b{color:var(--ink);font-weight:500}
+.jobline{display:flex;gap:18px;padding:11px 0;border-bottom:1px dotted var(--rule)}
+.jobline:last-child{border-bottom:0}
+.jobline .when{font-family:var(--mono);font-size:13px;color:var(--faint);min-width:118px;padding-top:5px;flex-shrink:0}
+@media(max-width:560px){.jobline,.log li,.talks li{flex-direction:column;gap:2px}}
+.jobline h3{font-family:"Fraunces",Georgia,serif;font-size:20px;font-weight:700}
+.jobline p{color:var(--soft);font-size:18.5px}
+
+/* footer */
+footer{margin-top:60px;border-top:3px double var(--ink);padding-top:16px;font-family:var(--mono);font-size:12.5px;color:var(--faint);line-height:1.9}
+</style>
 </head>
 <body>
-	<div id="terminal">
-	</div>
+<div class="page">
 
-	<!--This is just a short-bio kinda website, not my portfolio -->
+<div class="masthead">
+  <span class="site">saloni-garg.github.io</span>
+  <nav><a href="#work">work</a><a href="#jobs">jobs</a><a href="#talks">talks</a><a href="#writing">writing</a><a href="#elsewhere">elsewhere</a></nav>
+</div>
 
+<div class="intro">
+  <figure class="photo">
+    <img src="https://github.com/saloni-garg.png" alt="Portrait of Saloni Garg" width="344" height="344" onerror="this.closest('figure').style.display='none'">
+    <figcaption>San Jose, California</figcaption>
+  </figure>
+  <h1>Saloni Garg</h1>
+  <p class="first dropcap">I am a machine learning engineer at Adobe, on the Firefly team in San Jose. My day job is GPU systems for generative models: getting big multimodal models trained, post-trained, and served without wasting compute or anyone's patience.</p>
+  <p>The question I keep coming back to, at work and in my own projects, is a boring sounding one that turns out not to be boring at all: how do you know a model actually got better? A lot of my recent work is verifiers, evaluation, and RL environments, because that is where the honest answer lives.</p>
+  <p>Before Adobe I spent five years at Wayfair, in Berlin and then the US, building high traffic production systems. I have also written a textbook on retrieval-augmented generation, which still surprises me a little.</p>
+  <p class="findme">
+    Find me on <a href="https://www.linkedin.com/in/saloni-garg">LinkedIn</a> /
+    <a href="https://github.com/saloni-garg">GitHub</a> /
+    <a href="https://huggingface.co/sluuu">Hugging Face</a> /
+    <a href="https://openreview.net/profile?id=~Saloni_Garg3">OpenReview</a><br>
+    Or write to <a href="mailto:saloni8996@gmail.com">saloni8996@gmail.com</a>. Email is fastest.
+  </p>
+</div>
 
-	<section id="general-info">
-		<div>
-			<img id="portrait-photo" class="mt2" src="img/Alex2.jpg" alt="Portrait of Saloni Garg">
-		</div>
+<section id="recent">
+  <h2><span class="no">01</span>Recently</h2>
+  <ul class="log">
+    <li><span class="when">Oct 2026</span><p>My <a href="https://github.com/openenv/OpenEnv/pull/1477">OpenEnv pull request</a> was marked ready for review. It stops code verifiers from passing on a database nobody touched, which was quietly inflating scores.</p></li>
+    <li><span class="when">Oct 2026</span><p>The <a href="https://huggingface.co/datasets/sluuu/gpu-train-debug">gpu-train-debug dataset</a> went up on Hugging Face, with a paper draft measuring what verifier-based RL adds beyond supervised fine-tuning. The honest answer: less than the hype, more than nothing.</p></li>
+    <li><span class="when">Sep 2026</span><p>Gave a CloudX talk on debugging GenAI systems in production: token spikes, timeout cascades, and the failures that never page anyone.</p></li>
+    <li><span class="when">Aug 2026</span><p>Our RAG textbook came out with De Gruyter. Also spoke at the AI Risk Summit on KV cache side channels in shared inference infrastructure.</p></li>
+    <li><span class="when">Jun 2026</span><p>Received the EDGE in Tech Athena Award for early career leadership, from CITRIS at UC Berkeley.</p></li>
+    <li><span class="when">Sep 2025</span><p>Joined Adobe Firefly. A few weeks later I was named a finalist for the WLDA Awards, in AI for Good Impact.</p></li>
+  </ul>
+</section>
 
-		<h1 id="name"></h1>
-		<h2 id="profession"></h2>
-		<!-- <h1 id="name">> Saloni Garg</h1>
-		<h2 id="profession">> Front End Developer</h2> -->
-		<p id="one-line">> I
-			<!--<i class="fa fa-medium"></i>--><a href="https://medium.com/@saloni_garg" target="_blank">write</a>
-			<!-- <i class="fa fa-codepen"></i> --><a href="http://codepen.io/Saloni-garg" target="_blank">code</a>
-		</p>
+<section id="work">
+  <h2><span class="no">02</span>Selected work</h2>
+  <p class="note">Things I built outside the day job. All of it is public, so you do not have to take my word for any of it.</p>
+  <ul class="work">
+    <li>
+      <h3><a href="https://huggingface.co/datasets/sluuu/gpu-train-debug">gpu-train-debug</a></h3>
+      <p>An RL environment that hands a model a broken GPU training run and asks it to find the fault. Built because I kept meeting the same failures at work: OOMs dressed up as loss spikes, misconfigured sharding, silent data bugs. Includes train, hard, test, and out-of-distribution splits, and a full validation run comparing SFT with verifier-based RL.</p>
+      <p class="tech">Python / Verifiers / Prime Intellect / Hugging Face</p>
+    </li>
+    <li>
+      <h3><a href="https://github.com/saloni-garg/memfix">memfix</a></h3>
+      <p>A memory layer for AI agents that keeps receipts. Every fact points back to its source, corrections are append-only, and nothing is silently overwritten. Listed on Glama, submitted to the awesome-mcp-servers list.</p>
+      <p class="tech">Python / MCP / SQLite or Postgres / MIT</p>
+    </li>
+    <li>
+      <h3><a href="https://github.com/saloni-garg/jev-max">jev-max</a></h3>
+      <p>A browser agent for the web as it actually is: shadow DOM, iframes, canvas fallbacks, file uploads, drag and drop. Comes with an MCP server and a benchmark suite, because an agent demo without numbers is just a story.</p>
+      <p class="tech">TypeScript / Playwright / MCP / MIT</p>
+    </li>
+    <li>
+      <h3>Contributions</h3>
+      <p>Open source contributor to <b>Ray</b> and <b>PyTorch</b>, and lately to verifier tooling in the OpenEnv ecosystem. The OpenEnv fix above is the one I would start with if you want to see how I work in someone else's codebase.</p>
+      <p class="tech"><a href="https://github.com/saloni-garg">github.com/saloni-garg</a></p>
+    </li>
+  </ul>
+</section>
 
+<section id="jobs">
+  <h2><span class="no">03</span>Jobs</h2>
+  <div class="jobline"><span class="when">2025, now</span><div><h3>Senior Machine Learning Engineer, Adobe Firefly</h3><p>GPU-accelerated systems for large-scale generative models. Multimodal post-training, inference optimization, and LLM evaluation. Part research, part production, which is exactly the mix I wanted.</p></div></div>
+  <div class="jobline"><span class="when">2020 to 2025</span><div><h3>Senior Software Engineer, Wayfair</h3><p>Berlin first, then the US. High traffic systems including SEO middleware and edge workers, plus the CI/CD pipelines around them. Learned more about operating software at scale here than anywhere else.</p></div></div>
+  <div class="jobline"><span class="when">2016 to 2020</span><div><h3>B.Tech, Computer Science, LNMIIT Jaipur</h3><p>Where the open source habit started. I left with a degree, a Red Hat Women in Open Source award, and a Google scholarship I am still grateful for.</p></div></div>
+</section>
 
-		<p class="learn">> <span class="expand">learn more</span></p>
+<section id="writing">
+  <h2><span class="no">04</span>Writing</h2>
+  <ul class="plain">
+    <li><b>RAG Artificial Intelligence: Retrieval-Augmented Generation in Generative AI.</b> A textbook, published by De Gruyter in 2026, written with Amit Sagtani and Kamal Kant Hiran. Now finding its way into university courses.</li>
+    <li><b>Measuring the Marginal Value of Verifier-Based RL Beyond Supervised Fine-Tuning.</b> The gpu-train-debug paper, drafted from a full A100 validation run. Written in deliberately modest language, because the results are modest and real.</li>
+    <li><b>Research papers</b> co-authored with Kamal Kant Hiran, plus one patent application pending with me as inventor, and a published copyright application.</li>
+  </ul>
+</section>
 
-		<!-- <div id="short-bio">
-			<p></p>
-		</div> -->
-	</section>
+<section id="talks">
+  <h2><span class="no">05</span>Talks</h2>
+  <p class="note">I speak internationally, mostly about production GenAI and the unglamorous parts of making it work.</p>
+  <ul class="talks">
+    <li><span class="yr">2026</span><p><span class="venue">AI Risk Summit</span>, KV-Cache as Attack Surface: Side Channels in Shared LLM Inference Infrastructure</p></li>
+    <li><span class="yr">2026</span><p><span class="venue">CloudX</span>, Token Spikes, Timeout Cascades, and Silent Failures: Debugging GenAI Systems in Production</p></li>
+    <li><span class="yr">2025</span><p><span class="venue">Vector Search Conference</span>, GPU or CPU? Optimizing Vector Search Infrastructure for Cost and Speed</p></li>
+    <li><span class="yr">2025</span><p><span class="venue">CloudX</span>, How to Build a Blameless Debugging Culture with Observability Tools</p></li>
+    <li><span class="yr">2024</span><p><span class="venue">NDC London</span>, Neural Style Transfer: The Art and Science of Generative AI</p></li>
+    <li><span class="yr">2023</span><p><span class="venue">BuildStuff, Vilnius</span>, Can You Guess Which Song Snippets Are Written by AI?</p></li>
+    <li><span class="yr">2019</span><p><span class="venue">Red Hat Summit and Linux App Summit</span>, open source talks, plus an on-stage interview and a filmed conversation with Nextcloud founder Frank Karlitschek</p></li>
+  </ul>
+</section>
 
-<!-- jnj -->
-	<section id="online-presence">
-		<div>
-			<p>> I also:</p>
-			<ul class="activities">
-				<li><i class="fa fa-suitcase"></i> <a href="https://www.vretta.com/" target="_blank">work</a></li>
-				<li><i class="fa fa-github"></i> <a href="https://github.com/Saloni-garg/" target="_blank">build</a></li>
-				<li><i class="fa fa-code"></i> <a href="http://www.codewars.com/users/Saloni-garg" target="_blank">improve</a></li>
-			</ul>
-			<ul class="activities">
-				<li><i class="fa fa-linkedin"></i> <a href="https://ca.linkedin.com/in/Saloni-garg" target="_blank">network</a></li>
-				<li><i class="fa fa-twitter"></i> <a href="https://twitter.com/salonigarg_" target="_blank">tweet</a></li>
-			</ul>
-		</div>
-	</section>
+<section id="elsewhere">
+  <h2><span class="no">06</span>Recognition and community</h2>
+  <ul class="plain">
+    <li><b>Athena Award, 2026.</b> EDGE in Tech Athena Award for early career leadership, CITRIS and the Banatao Institute, UC Berkeley.</li>
+    <li><b>WLDA finalist, 2025.</b> World Leaders in Data and AI Awards, AI for Good Impact. The <a href="https://wlda.tech/news-pr/2025-wlda-awards-gala-finalists/">finalist list</a> is public.</li>
+    <li><b>Red Hat Women in Open Source Award, 2019</b> (academic), and the <b>Google Venkat Panchapakesan Memorial Scholarship</b>.</li>
+    <li><b>Reviewing and judging.</b> Conference papers for IEEE-affiliated venues, scholarly books for Manning, the NASA Space Apps Challenge, and the occasional hackathon. I say yes to more of this than is probably wise.</li>
+    <li><b>Mentoring.</b> Women Who Code, 1 Million Women to Tech, and Google Women Techmakers. Earlier, as a Mozilla Open Leader, I founded MozForce, a community of young developers in India, and taught a computer science cohort for women from economically weaker sections.</li>
+  </ul>
+</section>
 
-	<section id="abilities-first">
-		<div id="skills">
-			<p>> list skill</p>
-			<p>> where &lt;skill&gt; is one of:<skill>
-			<p class="subresult">HTML5, CSS3, ReactJS, Golang, D3, GIT and Github, </p>
-		</div>
+<section id="offwork">
+  <h2><span class="no">07</span>Off the clock</h2>
+  <p style="color:var(--soft);font-size:18.5px">I lead improv meetups in Mountain View, play intermediate badminton whenever I can find a court, and once spent ten days in silent Vipassana meditation in remote California, which remains the hardest debugging session of my life. I have also attempted Half Dome. Attempted is doing some work in that sentence.</p>
+</section>
 
-		<div id="familiar">
-			<p>> list familiar area:</p>
-			<p>> where &lt;area&gt; is one of:</p>
-			<p class="subresult">Haxe, OpenFL, Python, THREE.js, Node.js</p>
-		</div>
-	</section>
+<footer>
+  <p>Saloni Garg, San Jose, California. Written and maintained by me, in one HTML file, with no build step and no tracking.<br>
+  Last updated 23 October 2026. If anything here looks out of date, LinkedIn is the fresher source.</p>
+</footer>
 
-	<section id="terminal-line">
-		<p>> <input id="term-prompt" /></p>
-	</section>
-
-	<footer></footer>
-	<script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
-	<script src="js/next.js"></script>
+</div>
 </body>
-
 </html>
