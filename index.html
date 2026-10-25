@@ -15,7 +15,7 @@
 <link rel="icon" href="https://github.com/saloni-garg.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Kalam:wght@300;400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Person","name":"Saloni Garg","jobTitle":"Staff Machine Learning Engineer","worksFor":{"@type":"Organization","name":"Adobe","department":"Firefly Services"},"address":{"@type":"PostalAddress","addressLocality":"San Jose","addressRegion":"CA","addressCountry":"US"},"url":"https://saloni-garg.github.io/","image":"https://github.com/saloni-garg.png","email":"mailto:salonigarg2318@gmail.com","alumniOf":{"@type":"CollegeOrUniversity","name":"The LNM Institute of Information Technology, Jaipur"},"knowsAbout":["Generative AI","GPU-accelerated inference","LLM post-training","RLHF and RLVR","Retrieval-Augmented Generation","Vector search"],"sameAs":["https://www.linkedin.com/in/saloni-garg","https://github.com/saloni-garg","https://scholar.google.com/citations?user=-kidbB0AAAAJ","https://openreview.net/profile?id=~Saloni_Garg3","https://huggingface.co/sluuu"]}
 </script>
@@ -24,16 +24,16 @@
   --desk:#221910;
   --paper:#f4ead1; --ink:#2e2313; --soft:#5d4b30; --faint:#97835e;
   --accent:#a83c22; --link:#1e4d7a; --rule:#d9c9a1; --rule2:#b7a678;
-  --hand:"Kalam","Patrick Hand",cursive;
-  --disp:"Caveat","Kalam",cursive;
-  --label:"Patrick Hand","Kalam",cursive;
-  --mono:"Patrick Hand","Kalam",cursive;
+  --hand:"Patrick Hand",cursive;
+  --disp:"Patrick Hand",cursive;
+  --label:"Patrick Hand",cursive;
+  --mono:"Patrick Hand",cursive;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:radial-gradient(1200px 800px at 50% -5%,#3d2c1a,#221910 62%,#150e06);
   background-color:var(--desk);
-  color:var(--ink);font-family:var(--hand);font-size:17.5px;line-height:1.62;padding:34px 16px 60px;
+  color:var(--ink);font-family:var(--hand);font-size:19px;line-height:1.6;padding:34px 16px 60px;
 }
 .page{
   max-width:780px;margin:0 auto;position:relative;
@@ -68,12 +68,12 @@ a:hover{background:rgba(246,203,92,.45);text-decoration:none}
 .photo img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;object-position:center;display:block}
 .photo figcaption{font-family:var(--label);font-size:13.5px;color:var(--soft);text-align:center;margin-top:6px;height:0}
 @media(max-width:560px){.photo{float:none;margin:14px auto 20px}}
-h1{font-family:var(--disp);font-weight:700;font-size:66px;line-height:1.02;color:var(--ink);margin-bottom:4px}
-@media(max-width:560px){h1{font-size:50px}}
-.title{font-family:var(--disp);font-size:29px;font-weight:600;color:var(--ink)}
+h1{font-family:var(--disp);font-weight:400;font-size:56px;letter-spacing:.01em;line-height:1.02;color:var(--ink);margin-bottom:4px}
+@media(max-width:560px){h1{font-size:44px}}
+.title{font-family:var(--disp);font-size:26px;font-weight:400;color:var(--ink)}
 .loc{font-family:var(--label);font-size:14.5px;color:var(--faint);margin:2px 0 16px}
-.summary{color:var(--soft);max-width:600px;margin-bottom:13px;font-weight:300}
-.summary b{color:var(--ink);font-weight:700}
+.summary{color:var(--soft);max-width:600px;margin-bottom:13px;font-weight:400}
+.summary b{color:var(--ink)}
 .focus{font-family:var(--label);font-size:15px;color:var(--soft);line-height:1.75;border:2.2px solid var(--ink);border-radius:255px 14px 225px 14px/14px 225px 14px 255px;padding:10px 18px 12px;margin:20px 0 18px;background:rgba(255,253,246,.45)}
 .focus .k{color:var(--accent)}
 .links{font-family:var(--label);font-size:15.5px;line-height:2.05}
@@ -81,23 +81,23 @@ h1{font-family:var(--disp);font-weight:700;font-size:66px;line-height:1.02;color
 
 /* sections */
 section{margin-top:40px}
-h2{font-family:var(--disp);font-size:35px;font-weight:700;color:var(--ink);display:flex;align-items:baseline;gap:11px;margin-bottom:8px}
-h2 .no{font-family:var(--disp);font-size:22px;font-weight:700;color:var(--accent)}
+h2{font-family:var(--disp);font-size:31px;font-weight:400;color:var(--ink);display:flex;align-items:baseline;gap:11px;margin-bottom:8px}
+h2 .no{font-family:var(--disp);font-size:20px;font-weight:400;color:var(--accent)}
 h2:after{content:"";flex:1;border-top:2.2px solid var(--rule2);transform:translateY(-3px) rotate(-.25deg)}
 .rows{list-style:none}
 .rows li{display:flex;gap:18px;padding:10px 0;border-bottom:2px dotted var(--rule)}
 .rows li:last-child{border-bottom:0}
 .rows .when{font-family:var(--label);font-size:14px;color:var(--faint);min-width:118px;padding-top:5px;flex-shrink:0}
 @media(max-width:560px){.rows li{flex-direction:column;gap:2px}.rows .when{min-width:0}}
-.rows h3{font-family:var(--disp);font-size:26px;font-weight:700;color:var(--ink);line-height:1.15}
-.rows p{color:var(--soft);font-size:16.5px;font-weight:300}
-.rows p b{color:var(--ink);font-weight:700}
+.rows h3{font-family:var(--disp);font-size:23px;font-weight:400;color:var(--ink);line-height:1.15}
+.rows p{color:var(--soft);font-size:18px;font-weight:400}
+.rows p b{color:var(--ink)}
 .tech{font-family:var(--label);font-size:13.5px;color:var(--faint);margin-top:4px}
 .plain{list-style:none}
-.plain li{padding:7px 0 7px 20px;position:relative;color:var(--soft);font-size:16.5px;font-weight:300}
+.plain li{padding:7px 0 7px 20px;position:relative;color:var(--soft);font-size:18px;font-weight:400}
 .plain li:before{content:"*";position:absolute;left:2px;color:var(--accent);font-family:var(--disp);font-weight:700}
-.plain li b{color:var(--ink);font-weight:700}
-.mailbtn{display:inline-block;border:2.4px solid var(--ink);border-radius:255px 14px 225px 14px/14px 225px 14px 255px;padding:1px 22px 3px;color:var(--ink);text-decoration:none;font-family:var(--disp);font-size:22px;font-weight:700;background:rgba(255,253,246,.5)}
+.plain li b{color:var(--ink)}
+.mailbtn{display:inline-block;border:2.4px solid var(--ink);border-radius:255px 14px 225px 14px/14px 225px 14px 255px;padding:1px 22px 3px;color:var(--ink);text-decoration:none;font-family:var(--disp);font-size:21px;font-weight:400;background:rgba(255,253,246,.5)}
 .mailbtn:hover{background:rgba(246,203,92,.5);color:var(--ink)}
 footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-family:var(--label);font-size:13.5px;color:var(--faint);line-height:1.9}
 </style>
