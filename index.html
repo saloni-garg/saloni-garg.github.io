@@ -31,8 +31,13 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
-  background:radial-gradient(1200px 800px at 50% -5%,#3d2c1a,#221910 62%,#150e06);
-  background-color:var(--desk);
+  background-color:#a87f52;
+  background-image:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.05"/></feComponentTransfer></filter><rect width="260" height="260" filter="url(%23n)"/></svg>'),
+    repeating-linear-gradient(0deg, rgba(80,48,16,.18) 0 2px, transparent 2px 150px),
+    repeating-linear-gradient(90deg, rgba(255,232,190,.05) 0 4px, transparent 4px 11px),
+    radial-gradient(1200px 700px at 50% -10%, rgba(255,241,214,.5), transparent 60%),
+    linear-gradient(180deg,#bd9264,#a87f52 50%,#8f6a3e);
   color:var(--ink);font-family:var(--hand);font-size:19px;line-height:1.6;padding:34px 16px 60px;
 }
 .page{
@@ -40,7 +45,7 @@ body{
   padding:46px 52px 54px;
   transform:rotate(-.18deg);
   border-radius:255px 12px 225px 12px/12px 225px 12px 255px;
-  box-shadow:0 34px 60px rgba(0,0,0,.6),0 5px 16px rgba(0,0,0,.45),inset 0 0 60px rgba(146,110,52,.14);
+  box-shadow:0 34px 60px rgba(59,36,8,.5),0 5px 16px rgba(59,36,8,.4),inset 0 0 60px rgba(146,110,52,.14);
   background-color:var(--paper);
   background-image:
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.055"/></feComponentTransfer></filter><rect width="260" height="260" filter="url(%23n)"/></svg>'),
@@ -92,6 +97,7 @@ h2:after{content:"";flex:1;border-top:2.2px solid var(--rule2);transform:transla
 .rows h3{font-family:var(--disp);font-size:23px;font-weight:400;color:var(--ink);line-height:1.15}
 .rows p{color:var(--soft);font-size:18px;font-weight:400}
 .rows p b{color:var(--ink)}
+.ghead{font-family:var(--disp);font-size:21px;color:var(--ink);margin:18px 0 2px}
 .tech{font-family:var(--label);font-size:13.5px;color:var(--faint);margin-top:4px}
 .plain{list-style:none}
 .plain li{padding:7px 0 7px 20px;position:relative;color:var(--soft);font-size:18px;font-weight:400}
@@ -107,7 +113,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 
 <div class="masthead">
   <span class="site">saloni-garg.github.io</span>
-  <nav><a href="#experience">experience</a><a href="#work">work</a><a href="#publications">publications</a><a href="#talks">talks</a><a href="#awards">awards</a></nav>
+  <nav><a href="#experience">experience</a><a href="#work">work</a><a href="#oss">open source</a><a href="#publications">publications</a><a href="#talks">talks</a><a href="#awards">awards</a></nav>
 </div>
 
 <div class="head">
@@ -163,15 +169,46 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <h2><span class="no">02</span>Selected work</h2>
   <ul class="rows">
     <li><span class="when">2026</span><div><h3><a href="https://huggingface.co/datasets/sluuu/gpu-train-debug">gpu-train-debug</a></h3><p>RL environment for diagnosing GPU training failures, in Prime Intellect Verifiers format. Published on the Prime Intellect Hub and as a dataset on Hugging Face, with train, hard, test, and out-of-distribution splits and a full validation run on A100 hardware.</p><p class="tech">Python / Verifiers / Prime Intellect / Hugging Face</p></div></li>
-    <li><span class="when">2026</span><div><h3><a href="https://github.com/openenv/OpenEnv/pull/1477">OpenEnv, verifier fix (PR 1477)</a></h3><p>Contribution to OpenEnv: code verifiers no longer pass on an untouched database. Marked ready for review, with the environment test suite passing.</p><p class="tech">Python / RL environments / open source contribution</p></div></li>
     <li><span class="when">2026</span><div><h3><a href="https://github.com/saloni-garg/memfix">memfix</a></h3><p>Provenance-first, correctable memory layer for AI agents: source pointers, append-only log, tombstones, and an MCP server. Published under MIT; listed on Glama.</p><p class="tech">Python / MCP / SQLite or Postgres / MIT</p></div></li>
     <li><span class="when">2026</span><div><h3><a href="https://github.com/saloni-garg/jev-max">jev-max</a></h3><p>Browser agent for general web tasks: shadow DOM and iframe handling, canvas vision fallback, uploads, drag and drop, multi-tab support, MCP server, and a benchmark suite. Published under MIT.</p><p class="tech">TypeScript / Playwright / MCP / MIT</p></div></li>
     <li><span class="when">Ongoing</span><div><h3>Open source</h3><p>Contributor to <b>Ray</b> and <b>PyTorch</b>. Full list of repositories at <a href="https://github.com/saloni-garg">github.com/saloni-garg</a>.</p></div></li>
   </ul>
 </section>
 
+<section id="oss">
+  <h2><span class="no">03</span>Open source contributions</h2>
+  <p style="color:var(--soft)">Pull requests I have open upstream, grouped by the bug or feature. Statuses as of October 2026; every title links to the PR itself.</p>
+  <p class="ghead">One bug, five codebases: uniform-reward GRPO groups</p>
+  <p style="color:var(--soft)">In GRPO training, when every response in a group earns the same reward, the advantage should be exactly zero. Float32 group statistics invented a nonzero one instead. I found the bug class, fixed it, and sent the same fix upstream five times:</p>
+  <ul class="rows">
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/verl-project/verl/pull/8349">verl-project/verl</a></h3><p>"[algo] fix: give uniform reward groups exactly zero grpo advantage." Scalar and vectorized paths fixed; new tests cover uniform groups at several sizes.</p><p class="tech">PR #8349</p></div></li>
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/THUDM/slime/pull/2494">THUDM/slime</a></h3><p>"fix(data): give uniform reward groups exactly zero advantage." Fix in the grouped-reward post-processing, with new grouped-reward tests.</p><p class="tech">PR #2494</p></div></li>
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/OpenRLHF/OpenRLHF/pull/1383">OpenRLHF/OpenRLHF</a></h3><p>"fix(ppo): give uniform reward groups exactly zero advantage in group_norm." The most severe instance found: uniform groups were getting advantages up to about 0.98 instead of 0.</p><p class="tech">PR #1383</p></div></li>
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/NovaSky-AI/SkyRL/pull/2531">NovaSky-AI/SkyRL</a></h3><p>"[fix][train] Give uniform reward groups exactly zero GRPO advantage." Fix in the PPO utilities, with new unit tests for uniform groups.</p><p class="tech">PR #2531</p></div></li>
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/hiyouga/EasyR1/pull/11020">hiyouga/EasyR1</a></h3><p>"[algo] fix grpo giving uniform reward groups nonzero advantages." EasyR1 vendors the same algorithm code, bug included; fixed with tests.</p><p class="tech">PR #11020</p></div></li>
+  </ul>
+  <p class="ghead">Compilers, TPU, and Triton</p>
+  <ul class="rows">
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/google-pytorch/torch_tpu/pull/5846">google-pytorch/torch_tpu</a></h3><p>"Fix view decomposition returning a base larger than the view storage." The view decomposition fallback could build a base tensor larger than the storage it views; the fix re-checks the base and declines the decomposition.</p><p class="tech">PR #5846</p></div></li>
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/google-pytorch/torch_tpu/pull/5847">google-pytorch/torch_tpu</a></h3><p>"Fix view decomposition IndexError on 0-d views with a storage offset." Zero-dimensional views with a storage offset crashed the decomposition; the fix declines it cleanly instead.</p><p class="tech">PR #5847</p></div></li>
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/triton-lang/triton/pull/12489">triton-lang/triton</a></h3><p>"[Interpreter] Fix NaN/Inf handling in interpreter float conversions." The Triton interpreter's float conversions mishandled NaN and infinity; fixed with regression tests.</p><p class="tech">PR #12489</p></div></li>
+  </ul>
+  <p class="ghead">Verifiers and evaluation tooling</p>
+  <ul class="rows">
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/openenv/OpenEnv/pull/1477">openenv/OpenEnv</a></h3><p>"fix: stop awm code verifiers from passing on an untouched database." Over a thousand AWM code verifiers passed against a freshly seeded database; the fix adds a no-change guard. Test suite passing.</p><p class="tech">PR #1477</p></div></li>
+  </ul>
+  <p class="ghead">Drafts in progress</p>
+  <ul class="rows">
+    <li><span class="when">Draft</span><div><h3><a href="https://github.com/anthropics/buffa/pull/797">anthropics/buffa</a></h3><p>"descriptor: resolve a type_name without a leading dot against the enclosing scope." Protobuf descriptor linking failed on dotless type names inside a package; the fix walks the enclosing scopes.</p><p class="tech">PR #797</p></div></li>
+    <li><span class="when">Draft</span><div><h3><a href="https://github.com/anthropics/buffa/pull/798">anthropics/buffa</a></h3><p>"descriptor: reject an editions file whose edition is outside the supported range." Editions files outside the supported range silently linked with wrong defaults; the fix raises a clear error.</p><p class="tech">PR #798</p></div></li>
+    <li><span class="when">Draft</span><div><h3><a href="https://github.com/openai/human-eval/pull/72">openai/human-eval</a></h3><p>"Fix completions ending in a decorator replacing the test's check()." In the execution harness, a completion ending in a bare decorator could replace the test's own check function and pass without running; the fix isolates the test block.</p><p class="tech">PR #72</p></div></li>
+    <li><span class="when">Draft</span><div><h3><a href="https://github.com/openai/chatkit-python/pull/137">openai/chatkit-python</a></h3><p>"Allow ListView as a nested widget component." ListView was accepted at the root but silently misparsed when nested in a Card; one-line union fix plus a regression test.</p><p class="tech">PR #137</p></div></li>
+  </ul>
+  <p style="color:var(--soft);margin-top:14px">Also open: a listing PR adding memfix to <a href="https://github.com/punkpeye/awesome-mcp-servers/pull/16020">punkpeye/awesome-mcp-servers</a> (PR #16020).</p>
+</section>
+
 <section id="publications">
-  <h2><span class="no">03</span>Publications and IP</h2>
+  <h2><span class="no">04</span>Publications and IP</h2>
   <ul class="plain">
     <li><b>Book: <a href="https://doi.org/10.1515/9783112226780">Retrieval-Augmented Generation (RAG) for Enhancing AI Applications</a>.</b> De Gruyter, 2026. Publisher page via the book link.</li>
     <li><b>Patent:</b> A System and Method for Automated Drift Detection and Model Retraining in Machine Learning Pipelines. Indian Patent Office, 2025.</li>
@@ -184,7 +221,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 </section>
 
 <section id="talks">
-  <h2><span class="no">04</span>Talks</h2>
+  <h2><span class="no">05</span>Talks</h2>
   <ul class="rows">
     <li><span class="when">2026</span><div><p><b>AI Risk Summit.</b> KV-Cache as Attack Surface: Side Channels in Shared LLM Inference Infrastructure.</p></div></li>
     <li><span class="when">2026</span><div><p><b>CloudX.</b> Token Spikes, Timeout Cascades, and Silent Failures: Debugging GenAI Systems in Production.</p></div></li>
@@ -201,7 +238,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 </section>
 
 <section id="awards">
-  <h2><span class="no">05</span>Awards and recognition</h2>
+  <h2><span class="no">06</span>Awards and recognition</h2>
   <ul class="plain">
     <li><b>EDGE in Tech Athena Award, 2026.</b> UC Berkeley (CITRIS and the Banatao Institute).</li>
     <li><b>Adobe Employee Spot Bonus, 2026.</b></li>
@@ -215,7 +252,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 </section>
 
 <section id="contact">
-  <h2><span class="no">06</span>Contact</h2>
+  <h2><span class="no">07</span>Contact</h2>
   <p style="color:var(--soft)">LinkedIn: <a href="https://www.linkedin.com/in/saloni-garg">linkedin.com/in/saloni-garg</a><br>
   Google Scholar: <a href="https://scholar.google.com/citations?user=-kidbB0AAAAJ">Google Scholar profile</a><br>
   GitHub: <a href="https://github.com/saloni-garg">github.com/saloni-garg</a></p>
