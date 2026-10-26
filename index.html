@@ -106,6 +106,25 @@ h2:after{content:"";flex:1;border-top:2.2px solid var(--rule2);transform:transla
 .mailbtn{display:inline-block;border:2.4px solid var(--ink);border-radius:255px 14px 225px 14px/14px 225px 14px 255px;padding:1px 22px 3px;color:var(--ink);text-decoration:none;font-family:var(--disp);font-size:21px;font-weight:400;background:rgba(255,253,246,.5)}
 .mailbtn:hover{background:rgba(246,203,92,.5);color:var(--ink)}
 footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-family:var(--label);font-size:13.5px;color:var(--faint);line-height:1.9}
+
+/* mobile refinements */
+@media(max-width:640px){
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{padding:20px 8px 44px;font-size:18px}
+  .masthead{flex-direction:column;align-items:flex-start;gap:2px}
+  .masthead nav a{margin:0 14px 0 0;padding:6px 0;display:inline-block}
+  .links{overflow-wrap:anywhere}
+  .links a{white-space:normal}
+  h1{font-size:40px}
+  h2{font-size:27px}
+  .rows h3{font-size:21px}
+  img{max-width:100%;height:auto}
+  .mailbtn{max-width:100%;overflow-wrap:anywhere}
+}
+@media(max-width:400px){
+  h1{font-size:36px}
+  .page{padding:26px 18px 34px}
+}
 </style>
 </head>
 <body>
