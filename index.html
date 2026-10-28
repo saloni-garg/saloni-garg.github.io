@@ -223,7 +223,11 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
     <li><span class="when">Ready</span><div><h3><a href="https://github.com/openai/human-eval/pull/72">openai/human-eval</a></h3><p>"Fix completions ending in a decorator replacing the test's check()." In the execution harness, a completion ending in a bare decorator could replace the test's own check function and pass without running; the fix isolates the test block.</p><p class="tech">PR #72</p></div></li>
     <li><span class="when">Ready</span><div><h3><a href="https://github.com/anthropics/jacobian-lens/pull/21">anthropics/jacobian-lens</a></h3><p>"Raise in JacobianLens.save() when the storage dtype would turn finite entries into inf." Saving cast Jacobians to fp16 unchecked, silently turning large finite entries into infinity; the fix raises a clear error naming the layer.</p><p class="tech">PR #21</p></div></li>
   </ul>
-  <p style="color:var(--soft);margin-top:14px">Also open: a listing PR adding memfix to <a href="https://github.com/punkpeye/awesome-mcp-servers/pull/16020">punkpeye/awesome-mcp-servers</a> (PR #16020).</p>
+    <p class="ghead">Inference serving</p>
+  <ul class="rows">
+    <li><span class="when">Ready</span><div><h3><a href="https://github.com/ai-dynamo/dynamo/pull/17502">ai-dynamo/dynamo</a></h3><p>"fix(profiler): recognize SGLang --tp-size/--pp-size spellings in multinode placement." The profiler sized SGLang workers launched with the short size spellings as single-GPU instances and stripped their multinode placement; the fix teaches the parser those spellings, with the first unit tests for set_multinode_config.</p><p class="tech">PR #17502</p></div></li>
+  </ul>
+<p style="color:var(--soft);margin-top:14px">Also open: a listing PR adding memfix to <a href="https://github.com/punkpeye/awesome-mcp-servers/pull/16020">punkpeye/awesome-mcp-servers</a> (PR #16020).</p>
 </section>
 
 <section id="publications">
