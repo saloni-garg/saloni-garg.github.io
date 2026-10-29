@@ -58,6 +58,10 @@ a:hover{background:rgba(246,203,92,.45);text-decoration:none}
 
 /* header block */
 .head{padding:30px 0 4px}
+.titlerow{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
+.titlebtns{display:flex;gap:10px;flex-wrap:wrap;padding-top:14px}
+.titlebtns .linkbtn{margin:0}
+.linkbtn.sm{font-size:18px;padding:0 16px 2px}
 h1{font-family:var(--disp);font-weight:400;font-size:56px;letter-spacing:.01em;line-height:1.02;color:var(--ink);margin-bottom:4px}
 @media(max-width:560px){h1{font-size:44px}}
 .title{font-family:var(--disp);font-size:26px;font-weight:400;color:var(--ink);max-width:640px}
@@ -93,6 +97,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{padding:20px 8px 44px;font-size:18px}
   .masthead{flex-direction:column;align-items:flex-start;gap:2px}
+  .titlebtns{padding-top:2px}
   .masthead nav a{margin:0 14px 0 0;padding:6px 0;display:inline-block}
   h1{font-size:40px}
   h2{font-size:27px}
@@ -117,7 +122,13 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 </div>
 
 <div class="head">
-  <h1>AgentLab</h1>
+  <div class="titlerow">
+    <h1>AgentLab</h1>
+    <div class="titlebtns">
+      <a class="linkbtn sm" href="https://github.com/saloni-garg/AgentLab/releases/tag/v1.0">v1.0 Release</a>
+      <a class="linkbtn sm" href="https://github.com/saloni-garg/AgentLab">GitHub Repo</a>
+    </div>
+  </div>
   <p class="title">A reproducible laboratory for studying the scaling behavior of LLM agent organizations.</p>
   <p class="summary">AgentLab is a reproducible laboratory for empirical research on multi-agent LLM systems. Rather than providing new agent architectures, it provides the infrastructure to ask and answer controlled research questions: reproducible experiments, calibration gates, deterministic replay, and auditable analyses. Version 1.0 demonstrates this methodology through three empirical studies on Claude Haiku 5.5.</p>
 </div>
