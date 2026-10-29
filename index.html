@@ -62,6 +62,8 @@ a:hover{background:rgba(246,203,92,.45);text-decoration:none}
 /* masthead */
 .masthead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;border-bottom:3px double var(--ink);flex-wrap:wrap}
 .masthead .site{font-family:var(--label);font-size:14.5px;color:var(--faint)}
+.masthead a.site{text-decoration:none;cursor:pointer}
+.masthead a.site:hover{color:var(--accent);text-decoration:underline wavy 1px;text-underline-offset:4px}
 .masthead nav{font-family:var(--label);font-size:14.5px}
 .masthead nav a{color:var(--soft);text-decoration:none;margin-left:13px}
 .masthead nav a:hover{color:var(--accent);background:none;text-decoration:underline wavy 1px;text-underline-offset:4px}
@@ -133,7 +135,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 <div class="page">
 
 <div class="masthead">
-  <span class="site">saloni-garg.github.io</span>
+  <a class="site" href="https://saloni-garg.github.io/">saloni-garg.github.io</a>
   <nav><a href="#experience">experience</a><a href="#work">work</a><a href="#oss">open source</a><a href="#publications">publications</a><a href="#talks">talks</a><a href="#awards">awards</a></nav>
 </div>
 
