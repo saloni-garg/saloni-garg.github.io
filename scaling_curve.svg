@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="380" font-family="sans-serif" font-size="11">
+<text x="56" y="22" font-weight="bold">mean fraction correct vs team size (95% CI)</text>
+<rect x="56" y="40" width="492" height="294" fill="none" stroke="#999"/>
+<line x1="56" y1="334" x2="548" y2="334" stroke="#ddd"/>
+<text x="26" y="337">0.00</text>
+<line x1="56" y1="260" x2="548" y2="260" stroke="#ddd"/>
+<text x="26" y="264">0.25</text>
+<line x1="56" y1="187" x2="548" y2="187" stroke="#ddd"/>
+<text x="26" y="190">0.50</text>
+<line x1="56" y1="114" x2="548" y2="114" stroke="#ddd"/>
+<text x="26" y="116">0.75</text>
+<line x1="56" y1="40" x2="548" y2="40" stroke="#ddd"/>
+<text x="26" y="43">1.00</text>
+<text x="52" y="350">1</text>
+<text x="216" y="350">2</text>
+<text x="380" y="350">4</text>
+<text x="544" y="350">8</text>
+<text x="56" y="366">team size (log2) -&gt;</text>
+<line x1="56.0" y1="76.8" x2="56.0" y2="54.7" stroke="#d95f02" stroke-width="1.5"/>
+<line x1="52.0" y1="76.8" x2="60.0" y2="76.8" stroke="#d95f02"/>
+<line x1="52.0" y1="54.7" x2="60.0" y2="54.7" stroke="#d95f02"/>
+<circle cx="56.0" cy="69.4" r="3" fill="#d95f02"/>
+<line x1="220.0" y1="69.4" x2="220.0" y2="40.0" stroke="#d95f02" stroke-width="1.5"/>
+<line x1="216.0" y1="69.4" x2="224.0" y2="69.4" stroke="#d95f02"/>
+<line x1="216.0" y1="40.0" x2="224.0" y2="40.0" stroke="#d95f02"/>
+<circle cx="220.0" cy="54.7" r="3" fill="#d95f02"/>
+<line x1="384.0" y1="76.8" x2="384.0" y2="54.7" stroke="#d95f02" stroke-width="1.5"/>
+<line x1="380.0" y1="76.8" x2="388.0" y2="76.8" stroke="#d95f02"/>
+<line x1="380.0" y1="54.7" x2="388.0" y2="54.7" stroke="#d95f02"/>
+<circle cx="384.0" cy="69.4" r="3" fill="#d95f02"/>
+<line x1="548.0" y1="76.8" x2="548.0" y2="54.7" stroke="#d95f02" stroke-width="1.5"/>
+<line x1="544.0" y1="76.8" x2="552.0" y2="76.8" stroke="#d95f02"/>
+<line x1="544.0" y1="54.7" x2="552.0" y2="54.7" stroke="#d95f02"/>
+<circle cx="548.0" cy="69.4" r="3" fill="#d95f02"/>
+<polyline points="56.0,69.4 220.0,54.7 384.0,69.4 548.0,69.4" fill="none" stroke="#d95f02" stroke-width="2"/>
+<text x="556" y="72" fill="#d95f02">independent</text>
+<line x1="56.0" y1="76.8" x2="56.0" y2="54.7" stroke="#1b9e77" stroke-width="1.5"/>
+<line x1="52.0" y1="76.8" x2="60.0" y2="76.8" stroke="#1b9e77"/>
+<line x1="52.0" y1="54.7" x2="60.0" y2="54.7" stroke="#1b9e77"/>
+<circle cx="56.0" cy="69.4" r="3" fill="#1b9e77"/>
+<line x1="220.0" y1="76.8" x2="220.0" y2="54.7" stroke="#1b9e77" stroke-width="1.5"/>
+<line x1="216.0" y1="76.8" x2="224.0" y2="76.8" stroke="#1b9e77"/>
+<line x1="216.0" y1="54.7" x2="224.0" y2="54.7" stroke="#1b9e77"/>
+<circle cx="220.0" cy="69.4" r="3" fill="#1b9e77"/>
+<line x1="384.0" y1="76.8" x2="384.0" y2="54.7" stroke="#1b9e77" stroke-width="1.5"/>
+<line x1="380.0" y1="76.8" x2="388.0" y2="76.8" stroke="#1b9e77"/>
+<line x1="380.0" y1="54.7" x2="388.0" y2="54.7" stroke="#1b9e77"/>
+<circle cx="384.0" cy="69.4" r="3" fill="#1b9e77"/>
+<line x1="548.0" y1="76.8" x2="548.0" y2="54.7" stroke="#1b9e77" stroke-width="1.5"/>
+<line x1="544.0" y1="76.8" x2="552.0" y2="76.8" stroke="#1b9e77"/>
+<line x1="544.0" y1="54.7" x2="552.0" y2="54.7" stroke="#1b9e77"/>
+<circle cx="548.0" cy="69.4" r="3" fill="#1b9e77"/>
+<polyline points="56.0,69.4 220.0,69.4 384.0,69.4 548.0,69.4" fill="none" stroke="#1b9e77" stroke-width="2"/>
+<text x="556" y="72" fill="#1b9e77">orchestrated</text>
+<line x1="56.0" y1="62.1" x2="56.0" y2="40.0" stroke="#1a56db" stroke-width="1.5"/>
+<line x1="52.0" y1="62.1" x2="60.0" y2="62.1" stroke="#1a56db"/>
+<line x1="52.0" y1="40.0" x2="60.0" y2="40.0" stroke="#1a56db"/>
+<circle cx="56.0" cy="47.4" r="3" fill="#1a56db"/>
+<line x1="220.0" y1="62.1" x2="220.0" y2="40.0" stroke="#1a56db" stroke-width="1.5"/>
+<line x1="216.0" y1="62.1" x2="224.0" y2="62.1" stroke="#1a56db"/>
+<line x1="216.0" y1="40.0" x2="224.0" y2="40.0" stroke="#1a56db"/>
+<circle cx="220.0" cy="47.4" r="3" fill="#1a56db"/>
+<line x1="384.0" y1="62.1" x2="384.0" y2="40.0" stroke="#1a56db" stroke-width="1.5"/>
+<line x1="380.0" y1="62.1" x2="388.0" y2="62.1" stroke="#1a56db"/>
+<line x1="380.0" y1="40.0" x2="388.0" y2="40.0" stroke="#1a56db"/>
+<circle cx="384.0" cy="47.4" r="3" fill="#1a56db"/>
+<line x1="548.0" y1="62.1" x2="548.0" y2="40.0" stroke="#1a56db" stroke-width="1.5"/>
+<line x1="544.0" y1="62.1" x2="552.0" y2="62.1" stroke="#1a56db"/>
+<line x1="544.0" y1="40.0" x2="552.0" y2="40.0" stroke="#1a56db"/>
+<circle cx="548.0" cy="47.4" r="3" fill="#1a56db"/>
+<polyline points="56.0,47.4 220.0,47.4 384.0,47.4 548.0,47.4" fill="none" stroke="#1a56db" stroke-width="2"/>
+<text x="556" y="50" fill="#1a56db">verified</text>
+</svg>

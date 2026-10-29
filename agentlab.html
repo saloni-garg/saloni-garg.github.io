@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>AgentLab | Saloni Garg</title>
+<meta name="description" content="AgentLab is a reproducible laboratory for empirical research on multi-agent LLM systems: reproducible experiments, calibration gates, deterministic replay, and auditable analyses. Version 1.0 demonstrates the methodology through three empirical studies on Claude Haiku 5.5.">
+<link rel="icon" href="https://github.com/saloni-garg.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{
+  --desk:#221910;
+  --paper:#f4ead1; --ink:#2e2313; --soft:#5d4b30; --faint:#97835e;
+  --accent:#a83c22; --link:#1e4d7a; --rule:#d9c9a1; --rule2:#b7a678;
+  --hand:"Patrick Hand",cursive;
+  --disp:"Patrick Hand",cursive;
+  --label:"Patrick Hand",cursive;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background-color:#a87f52;
+  background-image:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.05"/></feComponentTransfer></filter><rect width="260" height="260" filter="url(%23n)"/></svg>'),
+    repeating-linear-gradient(0deg, rgba(80,48,16,.18) 0 2px, transparent 2px 150px),
+    repeating-linear-gradient(90deg, rgba(255,232,190,.05) 0 4px, transparent 4px 11px),
+    radial-gradient(1200px 700px at 50% -10%, rgba(255,241,214,.5), transparent 60%),
+    linear-gradient(180deg,#bd9264,#a87f52 50%,#8f6a3e);
+  color:var(--ink);font-family:var(--hand);font-size:19px;line-height:1.6;padding:34px 16px 60px;
+}
+.page{
+  max-width:880px;margin:0 auto;position:relative;
+  padding:46px 52px 54px;
+  transform:rotate(-.18deg);
+  border-radius:255px 12px 225px 12px/12px 225px 12px 255px;
+  box-shadow:0 34px 60px rgba(59,36,8,.5),0 5px 16px rgba(59,36,8,.4),inset 0 0 60px rgba(146,110,52,.14);
+  background-color:var(--paper);
+  background-image:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.055"/></feComponentTransfer></filter><rect width="260" height="260" filter="url(%23n)"/></svg>'),
+    radial-gradient(420px 200px at 88% 6%,rgba(166,116,48,.13),transparent 70%),
+    radial-gradient(520px 300px at 4% 96%,rgba(166,116,48,.12),transparent 70%),
+    radial-gradient(200px 120px at 70% 88%,rgba(140,95,40,.08),transparent 70%),
+    linear-gradient(160deg,#f7efdb,#f1e4c6 55%,#f4ead1);
+}
+@media(max-width:640px){.page{padding:32px 24px 40px}}
+a{color:var(--link);text-decoration:underline;text-decoration-thickness:1.2px;text-underline-offset:3px}
+a:hover{background:rgba(246,203,92,.45);text-decoration:none}
+::selection{background:#f2cf7e}
+
+/* masthead */
+.masthead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;border-bottom:3px double var(--ink);flex-wrap:wrap}
+.masthead .site{font-family:var(--label);font-size:14.5px;color:var(--faint)}
+.masthead nav{font-family:var(--label);font-size:14.5px}
+.masthead nav a{color:var(--soft);text-decoration:none;margin-left:13px}
+.masthead nav a:hover{color:var(--accent);background:none;text-decoration:underline wavy 1px;text-underline-offset:4px}
+
+/* header block */
+.head{padding:30px 0 4px}
+h1{font-family:var(--disp);font-weight:400;font-size:56px;letter-spacing:.01em;line-height:1.02;color:var(--ink);margin-bottom:4px}
+@media(max-width:560px){h1{font-size:44px}}
+.title{font-family:var(--disp);font-size:26px;font-weight:400;color:var(--ink);max-width:640px}
+.summary{color:var(--soft);max-width:640px;margin:16px 0 4px;font-weight:400}
+.summary b{color:var(--ink)}
+
+/* hero figure */
+.hero{margin:26px 0 6px;background:#fffdf6;padding:14px 14px 10px;transform:rotate(.4deg);box-shadow:2px 4px 10px rgba(60,40,10,.28);border:2.2px solid var(--ink);border-radius:255px 14px 225px 14px/14px 225px 14px 255px}
+.hero img{width:100%;height:auto;display:block}
+.hero figcaption{font-family:var(--label);font-size:14.5px;color:var(--soft);text-align:center;margin-top:8px}
+
+/* sections */
+section{margin-top:40px}
+h2{font-family:var(--disp);font-size:31px;font-weight:400;color:var(--ink);display:flex;align-items:baseline;gap:11px;margin-bottom:8px}
+h2 .no{font-family:var(--disp);font-size:20px;font-weight:400;color:var(--accent)}
+h2:after{content:"";flex:1;border-top:2.2px solid var(--rule2);transform:translateY(-3px) rotate(-.25deg)}
+section p{color:var(--soft);font-weight:400}
+section p b{color:var(--ink)}
+.contrib{list-style:none}
+.contrib li{padding:10px 0;border-bottom:2px dotted var(--rule)}
+.contrib li:last-child{border-bottom:0}
+.contrib h3{font-family:var(--disp);font-size:23px;font-weight:400;color:var(--ink);line-height:1.15;margin-bottom:2px}
+.contrib p{font-size:18px}
+
+/* links */
+.linkbtn{display:inline-block;border:2.4px solid var(--ink);border-radius:255px 14px 225px 14px/14px 225px 14px 255px;padding:1px 22px 3px;color:var(--ink);text-decoration:none;font-family:var(--disp);font-size:21px;font-weight:400;background:rgba(255,253,246,.5);margin:6px 10px 6px 0}
+.linkbtn:hover{background:rgba(246,203,92,.5);color:var(--ink)}
+
+footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-family:var(--label);font-size:15.5px;color:var(--soft);line-height:1.6}
+
+/* mobile refinements */
+@media(max-width:640px){
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{padding:20px 8px 44px;font-size:18px}
+  .masthead{flex-direction:column;align-items:flex-start;gap:2px}
+  .masthead nav a{margin:0 14px 0 0;padding:6px 0;display:inline-block}
+  h1{font-size:40px}
+  h2{font-size:27px}
+  .contrib h3{font-size:21px}
+  img{max-width:100%;height:auto}
+  .linkbtn{max-width:100%;overflow-wrap:anywhere}
+  .page{transform:none;margin-left:auto;margin-right:auto}
+  body{overflow-x:clip}
+}
+@media(max-width:400px){
+  h1{font-size:36px}
+  .page{padding:26px 18px 34px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="masthead">
+  <span class="site">saloni-garg.github.io</span>
+  <nav><a href="index.html">home</a><a href="https://github.com/saloni-garg/AgentLab">repository</a><a href="https://github.com/saloni-garg/AgentLab/releases/tag/v1.0">v1.0 release</a></nav>
+</div>
+
+<div class="head">
+  <h1>AgentLab</h1>
+  <p class="title">A reproducible laboratory for studying the scaling behavior of LLM agent organizations.</p>
+  <p class="summary">AgentLab is a reproducible laboratory for empirical research on multi-agent LLM systems. Rather than providing new agent architectures, it provides the infrastructure to ask and answer controlled research questions: reproducible experiments, calibration gates, deterministic replay, and auditable analyses. Version 1.0 demonstrates this methodology through three empirical studies on Claude Haiku 5.5.</p>
+</div>
+
+<figure class="hero">
+  <img src="scaling_curve.svg" alt="Mean fraction correct versus team size with 95% confidence intervals, comparing independent, orchestrated, and verified strategies under blind execution (Phase A)" width="680" height="380">
+  <figcaption>External verification vs orchestration under blind execution, Phase A — full results in the v1.0 release.</figcaption>
+</figure>
+
+<section id="why">
+  <h2><span class="no">01</span>Why I built this</h2>
+  <p>Benchmarks for agent systems typically assume task difficulty rather than measuring it, and hidden evaluation artifacts can masquerade as findings. My first pilot made the point directly: every configuration scored a perfect fraction correct, because each agent carried a check tool inside its attempt and self-verified until the check passed — the experiment was measuring its own setup instead of the phenomenon. I wanted scaling claims about agent teams that I could trust, so I built the measurement infrastructure first, treating benchmark design, calibration, replay, and analysis as first-class research objects.</p>
+</section>
+
+<section id="contributions">
+  <h2><span class="no">02</span>Three methodological contributions</h2>
+  <ul class="contrib">
+    <li>
+      <h3>1. Artifact-resistant evaluation</h3>
+      <p>An experiment can measure its own setup instead of the phenomenon it claims to study, and the failure mode is silent: the numbers look clean. AgentLab pairs artifact audits — lenient-vs-strict rescoring, a no-work baseline, seed sensitivity — with blind execution protocols that remove internal self-verification, so this class of error is looked for, not stumbled into. Under blind execution, external verification produced a real improvement over matched orchestration, flat across team size: verification acts as per-subtask insurance, not as a scaling effect.</p>
+    </li>
+    <li>
+      <h3>2. Calibration gates and mechanistic benchmarking</h3>
+      <p>A scaling variable should change the mechanism, not just the amount of work. Hypotheses are pre-registered with their falsification criteria, and an offline calibration gate must first show that a benchmark measures what it claims — in Phase A-2, the gate rejected the first chain generator before any live run, because its operations made defects less visible at later positions. The corrected experiment still could not enter the error regime it was designed to study, and that was the reported conclusion. <b>The platform rejected its own hypothesis for the correct reason.</b></p>
+    </li>
+    <li>
+      <h3>3. Model-calibrated benchmark generation</h3>
+      <p>Difficulty becomes a measured, controlled variable instead of an intuition asserted by the benchmark's author. A closed-loop controller calibrates a task family to a requested first-attempt failure band for the target model, and one requested band converged and validated on held-out seeds. For the 10% band, <b>the calibration procedure correctly diagnosed that the current generator family cannot represent that operating point</b> — the ladder jumps across that band in a single rung — so the controller declared failure against its pre-registered criterion rather than widening the tolerance or interpolating an answer.</p>
+    </li>
+  </ul>
+</section>
+
+<section id="links">
+  <h2><span class="no">03</span>Get AgentLab</h2>
+  <p>
+    <a class="linkbtn" href="https://github.com/saloni-garg/AgentLab/releases/tag/v1.0">AgentLab v1.0 Release</a>
+    <a class="linkbtn" href="https://github.com/saloni-garg/AgentLab">Repository</a>
+  </p>
+  <p>Every experiment ships as an immutable, sealed bundle with first-class provenance, deterministic replay, and analysis that consumes only recorded metrics — so another researcher can regenerate, replay, and audit each result.</p>
+</section>
+
+<footer>
+  <p>AgentLab does not guarantee that every benchmark can be calibrated. It guarantees that unsupported operating regimes are detected and reported rather than silently approximated.</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>Saloni Garg | Staff Machine Learning Engineer, Adobe Firefly</title>
-<meta name="description" content="Saloni Garg is a Staff Machine Learning Engineer at Adobe Firefly in San Jose, CA. She leads post-training and RLHF pipelines for multimodal foundation models: SFT, DPO, reward model training, distributed GPU training, and evaluation infrastructure. Co-author of the De Gruyter textbook on Retrieval-Augmented Generation. CITRIS Athena Award 2026.">
+<meta name="description" content="Saloni Garg is a Staff Machine Learning Engineer at Adobe Firefly in San Jose, CA. She leads post-training and RLHF pipelines for multimodal foundation models: SFT, DPO, reward model training, distributed GPU training, and evaluation infrastructure. Co-author of the De Gruyter textbook on Retrieval-Augmented Generation. 2026 CITRIS Award by UC Berkeley.">
 <meta name="keywords" content="Saloni Garg, Staff Machine Learning Engineer, Adobe Firefly, GPU, LLM post-training, RLHF, SFT, DPO, reward models, distributed training, RAG, generative AI, San Jose">
 <meta property="og:title" content="Saloni Garg | Staff Machine Learning Engineer, Adobe Firefly">
 <meta property="og:description" content="Staff Machine Learning Engineer at Adobe Firefly. Leads post-training and RLHF pipelines for multimodal foundation models, distributed GPU training, and evaluation infrastructure. Co-author of a De Gruyter textbook on RAG.">
@@ -146,7 +146,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <p class="title">Staff Machine Learning Engineer, Adobe Firefly</p>
   <p class="loc">San Jose, California</p>
   <p class="summary">Saloni Garg is a <b>Staff Machine Learning Engineer at Adobe (Firefly)</b> in San Jose, CA. She <b>leads development of the post-training and RLHF pipelines for multimodal foundation models</b>, supporting SFT, DPO, and reward model training, along with distributed training and automated evaluation infrastructure at scale.</p>
-  <p class="summary">She previously worked at <b>Wayfair</b> as a Senior ML Infrastructure Engineer in Mountain View, CA, and before that as a Founding ML Engineer at <b>Brisko</b> in Bengaluru, India. She is co-author of a textbook on <b>retrieval-augmented generation</b> (De Gruyter, 2026) and recipient of the <b>2026 CITRIS Athena Award</b>.</p>
+  <p class="summary">She previously worked at <b>Wayfair</b> as a Senior ML Infrastructure Engineer in Mountain View, CA, and before that as a Founding ML Engineer at <b>Brisko</b> in Bengaluru, India. She is co-author of a textbook on <b>retrieval-augmented generation</b> (De Gruyter, 2026) and recipient of the <b>2026 CITRIS Award by UC Berkeley</b>.</p>
   <p class="focus"><span class="k">Focus:</span> post-training and RLHF (SFT, DPO, reward models) / distributed GPU training (PyTorch, CUDA, FSDP, NCCL) / evaluation infrastructure / inference optimization / ML infrastructure</p>
   <p class="links">
     <a href="https://www.linkedin.com/in/saloni-garg">LinkedIn</a> &nbsp;/&nbsp;
@@ -189,6 +189,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 <section id="work">
   <h2><span class="no">02</span>Selected work</h2>
   <ul class="rows">
+    <li><span class="when">2026</span><div><h3><a href="agentlab.html">AgentLab</a></h3><p>A reproducible laboratory for studying the scaling behavior of LLM agent organizations — config-driven experiments, calibration gates, deterministic replay, and sealed, auditable results. Version 1.0 released publicly. <a href="https://github.com/saloni-garg/AgentLab/releases/tag/v1.0">v1.0 Release</a></p></div></li>
     <li><span class="when">2026</span><div><h3><a href="https://huggingface.co/datasets/sluuu/gpu-train-debug">gpu-train-debug</a></h3><p>RL environment for diagnosing GPU training failures, in Prime Intellect Verifiers format. Published on the Prime Intellect Hub and as a dataset on Hugging Face, with train, hard, test, and out-of-distribution splits and a full validation run on A100 hardware.</p><p class="tech">Python / Verifiers / Prime Intellect / Hugging Face</p></div></li>
     <li><span class="when">2026</span><div><h3><a href="https://github.com/saloni-garg/memfix">memfix</a></h3><p>Provenance-first, correctable memory layer for AI agents: source pointers, append-only log, tombstones, and an MCP server. Published under MIT; listed on Glama.</p><p class="tech">Python / MCP / SQLite or Postgres / MIT</p></div></li>
     <li><span class="when">2026</span><div><h3><a href="https://github.com/saloni-garg/jev-max">jev-max</a></h3><p>Browser agent for general web tasks: shadow DOM and iframe handling, canvas vision fallback, uploads, drag and drop, multi-tab support, MCP server, and a benchmark suite. Published under MIT.</p><p class="tech">TypeScript / Playwright / MCP / MIT</p></div></li>
@@ -202,30 +203,30 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <p class="ghead">One bug, five codebases: uniform-reward GRPO groups</p>
   <p style="color:var(--soft)">In GRPO training, when every response in a group earns the same reward, the advantage should be exactly zero. Float32 group statistics invented a nonzero one instead. I found the bug class, fixed it, and sent the same fix upstream five times:</p>
   <ul class="rows">
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/verl-project/verl/pull/8349">verl-project/verl</a></h3><p>"[algo] fix: give uniform reward groups exactly zero grpo advantage." Scalar and vectorized paths fixed; new tests cover uniform groups at several sizes.</p><p class="tech">PR #8349</p></div></li>
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/THUDM/slime/pull/2494">THUDM/slime</a></h3><p>"fix(data): give uniform reward groups exactly zero advantage." Fix in the grouped-reward post-processing, with new grouped-reward tests.</p><p class="tech">PR #2494</p></div></li>
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/OpenRLHF/OpenRLHF/pull/1383">OpenRLHF/OpenRLHF</a></h3><p>"fix(ppo): give uniform reward groups exactly zero advantage in group_norm." The most severe instance found: uniform groups were getting advantages up to about 0.98 instead of 0.</p><p class="tech">PR #1383</p></div></li>
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/NovaSky-AI/SkyRL/pull/2531">NovaSky-AI/SkyRL</a></h3><p>"[fix][train] Give uniform reward groups exactly zero GRPO advantage." Fix in the PPO utilities, with new unit tests for uniform groups.</p><p class="tech">PR #2531</p></div></li>
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/hiyouga/EasyR1/pull/11020">hiyouga/EasyR1</a></h3><p>"[algo] fix grpo giving uniform reward groups nonzero advantages." EasyR1 vendors the same algorithm code, bug included; fixed with tests.</p><p class="tech">PR #11020</p></div></li>
+    <li><div><h3><a href="https://github.com/verl-project/verl/pull/8349">verl-project/verl</a></h3><p>"[algo] fix: give uniform reward groups exactly zero grpo advantage." Scalar and vectorized paths fixed; new tests cover uniform groups at several sizes.</p><p class="tech">PR #8349</p></div></li>
+    <li><div><h3><a href="https://github.com/THUDM/slime/pull/2494">THUDM/slime</a></h3><p>"fix(data): give uniform reward groups exactly zero advantage." Fix in the grouped-reward post-processing, with new grouped-reward tests.</p><p class="tech">PR #2494</p></div></li>
+    <li><div><h3><a href="https://github.com/OpenRLHF/OpenRLHF/pull/1383">OpenRLHF/OpenRLHF</a></h3><p>"fix(ppo): give uniform reward groups exactly zero advantage in group_norm." The most severe instance found: uniform groups were getting advantages up to about 0.98 instead of 0.</p><p class="tech">PR #1383</p></div></li>
+    <li><div><h3><a href="https://github.com/NovaSky-AI/SkyRL/pull/2531">NovaSky-AI/SkyRL</a></h3><p>"[fix][train] Give uniform reward groups exactly zero GRPO advantage." Fix in the PPO utilities, with new unit tests for uniform groups.</p><p class="tech">PR #2531</p></div></li>
+    <li><div><h3><a href="https://github.com/hiyouga/EasyR1/pull/11020">hiyouga/EasyR1</a></h3><p>"[algo] fix grpo giving uniform reward groups nonzero advantages." EasyR1 vendors the same algorithm code, bug included; fixed with tests.</p><p class="tech">PR #11020</p></div></li>
   </ul>
   <p class="ghead">Compilers, TPU, and Triton</p>
   <ul class="rows">
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/google-pytorch/torch_tpu/pull/5846">google-pytorch/torch_tpu</a></h3><p>"Fix view decomposition returning a base larger than the view storage." The view decomposition fallback could build a base tensor larger than the storage it views; the fix re-checks the base and declines the decomposition.</p><p class="tech">PR #5846</p></div></li>
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/google-pytorch/torch_tpu/pull/5847">google-pytorch/torch_tpu</a></h3><p>"Fix view decomposition IndexError on 0-d views with a storage offset." Zero-dimensional views with a storage offset crashed the decomposition; the fix declines it cleanly instead.</p><p class="tech">PR #5847</p></div></li>
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/triton-lang/triton/pull/12489">triton-lang/triton</a></h3><p>"[Interpreter] Fix NaN/Inf handling in interpreter float conversions." The Triton interpreter's float conversions mishandled NaN and infinity; fixed with regression tests.</p><p class="tech">PR #12489</p></div></li>
+    <li><div><h3><a href="https://github.com/google-pytorch/torch_tpu/pull/5846">google-pytorch/torch_tpu</a></h3><p>"Fix view decomposition returning a base larger than the view storage." The view decomposition fallback could build a base tensor larger than the storage it views; the fix re-checks the base and declines the decomposition.</p><p class="tech">PR #5846</p></div></li>
+    <li><div><h3><a href="https://github.com/google-pytorch/torch_tpu/pull/5847">google-pytorch/torch_tpu</a></h3><p>"Fix view decomposition IndexError on 0-d views with a storage offset." Zero-dimensional views with a storage offset crashed the decomposition; the fix declines it cleanly instead.</p><p class="tech">PR #5847</p></div></li>
+    <li><div><h3><a href="https://github.com/triton-lang/triton/pull/12489">triton-lang/triton</a></h3><p>"[Interpreter] Fix NaN/Inf handling in interpreter float conversions." The Triton interpreter's float conversions mishandled NaN and infinity; fixed with regression tests.</p><p class="tech">PR #12489</p></div></li>
   </ul>
   <p class="ghead">Verifiers and evaluation tooling</p>
   <ul class="rows">
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/openenv/OpenEnv/pull/1477">openenv/OpenEnv</a></h3><p>"fix: stop awm code verifiers from passing on an untouched database." Over a thousand AWM code verifiers passed against a freshly seeded database; the fix adds a no-change guard. Test suite passing.</p><p class="tech">PR #1477</p></div></li>
+    <li><div><h3><a href="https://github.com/openenv/OpenEnv/pull/1477">openenv/OpenEnv</a></h3><p>"fix: stop awm code verifiers from passing on an untouched database." Over a thousand AWM code verifiers passed against a freshly seeded database; the fix adds a no-change guard. Test suite passing.</p><p class="tech">PR #1477</p></div></li>
   </ul>
   <p class="ghead">OpenAI and Anthropic</p>
   <ul class="rows">
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/openai/human-eval/pull/72">openai/human-eval</a></h3><p>"Fix completions ending in a decorator replacing the test's check()." In the execution harness, a completion ending in a bare decorator could replace the test's own check function and pass without running; the fix isolates the test block.</p><p class="tech">PR #72</p></div></li>
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/anthropics/jacobian-lens/pull/21">anthropics/jacobian-lens</a></h3><p>"Raise in JacobianLens.save() when the storage dtype would turn finite entries into inf." Saving cast Jacobians to fp16 unchecked, silently turning large finite entries into infinity; the fix raises a clear error naming the layer.</p><p class="tech">PR #21</p></div></li>
+    <li><div><h3><a href="https://github.com/openai/human-eval/pull/72">openai/human-eval</a></h3><p>"Fix completions ending in a decorator replacing the test's check()." In the execution harness, a completion ending in a bare decorator could replace the test's own check function and pass without running; the fix isolates the test block.</p><p class="tech">PR #72</p></div></li>
+    <li><div><h3><a href="https://github.com/anthropics/jacobian-lens/pull/21">anthropics/jacobian-lens</a></h3><p>"Raise in JacobianLens.save() when the storage dtype would turn finite entries into inf." Saving cast Jacobians to fp16 unchecked, silently turning large finite entries into infinity; the fix raises a clear error naming the layer.</p><p class="tech">PR #21</p></div></li>
   </ul>
     <p class="ghead">Inference serving</p>
   <ul class="rows">
-    <li><span class="when">Ready</span><div><h3><a href="https://github.com/ai-dynamo/dynamo/pull/17502">ai-dynamo/dynamo</a></h3><p>"fix(profiler): recognize SGLang --tp-size/--pp-size spellings in multinode placement." The profiler sized SGLang workers launched with the short size spellings as single-GPU instances and stripped their multinode placement; the fix teaches the parser those spellings, with the first unit tests for set_multinode_config.</p><p class="tech">PR #17502</p></div></li>
+    <li><div><h3><a href="https://github.com/ai-dynamo/dynamo/pull/17502">ai-dynamo/dynamo</a></h3><p>"fix(profiler): recognize SGLang --tp-size/--pp-size spellings in multinode placement." The profiler sized SGLang workers launched with the short size spellings as single-GPU instances and stripped their multinode placement; the fix teaches the parser those spellings, with the first unit tests for set_multinode_config.</p><p class="tech">PR #17502</p></div></li>
   </ul>
 <p style="color:var(--soft);margin-top:14px">Also open: a listing PR adding memfix to <a href="https://github.com/punkpeye/awesome-mcp-servers/pull/16020">punkpeye/awesome-mcp-servers</a> (PR #16020).</p>
 </section>
@@ -263,7 +264,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 <section id="awards">
   <h2><span class="no">06</span>Awards and recognition</h2>
   <ul class="plain">
-    <li><b>EDGE in Tech Athena Award, 2026.</b> UC Berkeley (CITRIS and the Banatao Institute).</li>
+    <li><b>2026 CITRIS Award by UC Berkeley.</b></li>
     <li><b>Adobe Employee Spot Bonus, 2026.</b></li>
     <li><b>AI and Data Science Leader of the Year, 2025.</b> WomenTech Global Awards.</li>
     <li><b>AI for Good Impact Award, 2025.</b></li>
