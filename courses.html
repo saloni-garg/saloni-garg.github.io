@@ -175,7 +175,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 
 <section id="llm-evals">
   <h2><span class="no">02</span>LLM Evals From Zero</h2>
-  <p>A course on evaluating LLM applications: why demos mislead, how to design an evaluation suite, and how to build the golden dataset it runs on.</p>
+  <p>A nine-chapter course on evaluating LLM applications: why demos mislead, how to design an evaluation suite and build the golden dataset it runs on, deterministic and reference-based scoring, LLM-as-a-judge and its calibration, evaluation for RAG pipelines and agents, release gates in CI, and online evaluation and drift in production. 196 slides.</p>
   <ul class="contrib">
     <li>
       <h3><a href="courses/llm-evals-chapter-1/">Chapter 1: Why Your App Is Already Broken (And Demos Won't Tell You)</a></h3>
@@ -191,6 +191,36 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
       <h3><a href="courses/llm-evals-chapter-3/">Chapter 3: Building the Golden Dataset</a></h3>
       <p>The input the suite runs on: what a golden dataset actually is, the wrong way to build one, and one case examined field by field.</p>
       <p><a class="linkbtn sm" href="courses/llm-evals-chapter-3/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/llm-evals-chapter-4/">Chapter 4: Scoring Without an LLM</a></h3>
+      <p>Deterministic and reference-based scoring, implemented: the eval runner, the scorer interface, exact match and token F1, retrieval metrics, and paired comparison against a frozen baseline.</p>
+      <p><a class="linkbtn sm" href="courses/llm-evals-chapter-4/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/llm-evals-chapter-5/">Chapter 5: LLM-as-a-Judge, Implemented</a></h3>
+      <p>A scorer made of a model: judge prompt and rubric design, structured verdicts, evidence-first claim checking, and bias experiments for position, verbosity, and self-preference.</p>
+      <p><a class="linkbtn sm" href="courses/llm-evals-chapter-5/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/llm-evals-chapter-6/">Chapter 6: Trust, Measured</a></h3>
+      <p>Calibrating the LLM judge against blind human labels: confusion matrices, Cohen's kappa, false passes, and per-capability trust decisions (gate, warn only, or human always).</p>
+      <p><a class="linkbtn sm" href="courses/llm-evals-chapter-6/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/llm-evals-chapter-7/">Chapter 7: Beyond Single Answers</a></h3>
+      <p>Stage-wise evaluation for RAG pipelines and multi-step agents: retrieval metrics and failure attribution, trajectory scoring, fault injection, and repeated-run success rates.</p>
+      <p><a class="linkbtn sm" href="courses/llm-evals-chapter-7/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/llm-evals-chapter-8/">Chapter 8: The Gate</a></h3>
+      <p>Evaluation in CI that blocks bad releases: policy as code in gate.yaml, thresholds set from measured baseline noise, a two-tier pipeline, and baseline management.</p>
+      <p><a class="linkbtn sm" href="courses/llm-evals-chapter-8/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/llm-evals-chapter-9/">Chapter 9: After the Merge</a></h3>
+      <p>Online evaluation, drift, and maintenance: production sampling, shadow and canary evaluation, provider fingerprinting, and the eval health dashboard.</p>
+      <p><a class="linkbtn sm" href="courses/llm-evals-chapter-9/">View slides</a></p>
     </li>
   </ul>
 </section>
