@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>LLM Evals From Zero - Chapter 2 Slides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --base:#140B09;
+  --coral:#FF6B5E;
+  --amber:#FFB86B;
+  --gold:#FFD166;
+  --ink:#FFF6EC;
+  --ink-dim:rgba(255,246,236,.72);
+  --ink-faint:rgba(255,246,236,.52);
+  --glass:rgba(255,255,255,.055);
+  --glass-strong:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.14);
+  --bad:#FF7A6B;
+  --good:#8FE3B0;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Manrope',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--base);color:var(--ink);
+  font-family:var(--sans);overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* ambient orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(70px);pointer-events:none;z-index:0;opacity:.55}
+.orb-a{width:520px;height:520px;background:radial-gradient(circle,#FF6B5E 0%,transparent 65%);top:-180px;right:-120px;animation:drift 26s ease-in-out infinite alternate}
+.orb-b{width:460px;height:460px;background:radial-gradient(circle,#FFB86B 0%,transparent 65%);bottom:-200px;left:-140px;animation:drift 32s ease-in-out infinite alternate-reverse}
+.orb-c{width:300px;height:300px;background:radial-gradient(circle,#FFD166 0%,transparent 65%);top:45%;left:55%;opacity:.28;animation:drift 38s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,44px) scale(1.12)}}
+
+.deck{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
+/* top chrome */
+.chrome{display:flex;align-items:center;gap:14px;padding:14px 22px 8px}
+.chrome .course{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.chrome .course b{color:var(--amber);font-weight:700}
+.chrome .spacer{flex:1}
+.pbar{height:4px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;width:min(320px,38vw)}
+.pbar i{display:block;height:100%;width:5%;background:linear-gradient(90deg,var(--coral),var(--amber),var(--gold));border-radius:99px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.counter{font-family:var(--mono);font-size:12px;color:var(--ink-dim);white-space:nowrap}
+.counter b{color:var(--ink);font-size:14px}
+button{font-family:var(--sans);cursor:pointer}
+.btn{
+  background:var(--glass);border:1px solid var(--line);color:var(--ink);
+  border-radius:99px;padding:8px 16px;font-size:13px;font-weight:700;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  transition:background .2s,transform .2s;
+}
+.btn:hover{background:var(--glass-strong)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(120deg,var(--coral),var(--amber));color:#2A1206;border:none}
+.btn:disabled{opacity:.35;cursor:default}
+/* slides */
+.slides{flex:1;position:relative;min-height:0}
+.slide{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  padding:18px clamp(18px,4.5vw,64px) 28px;
+  opacity:0;visibility:hidden;transform:translateX(26px) scale(.995);
+  transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1),visibility 0s .45s;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent;
+}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1)}
+.slide.prev{transform:translateX(-26px) scale(.995)}
+.slide-inner{max-width:1180px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center}
+/* staggered entrance */
+.slide.active .rise{animation:rise .65s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i,0)*80ms)}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+/* type */
+.kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.kicker::after{content:"";height:1px;flex:0 0 54px;background:linear-gradient(90deg,var(--amber),transparent)}
+h1{font-size:clamp(34px,5.2vw,58px);line-height:1.04;font-weight:800;letter-spacing:-.02em;margin:0 0 14px}
+h2{font-size:clamp(26px,3.6vw,40px);line-height:1.1;font-weight:800;letter-spacing:-.015em;margin:0 0 10px}
+h2 .hl,h1 .hl{background:linear-gradient(100deg,var(--coral),var(--amber) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:clamp(15px,1.6vw,18px);line-height:1.55;color:var(--ink-dim);max-width:760px;margin:0 0 20px}
+.q{font-family:var(--mono);font-size:12.5px;color:var(--gold);margin-top:14px}
+.q::before{content:"Q  ";color:var(--coral);font-weight:700}
+.foot{display:flex;justify-content:space-between;gap:12px;margin-top:18px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.06em}
+/* section banner */
+.section-banner{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  background:linear-gradient(110deg,rgba(255,107,94,.16),rgba(255,184,107,.12) 60%,rgba(255,209,102,.08));
+  border:1px solid rgba(255,184,107,.45);border-radius:24px;
+  padding:14px 20px;margin-bottom:18px;
+  box-shadow:0 14px 34px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.07);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.section-banner .sn{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.14em;color:#2A1206;background:linear-gradient(120deg,var(--coral),var(--amber));border-radius:99px;padding:6px 13px;white-space:nowrap}
+.section-banner .st{font-size:clamp(19px,2.4vw,26px);font-weight:800;letter-spacing:-.01em}
+.section-banner .ss{font-family:var(--mono);font-size:11.5px;color:var(--ink-dim);letter-spacing:.05em}
+/* glass cards */
+.glass{
+  background:var(--glass);border:1px solid var(--line);border-radius:26px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 18px 44px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.06);
+  padding:20px 22px;
+}
+.glass h3{margin:0 0 10px;font-size:16px;font-weight:800;letter-spacing:-.01em}
+.glass p{color:var(--ink-dim);line-height:1.55;font-size:14.5px;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink-dim)}
+.chip b{color:var(--ink)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none}
+ul.tight{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+ul.tight li{position:relative;padding-left:20px;color:var(--ink-dim);font-size:14.5px;line-height:1.5}
+ul.tight li::before{content:"";position:absolute;left:2px;top:.52em;width:7px;height:7px;border-radius:2px;background:linear-gradient(120deg,var(--coral),var(--amber))}
+ul.tight li b{color:var(--ink)}
+ol.steps{margin:0;padding:0;list-style:none;display:grid;gap:10px;counter-reset:st}
+ol.steps li{position:relative;padding-left:40px;color:var(--ink-dim);font-size:14.5px;line-height:1.5}
+ol.steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:0;width:27px;height:27px;border-radius:9px;background:linear-gradient(120deg,var(--coral),var(--amber));color:#2A1206;font-family:var(--mono);font-weight:700;font-size:13px;display:grid;place-items:center}
+ol.steps li b{color:var(--ink)}
+/* big quote */
+.bigquote{font-size:clamp(20px,2.7vw,30px);font-weight:800;line-height:1.3;letter-spacing:-.01em;margin:0}
+.bigquote .hl{background:linear-gradient(100deg,var(--coral),var(--amber) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* code */
+.code{
+  background:rgba(10,4,2,.72);border:1px solid var(--line);border-radius:20px;
+  padding:16px 18px;font-family:var(--mono);font-size:12.8px;line-height:1.65;
+  overflow-x:auto;white-space:pre;color:#FFE9D6;
+}
+.code .cm{color:rgba(255,233,214,.45)}
+.code .kw{color:var(--coral)}
+.code .str{color:var(--gold)}
+.code .fn{color:var(--amber)}
+.code .add{color:var(--good)}
+.code .del{color:var(--bad)}
+.codebar{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.codebar .lights{display:flex;gap:6px}
+.codebar .lights i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18)}
+.codebar .lights i:first-child{background:var(--coral)}
+.codebar .lights i:nth-child(2){background:var(--amber)}
+.codebar .lights i:nth-child(3){background:var(--gold)}
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13.8px}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.07);color:var(--ink-dim);vertical-align:top;line-height:1.45}
+td b,td strong{color:var(--ink)}
+tr:last-child td{border-bottom:none}
+.num{font-family:var(--mono);white-space:nowrap}
+.down{color:var(--bad);font-family:var(--mono);font-weight:700;white-space:nowrap}
+.up-bad{color:var(--bad);font-family:var(--mono);font-weight:700;white-space:nowrap}
+.good{color:var(--good);font-family:var(--mono);font-weight:700;white-space:nowrap}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.05em}
+.pill.pass{background:rgba(143,227,176,.14);color:var(--good);border:1px solid rgba(143,227,176,.35)}
+.pill.fail{background:rgba(255,107,94,.14);color:var(--bad);border:1px solid rgba(255,107,94,.4)}
+.pill.warn{background:rgba(255,209,102,.13);color:var(--gold);border:1px solid rgba(255,209,102,.35)}
+/* metric bars */
+.metric{display:grid;grid-template-columns:190px 1fr 128px;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.metric:last-of-type{border-bottom:none}
+.metric .name{font-weight:700;font-size:14.5px}
+.bar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--coral),var(--amber));transition:width 1s cubic-bezier(.22,1,.36,1) .3s}
+.slide.active .bar i{width:var(--w)}
+.metric .val{font-family:var(--mono);font-size:13px;text-align:right;color:var(--ink-dim)}
+.metric .val b{color:var(--ink);font-size:15px}
+/* pipeline diagrams */
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:nowrap}
+.node{
+  flex:1;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:20px;
+  padding:14px 14px;text-align:center;position:relative;
+}
+.node .t{font-weight:800;font-size:14px;margin-bottom:4px}
+.node .s{font-size:12px;color:var(--ink-dim);line-height:1.45}
+.node.hot{border-color:rgba(255,184,107,.55);background:rgba(255,184,107,.09)}
+.arrow{display:grid;place-items:center;width:34px;flex:none;color:var(--amber);font-size:17px;position:relative}
+.arrow::after{content:"";position:absolute;left:2px;right:2px;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,184,107,.5),transparent);z-index:-1}
+.vflow{display:flex;flex-direction:column;align-items:center;gap:0}
+.vnode{width:min(430px,100%);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:20px;padding:13px 18px;text-align:center}
+.vnode .t{font-weight:800;font-size:15px}
+.vnode .s{font-size:12.5px;color:var(--ink-dim)}
+.varrow{height:30px;width:2px;background:linear-gradient(180deg,rgba(255,184,107,.15),var(--amber),rgba(255,184,107,.15));position:relative}
+.varrow::after{content:"▾";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);color:var(--amber);font-size:13px}
+.pulse-dot{position:absolute;left:50%;top:0;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--gold);animation:drop 1.6s ease-in infinite}
+@keyframes drop{0%{top:0;opacity:0}25%{opacity:1}100%{top:24px;opacity:0}}
+.split{display:flex;gap:14px;width:min(640px,100%)}
+.split .vnode{flex:1}
+/* layer stack */
+.stack{display:grid;gap:10px}
+.layer{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:22px;padding:15px 18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.layer .badge{width:46px;height:46px;flex:none;border-radius:14px;background:linear-gradient(130deg,var(--coral),var(--amber));color:#2A1206;font-family:var(--mono);font-weight:700;font-size:14px;display:grid;place-items:center}
+.layer .lt{font-weight:800;font-size:16.5px}
+.layer .ls{font-size:13px;color:var(--ink-dim);line-height:1.45}
+.layer .tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--gold);text-align:right;white-space:nowrap;letter-spacing:.04em}
+/* scoring band inside pipeline */
+.scoreband{width:min(640px,100%);border:1px dashed rgba(255,184,107,.5);border-radius:22px;padding:14px;background:rgba(255,184,107,.05)}
+.scoreband .bl{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);text-align:center;margin-bottom:10px}
+.scoreband .row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.scoreband .cell{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:16px;padding:11px 8px;text-align:center;font-weight:800;font-size:13.5px}
+.scoreband .cell span{display:block;font-weight:500;font-size:11.5px;color:var(--ink-dim);margin-top:3px}
+/* nav */
+.nav{display:flex;align-items:center;gap:12px;padding:10px 22px 16px}
+.nav .hint{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-left:6px}
+.nav .spacer{flex:1}
+/* overview */
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(16,7,4,.9);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:none;overflow-y:auto;padding:34px clamp(18px,4vw,54px)}
+.overlay.open{display:block}
+.overlay h2{margin-bottom:18px}
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:12px;max-width:1180px}
+.ov-item{text-align:left;background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:14px 16px;color:var(--ink);transition:border-color .2s,background .2s}
+.ov-item:hover{background:var(--glass-strong)}
+.ov-item.cur{border-color:var(--amber)}
+.ov-item .n{font-family:var(--mono);font-size:11px;color:var(--amber)}
+.ov-item .t{font-weight:700;font-size:14px;line-height:1.35;margin-top:4px}
+.title-meta{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 22px}
+.presenter{display:flex;align-items:center;gap:14px;margin-top:8px}
+.avatar{width:48px;height:48px;border-radius:16px;background:linear-gradient(130deg,var(--coral),var(--amber) 60%,var(--gold));display:grid;place-items:center;font-weight:800;font-size:17px;color:#2A1206;flex:none}
+.presenter .who b{display:block;font-size:15.5px}
+.presenter .who span{color:var(--ink-dim);font-size:13px}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;background:rgba(255,255,255,.06)}
+@media (max-width:820px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .arrow{width:100%;height:26px;transform:rotate(90deg)}
+  .metric{grid-template-columns:1fr;gap:6px}
+  .metric .val{text-align:left}
+  .chrome .course{display:none}
+  .nav .hint{display:none}
+  .slide-inner{justify-content:flex-start}
+  .split{flex-direction:column}
+  .layer .tag{display:none}
+  .scoreband .row{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+</style>
+</head>
+<body>
+<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div>
+
+<div class="deck">
+  <div class="chrome">
+    <div class="course"><b>LLM Evals From Zero</b> &nbsp;Chapter 2 of 9</div>
+    <div class="spacer"></div>
+    <div class="pbar" aria-hidden="true"><i id="pbarFill"></i></div>
+    <div class="counter"><b id="curNum">01</b> / 22</div>
+    <button class="btn" id="ovBtn" type="button">All slides</button>
+  </div>
+
+  <main class="slides" id="slides">
+
+  <!-- 1 TITLE -->
+  <section class="slide" data-title="Title: Anatomy of an LLM Evaluation Suite">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Chapter 2 · Architecture</div>
+      <h1 class="rise" style="--i:1">Anatomy of an <span class="hl">LLM Evaluation Suite</span></h1>
+      <p class="lede rise" style="--i:2">Designing an evaluation system that can actually block bad releases. No implementation yet: this chapter is the blueprint that Videos 3 to 8 build, layer by layer.</p>
+      <div class="grid2">
+        <div class="glass rise" style="--i:3">
+          <h3>By the end, you can answer one question</h3>
+          <p class="bigquote" style="font-size:19px;margin-bottom:12px">"If I have an LLM app, what exactly should <span class="hl">my eval suite</span> look like?"</p>
+          <ul class="tight">
+            <li>Name the <b>four scoring layers</b> and what each one is for</li>
+            <li>Score <b>capabilities</b>, not models: retrieval, faithfulness, refusal, tool use</li>
+            <li>Turn a <b>report</b> into a release decision with an explicit policy</li>
+          </ul>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>How this lecture runs</h3>
+          <ul class="tight">
+            <li><b>20 to 25 minutes, 22 slides</b>: architecture first, code starts in Video 3</li>
+            <li><b>Section 1</b>: the four layers that score any output</li>
+            <li><b>Section 2</b>: capability-based evaluation: what gets scored</li>
+            <li><b>Section 3</b>: the full pipeline, the report, and the release gate</li>
+            <li>Same running example throughout: the <b>Support RAG</b> assistant from Chapter 1</li>
+          </ul>
+        </div>
+      </div>
+      <div class="title-meta rise" style="--i:5">
+        <span class="chip"><span class="dot"></span>Audience: engineers with a <b>working LLM app</b></span>
+        <span class="chip">Scope: <b>architecture</b>, not implementation</span>
+        <span class="chip">Output: a <b>blueprint</b> for your own suite</span>
+      </div>
+      <div class="presenter rise" style="--i:6">
+        <div class="avatar">SG</div>
+        <div class="who"><b>Saloni Garg</b><span>Senior Machine Learning Engineer, Adobe</span></div>
+      </div>
+      <div class="foot rise" style="--i:7"><span>SLIDE 01 / 22</span><span>PACE 0:00</span></div>
+    </div>
+  </section>
+
+  <!-- 2 RECAP -->
+  <section class="slide" data-title="Recap: last time">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 02 · Recap</div>
+      <h2 class="rise" style="--i:1">Last time: the problem. <span class="hl">Today: the design.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>We learned</h3>
+          <ul class="tight">
+            <li><b>Demos lie.</b> A hand-picked sample is filtered by the outcome before it is shown.</li>
+            <li><b>Manual testing does not scale.</b> Five spot checks cannot see a failure mode that fires on a small slice of real traffic.</li>
+            <li><b>Every release needs automated evaluation.</b> A prompt change that warmed up the tone silently cost faithfulness, citations, and refusals.</li>
+          </ul>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>Today we answer</h3>
+          <p class="bigquote" style="margin-bottom:14px">What should an evaluation suite <span class="hl">actually contain?</span></p>
+          <ul class="tight">
+            <li>The <b>layers</b> that score an output, cheapest and most objective first</li>
+            <li>The <b>capabilities</b> each output is scored on</li>
+            <li>The <b>policy</b> that turns scores into a merge or block decision</li>
+          </ul>
+        </div>
+      </div>
+      <p class="q rise" style="--i:4">Engineering question: if I have an LLM app, what exactly should my eval suite look like? By slide 22, you will be able to draw it.</p>
+      <div class="foot rise" style="--i:5"><span>SLIDE 02 / 22</span><span>PACE 1:05</span></div>
+    </div>
+  </section>
+
+  <!-- 3 WRONG MENTAL MODEL -->
+  <section class="slide" data-title="The wrong mental model">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 03 · The wrong mental model</div>
+      <h2 class="rise" style="--i:1">Most teams think an eval suite <span class="hl">looks like this</span></h2>
+      <div class="grid2">
+        <div class="vflow rise" style="--i:2">
+          <div class="vnode"><div class="t">Dataset</div><div class="s">A folder of test prompts</div></div>
+          <div class="varrow"><span class="pulse-dot"></span></div>
+          <div class="vnode"><div class="t">Model</div><div class="s">Run the candidate over the prompts</div></div>
+          <div class="varrow"><span class="pulse-dot"></span></div>
+          <div class="vnode" style="border-color:rgba(255,107,94,.5);background:rgba(255,107,94,.08)"><div class="t" style="font-family:var(--mono);font-size:19px">Accuracy = 87%</div><div class="s">One number out the bottom</div></div>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:3;border-color:rgba(255,107,94,.45)">
+            <h3 style="color:var(--bad)">This tells you almost nothing.</h3>
+            <ul class="tight">
+              <li><b>Which cases failed?</b> The number does not say, so nobody can fix them.</li>
+              <li><b>Which capability regressed?</b> Retrieval, faithfulness, and refusal are averaged into invisibility.</li>
+              <li><b>What is it averaged over?</b> Easy and adversarial cases count the same.</li>
+              <li><b>What decision does it drive?</b> There is no threshold and no owner, so the release ships on a feeling anyway.</li>
+            </ul>
+          </div>
+          <p class="q rise" style="--i:4">A single score is a summary with the evidence deleted. The next slide shows what that costs.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 03 / 22</span><span>PACE 2:10</span></div>
+    </div>
+  </section>
+
+  <!-- 4 WHY ONE SCORE FAILS -->
+  <section class="slide" data-title="Why one score fails">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 04 · Why one score fails</div>
+      <h2 class="rise" style="--i:1">Suppose accuracy <span class="hl">stays the same</span></h2>
+      <p class="lede rise" style="--i:2">Baseline vs. candidate, scored per capability. The headline number does not move. Everything a user would notice does.</p>
+      <div class="glass rise" style="--i:3">
+        <table>
+          <tr><th style="width:34%">Metric</th><th style="width:18%">Baseline</th><th style="width:18%">Candidate</th><th>Reading</th></tr>
+          <tr><td><b>Accuracy</b></td><td class="num">87%</td><td class="num">87%</td><td><span class="pill pass">FLAT</span></td></tr>
+          <tr><td><b>Hallucinations</b></td><td class="num">2%</td><td class="num">11%</td><td><span class="up-bad">↑ 9 pts, worse</span></td></tr>
+          <tr><td><b>Refusal</b></td><td class="num">96%</td><td class="num">73%</td><td><span class="down">↓ 23 pts</span></td></tr>
+          <tr><td><b>Citation correctness</b></td><td class="num">99%</td><td class="num">81%</td><td><span class="down">↓ 18 pts</span></td></tr>
+        </table>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:4">
+          <h3>The question</h3>
+          <p class="bigquote" style="font-size:21px">Would you deploy this model?</p>
+          <p style="margin-top:8px">The accuracy row says nothing changed. The other three rows describe a system that invents facts five times as often, refuses far worse, and cites sources it did not use.</p>
+        </div>
+        <div class="glass rise" style="--i:5">
+          <h3>Why the average hides it</h3>
+          <p>Capabilities move in opposite directions and cancel out in the mean. Gains on easy cases pay for regressions on hard ones, and the single number reports the trade as "no change." A release decision needs the rows, not the average of the rows.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:6"><span>SLIDE 04 / 22</span><span>PACE 3:15</span></div>
+    </div>
+  </section>
+
+  <!-- 5 MULTI-DIMENSIONAL -->
+  <section class="slide" data-title="Evaluation is multi-dimensional">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 05 · The dimensions</div>
+      <h2 class="rise" style="--i:1">Evaluation is <span class="hl">multi-dimensional</span></h2>
+      <p class="lede rise" style="--i:2">"Quality" is not one thing. It is a set of capabilities and costs, each measured separately, because each one fails separately.</p>
+      <div class="grid4">
+        <div class="glass rise" style="--i:3"><h3 style="color:var(--coral)">Retrieval</h3><p>Did the system fetch the evidence the answer needs?</p></div>
+        <div class="glass rise" style="--i:4"><h3 style="color:var(--amber)">Faithfulness</h3><p>Is every claim supported by the retrieved context?</p></div>
+        <div class="glass rise" style="--i:5"><h3 style="color:var(--gold)">Refusal</h3><p>Does it decline what it should decline, and only that?</p></div>
+        <div class="glass rise" style="--i:6"><h3 style="color:var(--coral)">Tool Use</h3><p>For agents: right tool, right arguments, right order?</p></div>
+        <div class="glass rise" style="--i:7"><h3 style="color:var(--amber)">Safety</h3><p>Does it stay inside the lines on harmful or out-of-scope asks?</p></div>
+        <div class="glass rise" style="--i:8"><h3 style="color:var(--gold)">Cost</h3><p>What does one run of the system cost, in tokens and retries?</p></div>
+        <div class="glass rise" style="--i:9"><h3 style="color:var(--coral)">Latency</h3><p>How long does the user wait, at the tail as well as the median?</p></div>
+        <div class="glass rise" style="--i:10"><h3 style="color:var(--amber)">Format</h3><p>Does the output obey the contract: structure, length, citations?</p></div>
+      </div>
+      <div class="glass rise" style="--i:11;margin-top:16px;border-color:rgba(255,184,107,.5)">
+        <p><b style="color:var(--ink)">Every capability can regress independently.</b> Slide 4 is the proof: accuracy flat while hallucinations, refusal, and citation correctness all moved. A suite that reports one number per capability can see that. A suite that reports one number cannot.</p>
+      </div>
+      <div class="foot rise" style="--i:12"><span>SLIDE 05 / 22</span><span>PACE 4:20</span></div>
+    </div>
+  </section>
+
+  <!-- 6 SECTION 1 + ARCHITECTURE OVERVIEW -->
+  <section class="slide" data-title="Section 1: architecture overview, the four layers">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 1</span>
+        <span class="st">The Four Layers</span>
+        <span class="ss">SLIDES 06 TO 10 · HOW AN OUTPUT GETS SCORED</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 06 · Architecture overview</div>
+      <h2 class="rise" style="--i:2">Every response passes through <span class="hl">four layers</span></h2>
+      <div class="grid2">
+        <div class="rise" style="--i:3">
+          <div class="vflow" style="margin-bottom:12px">
+            <div class="vnode" style="width:100%"><div class="t">Responses</div><div class="s">Outputs of the system under test, one per dataset case</div></div>
+            <div class="varrow"><span class="pulse-dot"></span></div>
+          </div>
+          <div class="stack">
+            <div class="layer"><div class="badge">L1</div><div><div class="lt">Deterministic Checks</div><div class="ls">Code decides: format, schema, budgets</div></div><span class="tag">CODE<br />DECIDES</span></div>
+            <div class="layer"><div class="badge">L2</div><div><div class="lt">Reference Scoring</div><div class="ls">Compare the output against ground truth</div></div><span class="tag">GROUND TRUTH<br />DECIDES</span></div>
+            <div class="layer"><div class="badge">L3</div><div><div class="lt">LLM Judge</div><div class="ls">A model scores what only judgment can settle</div></div><span class="tag">MODEL<br />JUDGES</span></div>
+            <div class="layer"><div class="badge">L4</div><div><div class="lt">Human Review</div><div class="ls">People settle what the other layers cannot</div></div><span class="tag">HUMANS<br />DECIDE</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:4">
+            <h3>Why this order</h3>
+            <ul class="tight">
+              <li><b>Cheapest and most objective first.</b> A rule that runs in microseconds should never wait behind a judge call.</li>
+              <li><b>Each layer handles what the layer above cannot decide.</b> Format is a fact. Faithfulness is a judgment. Ambiguity is a human call.</li>
+              <li><b>Volume shrinks as cost rises.</b> Everything passes through Layer 1. Only the residue reaches human review.</li>
+              <li><b>Layers are independent.</b> Swap the judge model or add a check without rebuilding the suite.</li>
+            </ul>
+          </div>
+          <p class="q rise" style="--i:5">Design rule: never pay for judgment where a fact will do.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:6"><span>SLIDE 06 / 22</span><span>PACE 5:25</span></div>
+    </div>
+  </section>
+
+  <!-- 7 LAYER 1 -->
+  <section class="slide" data-title="Layer 1: deterministic checks">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 07 · Layer 1 of 4</div>
+      <h2 class="rise" style="--i:1">Deterministic checks: <span class="hl">questions with objective answers</span></h2>
+      <div class="grid2">
+        <div class="rise" style="--i:2">
+          <div class="code"><div class="codebar"><span class="lights"><i></i><i></i><i></i></span> checks/deterministic.py · plain asserts, no model call</div><span class="kw">def</span> <span class="fn">check</span>(out):
+    <span class="kw">assert</span> json.loads(out.text)          <span class="cm"># JSON valid?</span>
+    <span class="kw">assert</span> valid_schema(out.tool_call)  <span class="cm"># tool call valid?</span>
+    <span class="kw">assert</span> out.citations                <span class="cm"># citation exists?</span>
+    <span class="kw">assert</span> out.tokens &lt; 500             <span class="cm"># under 500 tokens?</span>
+    <span class="kw">assert</span> out.latency_s &lt; 3.0          <span class="cm"># under 3 s?</span></div>
+          <div class="glass rise" style="--i:3;margin-top:16px">
+            <h3>Properties</h3>
+            <ul class="tight">
+              <li><b>Free and instant:</b> runs on every case, every commit</li>
+              <li><b>Perfectly reproducible:</b> same input, same verdict, forever</li>
+              <li><b>Binary:</b> pass or fail, with the failing case ID attached</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:4">
+            <h3>What belongs here</h3>
+            <table>
+              <tr><th style="width:52%">Question</th><th>Decided by</th></tr>
+              <tr><td><b>JSON valid?</b></td><td>Parse it</td></tr>
+              <tr><td><b>Tool call valid?</b></td><td>Schema check</td></tr>
+              <tr><td><b>Citation exists?</b></td><td>Lookup in retrieved set</td></tr>
+              <tr><td><b>Response under 500 tokens?</b></td><td>Token count</td></tr>
+              <tr><td><b>Latency under 3 s?</b></td><td>Timer</td></tr>
+            </table>
+          </div>
+          <div class="glass rise" style="--i:5;margin-top:16px;border-color:rgba(255,107,94,.45)">
+            <h3 style="color:var(--bad)">These should never use an LLM.</h3>
+            <p>Asking a model whether JSON is valid buys you cost, latency, and nondeterminism in exchange for a worse answer than a parser gives for free. If a rule can decide it, a rule decides it.</p>
+          </div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:6"><span>SLIDE 07 / 22</span><span>PACE 6:30</span></div>
+    </div>
+  </section>
+
+  <!-- 8 LAYER 2 -->
+  <section class="slide" data-title="Layer 2: reference-based metrics">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 08 · Layer 2 of 4</div>
+      <h2 class="rise" style="--i:1">Reference-based metrics: <span class="hl">compare against ground truth</span></h2>
+      <p class="lede rise" style="--i:2">When the dataset carries the right answer, scoring is arithmetic: measure the distance between the output and the reference.</p>
+      <div class="glass rise" style="--i:3">
+        <table>
+          <tr><th style="width:24%">Metric</th><th style="width:38%">What it measures</th><th>Use it when</th></tr>
+          <tr><td><b>Exact match</b></td><td>Output equals the reference, character for character</td><td>Answers are short and canonical: labels, codes, IDs</td></tr>
+          <tr><td><b>F1</b></td><td>Token-level overlap: precision and recall of the answer's words</td><td>Extractive QA, short factual answers</td></tr>
+          <tr><td><b>BLEU</b> <span class="pill warn">SOMETIMES</span></td><td>N-gram precision against the reference</td><td>Wording is tightly constrained, translation-like tasks</td></tr>
+          <tr><td><b>ROUGE</b> <span class="pill warn">SOMETIMES</span></td><td>N-gram recall against the reference</td><td>Summarization-style outputs with a fixed target</td></tr>
+          <tr><td><b>Semantic similarity</b></td><td>Embedding distance between output and reference</td><td>Paraphrase is fine but meaning must match</td></tr>
+          <tr><td><b>Retrieval Recall@K</b></td><td>Did the expected chunk appear in the top K retrieved?</td><td>Scoring the retriever before generation even starts</td></tr>
+        </table>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:4"><h3>The requirement</h3><p><b style="color:var(--ink)">Requires reference answers.</b> No ground truth, no Layer 2. This is why the golden dataset in Video 3 stores an expected answer and expected sources for every case.</p></div>
+        <div class="glass rise" style="--i:5"><h3>The limit</h3><p>Overlap is not correctness. A wrong answer can share most of its words with the right one, and a right answer can share almost none. Layer 2 is strong where wording is constrained, weak where answers are open-ended.</p></div>
+      </div>
+      <div class="foot rise" style="--i:6"><span>SLIDE 08 / 22</span><span>PACE 7:35</span></div>
+    </div>
+  </section>
+
+  <!-- 9 LAYER 3 -->
+  <section class="slide" data-title="Layer 3: LLM-as-a-judge">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 09 · Layer 3 of 4</div>
+      <h2 class="rise" style="--i:1">LLM-as-a-judge: <span class="hl">questions humans answer well</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>What the judge scores</h3>
+          <ul class="tight">
+            <li><b>Is the answer faithful?</b> Every claim traceable to the retrieved context</li>
+            <li><b>Is it helpful?</b> It addresses what the user actually asked</li>
+            <li><b>Does it follow instructions?</b> Constraints honored, not just attempted</li>
+            <li><b>Is reasoning complete?</b> No skipped steps, no unsupported leaps</li>
+          </ul>
+          <p style="margin-top:12px">Each question gets a rubric: defined criteria the judge applies case by case, so the verdict comes with a reason a human can audit.</p>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:3">
+            <h3>Why this layer exists</h3>
+            <p><b style="color:var(--ink)">Cannot be reliably measured with string matching.</b> Two answers can share zero words and both be right. A fluent answer can match every keyword in the reference and still be wrong. Meaning is the thing being scored, and meaning needs a reader.</p>
+          </div>
+          <div class="glass rise" style="--i:4;margin-top:16px">
+            <h3>What this chapter does not do</h3>
+            <p>The judge is one component of the suite, not the suite. Videos 5 and 6 build it properly: writing rubrics it can follow, exposing its biases, and calibrating it against human labels before any gate is allowed to trust it.</p>
+          </div>
+        </div>
+      </div>
+      <p class="q rise" style="--i:5">Engineering question: how do I trust an LLM judge? Short answer for now: you do not, until it agrees with humans on cases humans labeled first. That is Video 6.</p>
+      <div class="foot rise" style="--i:6"><span>SLIDE 09 / 22</span><span>PACE 8:40</span></div>
+    </div>
+  </section>
+
+  <!-- 10 LAYER 4 -->
+  <section class="slide" data-title="Layer 4: human review">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 10 · Layer 4 of 4</div>
+      <h2 class="rise" style="--i:1">Human review: <span class="hl">the scarcest layer, spent deliberately</span></h2>
+      <div class="grid4">
+        <div class="glass rise" style="--i:2"><h3 style="color:var(--coral)">Ambiguous outputs</h3><p>The rubric has no clean answer and the judge is guessing. A human settles what the case should have scored.</p></div>
+        <div class="glass rise" style="--i:3"><h3 style="color:var(--amber)">Safety</h3><p>The cost of a wrong automated verdict is highest here. Safety cases get human eyes before a release ships.</p></div>
+        <div class="glass rise" style="--i:4"><h3 style="color:var(--gold)">New capabilities</h3><p>No rubric exists yet for behavior the system just learned. Humans define what good looks like first.</p></div>
+        <div class="glass rise" style="--i:5"><h3 style="color:var(--coral)">Judge disagreements</h3><p>Where judge runs conflict, or the judge conflicts with a reference score, the case escalates instead of averaging out.</p></div>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:6;border-color:rgba(255,184,107,.5)">
+          <h3>Humans are expensive. Use them strategically.</h3>
+          <p>Human review is the slowest and most expensive layer in the stack, and the only one that does not scale with compute. The architecture protects it: Layers 1 to 3 absorb the volume so humans see only the cases where their judgment changes the outcome.</p>
+        </div>
+        <div class="glass rise" style="--i:7">
+          <h3>Human labels do double duty</h3>
+          <p>Every human verdict is also training signal for the suite itself: it becomes a golden dataset case, a rubric clarification, or a calibration point for the judge. Review is not a cost center bolted on at the end; it is how the cheaper layers get trustworthy.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:8"><span>SLIDE 10 / 22</span><span>PACE 9:45</span></div>
+    </div>
+  </section>
+
+  <!-- 11 SECTION 2 + SCORE CAPABILITIES -->
+  <section class="slide" data-title="Section 2: don't score models, score capabilities">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 2</span>
+        <span class="st">Capability-Based Evaluation</span>
+        <span class="ss">SLIDES 11 TO 17 · WHAT GETS SCORED</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 11 · The unit of scoring</div>
+      <h2 class="rise" style="--i:2">Don't score models. <span class="hl">Score capabilities.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:3">
+          <h3>Instead of</h3>
+          <p style="font-family:var(--mono);font-size:clamp(22px,3vw,32px);color:var(--ink-faint);margin:10px 0 14px"><s>GPT-5 = 91%</s></p>
+          <ul class="tight">
+            <li><b>No owner:</b> when it drops, nobody knows which part of the system to fix</li>
+            <li><b>No diagnosis:</b> the number moves and the cause stays hidden</li>
+            <li><b>No policy:</b> there is no threshold you can defend for a number that means everything at once</li>
+          </ul>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>Think</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:4px">
+            <span class="chip" style="justify-content:center;padding:10px"><b>Retrieval</b></span>
+            <span class="chip" style="justify-content:center;padding:10px"><b>Faithfulness</b></span>
+            <span class="chip" style="justify-content:center;padding:10px"><b>Refusal</b></span>
+            <span class="chip" style="justify-content:center;padding:10px"><b>Tool Use</b></span>
+            <span class="chip" style="justify-content:center;padding:10px"><b>Safety</b></span>
+            <span class="chip" style="justify-content:center;padding:10px"><b>Latency</b></span>
+          </div>
+          <p style="margin-top:12px">One score per capability, each with its own scorer, its own baseline, and its own gate. The next six slides take the core capabilities one at a time.</p>
+        </div>
+      </div>
+      <p class="q rise" style="--i:5">A model score tells you something changed. A capability score tells you what changed, and who fixes it.</p>
+      <div class="foot rise" style="--i:6"><span>SLIDE 11 / 22</span><span>PACE 10:50</span></div>
+    </div>
+  </section>
+
+  <!-- 12 RETRIEVAL -->
+  <section class="slide" data-title="Capability: retrieval">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 12 · Capability 1 of 6</div>
+      <h2 class="rise" style="--i:1">Retrieval: score it <span class="hl">before generation exists</span></h2>
+      <div class="flow rise" style="--i:2">
+        <div class="node"><div class="t">Query</div><div class="s">One dataset case</div></div>
+        <div class="arrow">→</div>
+        <div class="node hot"><div class="t">Retriever</div><div class="s">Returns top-k chunks</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Check vs. Expected Sources</div><div class="s">Was the gold chunk in the top k?</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Recall@K</div><div class="s">Layer 2, deterministic scoring</div></div>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:3">
+          <h3>The questions</h3>
+          <ul class="tight">
+            <li><b>Did we retrieve the right chunk?</b></li>
+            <li><b>Was supporting evidence available</b> in the retrieved set at all?</li>
+            <li><b>Was recall sufficient</b>, or did the answer need evidence that never arrived?</li>
+          </ul>
+        </div>
+        <div class="glass rise" style="--i:4;border-color:rgba(255,184,107,.5)">
+          <h3>Generation hasn't happened yet.</h3>
+          <p>Retrieval is scored on the retriever's output alone, before the model writes a word. If the evidence never arrived, the failure belongs to retrieval, and no prompt edit will fix it. Scoring the stages separately is what makes a failure attributable.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 12 / 22</span><span>PACE 11:55</span></div>
+    </div>
+  </section>
+
+  <!-- 13 FAITHFULNESS -->
+  <section class="slide" data-title="Capability: faithfulness">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 13 · Capability 2 of 6</div>
+      <h2 class="rise" style="--i:1">Faithfulness: <span class="hl">grounded, or invented?</span></h2>
+      <div class="glass rise" style="--i:2">
+        <h3>The question</h3>
+        <p class="bigquote">Did the model invent anything <span class="hl">not present in retrieved context?</span></p>
+        <p style="margin-top:10px">Not "is the answer true in the world?" but "is it true to the evidence the system retrieved?" A correct-sounding claim with no support in context is still a faithfulness failure, because the next one will be wrong the same way.</p>
+      </div>
+      <div style="margin-top:16px">
+        <h3 class="rise" style="--i:3;font-size:15px;margin:0 0 10px;font-family:var(--mono);letter-spacing:.1em;color:var(--amber)">POSSIBLE OUTPUTS</h3>
+        <div class="grid3">
+          <div class="glass rise" style="--i:4;border-color:rgba(143,227,176,.35)"><h3 style="color:var(--good)">Faithful</h3><p>Every claim in the answer is supported by the retrieved context.</p></div>
+          <div class="glass rise" style="--i:5;border-color:rgba(255,209,102,.4)"><h3 style="color:var(--gold)">Partially faithful</h3><p>The core answer is supported, but details were added that the context never states.</p></div>
+          <div class="glass rise" style="--i:6;border-color:rgba(255,107,94,.45)"><h3 style="color:var(--bad)">Hallucinated</h3><p>Claims contradict the context, or rest on evidence that was never retrieved.</p></div>
+        </div>
+      </div>
+      <p class="q rise" style="--i:7">Scored by: the LLM judge (Layer 3), because support is a judgment about meaning. String matching cannot tell a paraphrase from an invention.</p>
+      <div class="foot rise" style="--i:8"><span>SLIDE 13 / 22</span><span>PACE 13:00</span></div>
+    </div>
+  </section>
+
+  <!-- 14 REFUSAL -->
+  <section class="slide" data-title="Capability: refusal">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 14 · Capability 3 of 6</div>
+      <h2 class="rise" style="--i:1">Refusal: a <span class="hl">two-way</span> decision, scored both ways</h2>
+      <div class="vflow rise" style="--i:2;width:100%;align-items:stretch">
+        <div class="split" style="width:100%">
+          <div class="vflow">
+            <div class="vnode" style="width:100%"><div class="t">Should answer?</div><div class="s" style="font-family:var(--mono);color:var(--good);font-weight:700">YES: answer is in scope and in the docs</div></div>
+            <div class="varrow"><span class="pulse-dot"></span></div>
+            <div class="vnode" style="width:100%;border-color:rgba(143,227,176,.4)"><div class="t" style="color:var(--good)">Respond</div><div class="s">Answer, grounded and cited</div></div>
+          </div>
+          <div class="vflow">
+            <div class="vnode" style="width:100%"><div class="t">Should answer?</div><div class="s" style="font-family:var(--mono);color:var(--bad);font-weight:700">NO: out of scope, or no evidence retrieved</div></div>
+            <div class="varrow"><span class="pulse-dot"></span></div>
+            <div class="vnode" style="width:100%;border-color:rgba(255,107,94,.45)"><div class="t" style="color:var(--bad)">Refuse</div><div class="s">Decline clearly, do not guess</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:3">
+          <h3>Measure both error directions</h3>
+          <ul class="tight">
+            <li><b>False refusals:</b> the system refused a question it should have answered. Users hit a wall for no reason.</li>
+            <li><b>Missed refusals:</b> the system answered a question it should have refused. This is where hallucination and safety failures enter.</li>
+          </ul>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>Why one number is not enough</h3>
+          <p>The two errors trade off. Tune the system to never refuse and missed refusals explode; tune it to refuse freely and false refusals do. The dataset labels every case <span style="font-family:var(--mono);font-size:12.5px;color:var(--gold)">must_refuse: true / false</span>, and the report shows both directions separately.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 14 / 22</span><span>PACE 14:05</span></div>
+    </div>
+  </section>
+
+  <!-- 15 INSTRUCTION FOLLOWING -->
+  <section class="slide" data-title="Capability: instruction following">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 15 · Capability 4 of 6</div>
+      <h2 class="rise" style="--i:1">Instruction following: <span class="hl">the layer is chosen by the instruction</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th style="width:36%">Example instruction</th><th style="width:30%">How it is checked</th><th>Layer</th></tr>
+          <tr><td><b>Exactly three bullets</b></td><td>Count the bullets</td><td><span class="pill pass">DETERMINISTIC</span></td></tr>
+          <tr><td><b>JSON only</b></td><td>Parse the output, reject prose</td><td><span class="pill pass">DETERMINISTIC</span></td></tr>
+          <tr><td><b>Markdown table</b></td><td>Check the structure renders as a table</td><td><span class="pill pass">DETERMINISTIC</span></td></tr>
+          <tr><td><b>Use citations</b></td><td>Citations present (Layer 1), and they support the claims (Layer 3)</td><td><span class="pill warn">BOTH</span></td></tr>
+          <tr><td><b>No opinions</b></td><td>Judgment call about tone and stance</td><td><span class="pill warn">JUDGED</span></td></tr>
+        </table>
+      </div>
+      <div class="glass rise" style="--i:3;margin-top:16px;border-color:rgba(255,184,107,.5)">
+        <p><b style="color:var(--ink)">Often deterministic. Sometimes judged.</b> Count what can be counted, parse what can be parsed, and reserve the judge for instructions about meaning and tone. Routing each instruction to the cheapest layer that can decide it is the whole architecture in miniature.</p>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 15 / 22</span><span>PACE 15:10</span></div>
+    </div>
+  </section>
+
+  <!-- 16 TOOL USE -->
+  <section class="slide" data-title="Capability: tool use">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 16 · Capability 5 of 6</div>
+      <h2 class="rise" style="--i:1">Tool use: <span class="hl">for agents, score the trajectory</span></h2>
+      <div class="grid4">
+        <div class="glass rise" style="--i:2"><h3 style="color:var(--coral)">Correct tool</h3><p>Did the agent call the tool the task actually needed, not a plausible neighbor?</p><p style="margin-top:8px"><b style="color:var(--ink)">Check:</b> deterministic, against the expected call.</p></div>
+        <div class="glass rise" style="--i:3"><h3 style="color:var(--amber)">Correct arguments</h3><p>Right values, right types, nothing invented to fill a required field.</p><p style="margin-top:8px"><b style="color:var(--ink)">Check:</b> schema plus value comparison.</p></div>
+        <div class="glass rise" style="--i:4"><h3 style="color:var(--gold)">Correct order</h3><p>Steps sequenced so each call has what it needs from the ones before it.</p><p style="margin-top:8px"><b style="color:var(--ink)">Check:</b> trajectory comparison.</p></div>
+        <div class="glass rise" style="--i:5"><h3 style="color:var(--coral)">Recovery after failure</h3><p>A tool errored or returned junk: did the agent adapt, retry sensibly, or escalate?</p><p style="margin-top:8px"><b style="color:var(--ink)">Check:</b> judged, plus step counts.</p></div>
+      </div>
+      <div class="glass rise" style="--i:6;margin-top:16px;border-color:rgba(255,107,94,.45)">
+        <p><b style="color:var(--ink)">Success ≠ final answer only.</b> An agent can land on the right answer through the wrong calls, a lucky guess, or a side effect you would never accept in production. If you score only the outcome, all of that ships. Video 7 extends the full framework to agents.</p>
+      </div>
+      <div class="foot rise" style="--i:7"><span>SLIDE 16 / 22</span><span>PACE 16:15</span></div>
+    </div>
+  </section>
+
+  <!-- 17 OPERATIONAL METRICS -->
+  <section class="slide" data-title="Capability: operational metrics">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 17 · Capability 6 of 6</div>
+      <h2 class="rise" style="--i:1">Operational metrics: <span class="hl">don't forget the cost of quality</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th style="width:26%">Metric</th><th>What it catches</th></tr>
+          <tr><td><b>Latency</b></td><td>A candidate that answers better but slower, past the point users tolerate</td></tr>
+          <tr><td><b>Token cost</b></td><td>Prompt and reasoning growth that multiplies spend at production volume</td></tr>
+          <tr><td><b>Retries</b></td><td>Hidden instability: the system quietly paying twice for one answer</td></tr>
+          <tr><td><b>Throughput</b></td><td>Whether the candidate still holds up at real request volume</td></tr>
+          <tr><td><b>Timeout rate</b></td><td>Requests that never produce an answer at all, invisible to quality scores</td></tr>
+        </table>
+      </div>
+      <div class="glass rise" style="--i:3;margin-top:16px;border-color:rgba(255,184,107,.5)">
+        <p><b style="color:var(--ink)">Quality isn't free.</b> Operational metrics belong in the same report as quality metrics, because the release decision weighs both. A slightly better answer at much higher latency and cost can be the wrong release, and slide 20 turns exactly that trade into policy.</p>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 17 / 22</span><span>PACE 17:20</span></div>
+    </div>
+  </section>
+
+  <!-- 18 SECTION 3 + COMPLETE PIPELINE -->
+  <section class="slide" data-title="Section 3: the complete evaluation pipeline">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 3</span>
+        <span class="st">Putting Everything Together</span>
+        <span class="ss">SLIDES 18 TO 22 · PIPELINE, REPORT, GATE</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 18 · Complete evaluation pipeline</div>
+      <h2 class="rise" style="--i:2">The layers and capabilities, <span class="hl">assembled</span></h2>
+      <div class="vflow rise" style="--i:3">
+        <div class="vnode"><div class="t">Golden Dataset</div><div class="s">Fixed, versioned cases with expected behavior</div></div>
+        <div class="varrow"><span class="pulse-dot"></span></div>
+        <div class="vnode"><div class="t">Candidate Model</div><div class="s">The exact build under test, pinned</div></div>
+        <div class="varrow"><span class="pulse-dot"></span></div>
+        <div class="vnode"><div class="t">Generate Outputs</div><div class="s">One response per case, recorded with latency and cost</div></div>
+        <div class="varrow"><span class="pulse-dot"></span></div>
+        <div class="scoreband">
+          <div class="bl">Scoring · Layers 1 to 3 run in order</div>
+          <div class="row">
+            <div class="cell">Deterministic<span>format, schema, budgets</span></div>
+            <div class="cell">Reference<span>vs. ground truth</span></div>
+            <div class="cell">LLM Judge<span>faithfulness, quality</span></div>
+          </div>
+        </div>
+        <div class="varrow"><span class="pulse-dot"></span></div>
+        <div class="vnode"><div class="t">Aggregate Report</div><div class="s">One score per capability, diffed against the baseline</div></div>
+        <div class="varrow"><span class="pulse-dot"></span></div>
+        <div class="vnode" style="border-color:rgba(255,184,107,.6);background:rgba(255,184,107,.09)"><div class="t">Release Gate</div><div class="s">Policy decides: merge, or block the release</div></div>
+      </div>
+      <p class="q rise" style="--i:4">Human review (Layer 4) sits beside the pipeline: escalations, safety cases, and disagreements route to people, and their verdicts flow back into the golden dataset.</p>
+      <div class="foot rise" style="--i:5"><span>SLIDE 18 / 22</span><span>PACE 18:25</span></div>
+    </div>
+  </section>
+
+  <!-- 19 EXAMPLE REPORT -->
+  <section class="slide" data-title="Example report">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 19 · Example report</div>
+      <h2 class="rise" style="--i:1">What the report <span class="hl">actually looks like</span></h2>
+      <div class="glass rise" style="--i:2">
+        <div class="codebar"><span class="lights"><i></i><i></i><i></i></span> EXAMPLE EVALUATION REPORT · SCORED PER CAPABILITY</div>
+        <div class="metric"><span class="name">Retrieval Recall</span><span class="bar"><i style="--w:93%"></i></span><span class="val"><b>93%</b></span></div>
+        <div class="metric"><span class="name">Faithfulness</span><span class="bar"><i style="--w:95%"></i></span><span class="val"><b>95%</b></span></div>
+        <div class="metric"><span class="name">Citation Accuracy</span><span class="bar"><i style="--w:98%"></i></span><span class="val"><b>98%</b></span></div>
+        <div class="metric"><span class="name">Refusal</span><span class="bar"><i style="--w:88%"></i></span><span class="val"><b>88%</b></span></div>
+        <div class="metric"><span class="name">Instruction Following</span><span class="bar"><i style="--w:97%"></i></span><span class="val"><b>97%</b></span></div>
+        <div class="metric"><span class="name">Latency</span><span class="bar"><i style="--w:60%"></i></span><span class="val"><b>1.8 s</b></span></div>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:3;border-color:rgba(255,184,107,.5)"><h3>No single overall score.</h3><p>There is deliberately no blended number at the bottom. The moment you average these rows, slide 4 happens: regressions hide inside the mean.</p></div>
+        <div class="glass rise" style="--i:4"><h3>How to read it</h3><p>Each row is a capability with its own baseline and its own threshold. Refusal at 88% is the weakest row here, and it is visible at a glance. The report is the input to the release decision, which is the next slide.</p></div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 19 / 22</span><span>PACE 19:30</span></div>
+    </div>
+  </section>
+
+  <!-- 20 RELEASE DECISION -->
+  <section class="slide" data-title="Release decision: policy, not averages">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 20 · Release decision</div>
+      <h2 class="rise" style="--i:1">Release decisions are <span class="hl">policies, not averages</span></h2>
+      <p class="lede rise" style="--i:2">An example gate policy, written before any candidate is run. The candidate is compared against the baseline, per capability, and the policy decides.</p>
+      <div class="glass rise" style="--i:3">
+        <div class="codebar"><span class="lights"><i></i><i></i><i></i></span> EXAMPLE POLICY · FAIL THE RELEASE IF ANY ROW TRIPS</div>
+        <table>
+          <tr><th style="width:30%">Capability</th><th style="width:32%">Fail condition</th><th>Why this threshold shape</th></tr>
+          <tr><td><b>Faithfulness</b></td><td><span class="down">↓ more than 2%</span></td><td>Invented facts are core product risk, so the band is tight</td></tr>
+          <tr><td><b>Refusal</b></td><td><span class="down">↓ more than 5%</span></td><td>Noisier to measure, wider band, still gated</td></tr>
+          <tr><td><b>Safety</b></td><td><span class="down">↓ any amount</span></td><td>No tolerance band: any regression blocks</td></tr>
+          <tr><td><b>Latency</b></td><td><span class="up-bad">↑ more than 25%</span></td><td>Operational regressions gate too, not just quality ones</td></tr>
+        </table>
+      </div>
+      <div class="glass rise" style="--i:4;margin-top:16px;border-color:rgba(255,184,107,.5)">
+        <p><b style="color:var(--ink)">Engineering teams deploy policies, not averages.</b> Thresholds are agreed in advance, per capability, so when the report lands the decision is mechanical: the gate fires or it does not. Tune the numbers to your application and its noise; the structure, per-capability thresholds with an explicit fail action, is the part to copy.</p>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 20 / 22</span><span>PACE 20:35</span></div>
+    </div>
+  </section>
+
+  <!-- 21 WHAT WE'LL BUILD -->
+  <section class="slide" data-title="What we'll build">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 21 · The road ahead</div>
+      <h2 class="rise" style="--i:1">What we'll build, <span class="hl">in dependency order</span></h2>
+      <div class="grid2">
+        <div class="vflow rise" style="--i:2;align-items:stretch">
+          <div class="vnode" style="width:100%;text-align:left"><div class="t">✓ Golden dataset</div><div class="s">The input every layer consumes</div></div>
+          <div class="varrow" style="align-self:center"><span class="pulse-dot"></span></div>
+          <div class="vnode" style="width:100%;text-align:left"><div class="t">Deterministic metrics</div><div class="s">Layer 1, implemented first because it is free</div></div>
+          <div class="varrow" style="align-self:center"><span class="pulse-dot"></span></div>
+          <div class="vnode" style="width:100%;text-align:left"><div class="t">Reference scoring</div><div class="s">Layer 2, against the dataset's ground truth</div></div>
+          <div class="varrow" style="align-self:center"><span class="pulse-dot"></span></div>
+          <div class="vnode" style="width:100%;text-align:left"><div class="t">LLM judge</div><div class="s">Layer 3, built and then calibrated against humans</div></div>
+          <div class="varrow" style="align-self:center"><span class="pulse-dot"></span></div>
+          <div class="vnode" style="width:100%;text-align:left"><div class="t">CI pipeline</div><div class="s">The suite runs on every pull request</div></div>
+          <div class="varrow" style="align-self:center"><span class="pulse-dot"></span></div>
+          <div class="vnode" style="width:100%;text-align:left;border-color:rgba(255,184,107,.6);background:rgba(255,184,107,.09)"><div class="t">Automatic release gates</div><div class="s">Policy from slide 20, enforced by the pipeline</div></div>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>Which video builds which piece</h3>
+          <table>
+            <tr><th style="width:22%">Video</th><th>Builds</th></tr>
+            <tr><td class="num"><b>3</b></td><td>The golden dataset</td></tr>
+            <tr><td class="num"><b>4</b></td><td>Deterministic and reference-based scoring</td></tr>
+            <tr><td class="num"><b>5 to 6</b></td><td>The LLM judge: implementation, then validation against humans</td></tr>
+            <tr><td class="num"><b>7</b></td><td>The framework extended to RAG and agents</td></tr>
+            <tr><td class="num"><b>8</b></td><td>The architecture becomes a CI/CD release gate</td></tr>
+          </table>
+          <p style="margin-top:12px">One coherent engineering project, not nine independent topics: each video fills in one part of the blueprint from this chapter.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 21 / 22</span><span>PACE 21:40</span></div>
+    </div>
+  </section>
+
+  <!-- 22 KEY TAKEAWAYS -->
+  <section class="slide" data-title="Key takeaways">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 22 · Key takeaways</div>
+      <h2 class="rise" style="--i:1">The blueprint, <span class="hl">in five lines</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>Key takeaways</h3>
+          <ol class="steps">
+            <li><b>Evaluation is multi-dimensional.</b></li>
+            <li><b>Different capabilities require different metrics.</b></li>
+            <li><b>Use deterministic checks whenever possible.</b></li>
+            <li><b>LLM judges are only one component.</b></li>
+            <li><b>Release decisions should be based on capability regressions, not a single aggregate score.</b></li>
+          </ol>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:3">
+            <h3>Next video · Chapter 3</h3>
+            <p><b style="color:var(--ink)">Build the Golden Dataset.</b> Every layer in this architecture consumes it, and Layer 2 is impossible without its reference answers, so it comes first: what a case contains, how to stratify it, and the rule that the dataset never gets edited to make a failing model pass.</p>
+            <p class="q">Bring: the questions your users actually ask, including the ones your app should refuse.</p>
+          </div>
+          <div class="presenter rise" style="--i:4;margin-top:16px">
+            <div class="avatar">SG</div>
+            <div class="who"><b>Saloni Garg</b><span>Senior Machine Learning Engineer, Adobe</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 22 / 22</span><span>PACE 22:45 · END 24:00</span></div>
+    </div>
+  </section>
+
+  </main>
+
+  <div class="nav">
+    <button class="btn" id="prevBtn" type="button">← Prev</button>
+    <button class="btn primary" id="nextBtn" type="button">Next →</button>
+    <span class="hint">Keyboard: <span class="kbd">←</span> <span class="kbd">→</span> navigate · <span class="kbd">Space</span> next · <span class="kbd">O</span> overview · swipe on touch</span>
+    <div class="spacer"></div>
+    <span class="hint" id="slideTitle"></span>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-label="All slides">
+  <div style="display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto 4px">
+    <h2 style="margin:0">All 22 slides</h2>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn" id="ovClose" type="button">Close ✕</button>
+  </div>
+  <p style="color:var(--ink-dim);max-width:1180px;margin:0 auto 18px;font-size:14px">Chapter 2 · Anatomy of an LLM Evaluation Suite · The four layers, capability-based evaluation, and the release gate. 20 to 25 minutes.</p>
+  <div class="ov-grid" id="ovGrid" style="margin:0 auto"></div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var cur = 0;
+  var fill = document.getElementById('pbarFill');
+  var num = document.getElementById('curNum');
+  var titleEl = document.getElementById('slideTitle');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var overlay = document.getElementById('overlay');
+  var grid = document.getElementById('ovGrid');
+
+  slides.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ov-item';
+    b.innerHTML = '<div class="n">SLIDE ' + String(i+1).padStart(2,'0') + '</div><div class="t"></div>';
+    b.querySelector('.t').textContent = s.getAttribute('data-title');
+    b.addEventListener('click', function(){ go(i); toggleOv(false); });
+    grid.appendChild(b);
+  });
+  var ovItems = grid.children;
+
+  function go(i){
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function(s, j){
+      s.classList.toggle('active', j === cur);
+      s.classList.toggle('prev', j < cur);
+      if (j === cur) s.scrollTop = 0;
+    });
+    fill.style.width = ((cur + 1) / slides.length * 100) + '%';
+    num.textContent = String(cur + 1).padStart(2,'0');
+    titleEl.textContent = slides[cur].getAttribute('data-title');
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === slides.length - 1;
+    nextBtn.textContent = cur === slides.length - 1 ? 'End of deck' : 'Next →';
+    for (var k = 0; k < ovItems.length; k++) ovItems[k].classList.toggle('cur', k === cur);
+  }
+  function toggleOv(open){ overlay.classList.toggle('open', open); }
+
+  prevBtn.addEventListener('click', function(){ go(cur - 1); });
+  nextBtn.addEventListener('click', function(){ go(cur + 1); });
+  document.getElementById('ovBtn').addEventListener('click', function(){ toggleOv(true); });
+  document.getElementById('ovClose').addEventListener('click', function(){ toggleOv(false); });
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) toggleOv(false); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') { toggleOv(false); return; }
+    if (overlay.classList.contains('open')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(cur + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home') { go(0); }
+    else if (e.key === 'End') { go(slides.length - 1); }
+    else if (e.key === 'o' || e.key === 'O') { toggleOv(true); }
+  });
+
+  var tx = null, ty = null;
+  var main = document.getElementById('slides');
+  main.addEventListener('touchstart', function(e){ tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY; }, {passive:true});
+  main.addEventListener('touchend', function(e){
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 1.6) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, {passive:true});
+
+  go(0);
+})();
+</script>
+</body>
+</html>
