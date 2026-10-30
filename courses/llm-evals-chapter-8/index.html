@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>LLM Evals From Zero - Chapter 8 Slides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --base:#140B09;
+  --coral:#FF6B5E;
+  --amber:#FFB86B;
+  --gold:#FFD166;
+  --ink:#FFF6EC;
+  --ink-dim:rgba(255,246,236,.72);
+  --ink-faint:rgba(255,246,236,.52);
+  --glass:rgba(255,255,255,.055);
+  --glass-strong:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.14);
+  --bad:#FF7A6B;
+  --good:#8FE3B0;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Manrope',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--base);color:var(--ink);
+  font-family:var(--sans);overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);pointer-events:none;z-index:0;opacity:.55}
+.orb-a{width:520px;height:520px;background:radial-gradient(circle,#FF6B5E 0%,transparent 65%);top:-180px;right:-120px;animation:drift 26s ease-in-out infinite alternate}
+.orb-b{width:460px;height:460px;background:radial-gradient(circle,#FFB86B 0%,transparent 65%);bottom:-200px;left:-140px;animation:drift 32s ease-in-out infinite alternate-reverse}
+.orb-c{width:300px;height:300px;background:radial-gradient(circle,#FFD166 0%,transparent 65%);top:45%;left:55%;opacity:.28;animation:drift 38s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,44px) scale(1.12)}}
+.deck{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
+.chrome{display:flex;align-items:center;gap:14px;padding:14px 22px 8px}
+.chrome .course{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.chrome .course b{color:var(--amber);font-weight:700}
+.chrome .spacer{flex:1}
+.pbar{height:4px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;width:min(320px,38vw)}
+.pbar i{display:block;height:100%;width:5%;background:linear-gradient(90deg,var(--coral),var(--amber),var(--gold));border-radius:99px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.counter{font-family:var(--mono);font-size:12px;color:var(--ink-dim);white-space:nowrap}
+.counter b{color:var(--ink);font-size:14px}
+button{font-family:var(--sans);cursor:pointer}
+.btn{
+  background:var(--glass);border:1px solid var(--line);color:var(--ink);
+  border-radius:99px;padding:8px 16px;font-size:13px;font-weight:700;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  transition:background .2s,transform .2s;
+}
+.btn:hover{background:var(--glass-strong)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(120deg,var(--coral),var(--amber));color:#2A1206;border:none}
+.btn:disabled{opacity:.35;cursor:default}
+.slides{flex:1;position:relative;min-height:0}
+.slide{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  padding:18px clamp(18px,4.5vw,64px) 28px;
+  opacity:0;visibility:hidden;transform:translateX(26px) scale(.995);
+  transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1),visibility 0s .45s;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent;
+}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1)}
+.slide.prev{transform:translateX(-26px) scale(.995)}
+.slide-inner{max-width:1180px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center}
+.slide.active .rise{animation:rise .65s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i,0)*80ms)}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.kicker::after{content:"";height:1px;flex:0 0 54px;background:linear-gradient(90deg,var(--amber),transparent)}
+h1{font-size:clamp(34px,5.2vw,58px);line-height:1.04;font-weight:800;letter-spacing:-.02em;margin:0 0 14px}
+h2{font-size:clamp(26px,3.6vw,40px);line-height:1.1;font-weight:800;letter-spacing:-.015em;margin:0 0 10px}
+h2 .hl,h1 .hl{background:linear-gradient(100deg,var(--coral),var(--amber) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:clamp(15px,1.6vw,18px);line-height:1.55;color:var(--ink-dim);max-width:760px;margin:0 0 20px}
+.q{font-family:var(--mono);font-size:12.5px;color:var(--gold);margin-top:14px}
+.q::before{content:"Q  ";color:var(--coral);font-weight:700}
+.foot{display:flex;justify-content:space-between;gap:12px;margin-top:18px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.06em}
+.section-banner{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  background:linear-gradient(110deg,rgba(255,107,94,.16),rgba(255,184,107,.12) 60%,rgba(255,209,102,.08));
+  border:1px solid rgba(255,184,107,.45);border-radius:24px;
+  padding:14px 20px;margin-bottom:18px;
+  box-shadow:0 14px 34px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.07);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.section-banner .sn{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.14em;color:#2A1206;background:linear-gradient(120deg,var(--coral),var(--amber));border-radius:99px;padding:6px 13px;white-space:nowrap}
+.section-banner .st{font-size:clamp(19px,2.4vw,26px);font-weight:800;letter-spacing:-.01em}
+.section-banner .ss{font-family:var(--mono);font-size:11.5px;color:var(--ink-dim);letter-spacing:.05em}
+.glass{
+  background:var(--glass);border:1px solid var(--line);border-radius:26px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 18px 44px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.06);
+  padding:20px 22px;
+}
+.glass h3{margin:0 0 10px;font-size:16px;font-weight:800;letter-spacing:-.01em}
+.glass p{color:var(--ink-dim);line-height:1.55;font-size:14.5px;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink-dim)}
+.chip b{color:var(--ink)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none}
+ul.tight{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+ul.tight li{position:relative;padding-left:20px;color:var(--ink-dim);font-size:14.5px;line-height:1.5}
+ul.tight li::before{content:"";position:absolute;left:2px;top:.52em;width:7px;height:7px;border-radius:2px;background:linear-gradient(120deg,var(--coral),var(--amber))}
+ul.tight li b{color:var(--ink)}
+ol.steps{margin:0;padding:0;list-style:none;display:grid;gap:10px;counter-reset:st}
+ol.steps li{position:relative;padding-left:40px;color:var(--ink-dim);font-size:14.5px;line-height:1.5}
+ol.steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:0;width:27px;height:27px;border-radius:9px;background:linear-gradient(120deg,var(--coral),var(--amber));color:#2A1206;font-family:var(--mono);font-weight:700;font-size:13px;display:grid;place-items:center}
+ol.steps li b{color:var(--ink)}
+.bigquote{font-size:clamp(20px,2.7vw,30px);font-weight:800;line-height:1.3;letter-spacing:-.01em;margin:0}
+.bigquote .hl{background:linear-gradient(100deg,var(--coral),var(--amber) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.code{
+  background:rgba(10,4,2,.72);border:1px solid var(--line);border-radius:20px;
+  padding:16px 18px;font-family:var(--mono);font-size:12.8px;line-height:1.65;
+  overflow-x:auto;white-space:pre;color:#FFE9D6;
+}
+.code .cm{color:rgba(255,233,214,.45)}
+.code .kw{color:var(--coral)}
+.code .str{color:var(--gold)}
+.code .fn{color:var(--amber)}
+.code .add{color:var(--good)}
+.code .del{color:var(--bad)}
+.codebar{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.codebar .lights{display:flex;gap:6px}
+.codebar .lights i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18)}
+.codebar .lights i:first-child{background:var(--coral)}
+.codebar .lights i:nth-child(2){background:var(--amber)}
+.codebar .lights i:nth-child(3){background:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:13.8px}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.07);color:var(--ink-dim);vertical-align:top;line-height:1.45}
+td b,td strong{color:var(--ink)}
+tr:last-child td{border-bottom:none}
+.num{font-family:var(--mono);white-space:nowrap}
+.down{color:var(--bad);font-family:var(--mono);font-weight:700;white-space:nowrap}
+.good{color:var(--good);font-family:var(--mono);font-weight:700;white-space:nowrap}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.05em}
+.pill.pass{background:rgba(143,227,176,.14);color:var(--good);border:1px solid rgba(143,227,176,.35)}
+.pill.fail{background:rgba(255,107,94,.14);color:var(--bad);border:1px solid rgba(255,107,94,.4)}
+.pill.warn{background:rgba(255,209,102,.13);color:var(--gold);border:1px solid rgba(255,209,102,.35)}
+.metric{display:grid;grid-template-columns:220px 1fr 128px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.metric:last-of-type{border-bottom:none}
+.metric .name{font-weight:700;font-size:14.5px}
+.bar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--coral),var(--amber));transition:width 1s cubic-bezier(.22,1,.36,1) .3s}
+.slide.active .bar i{width:var(--w)}
+.metric .val{font-family:var(--mono);font-size:13px;text-align:right;color:var(--ink-dim)}
+.metric .val b{color:var(--ink);font-size:15px}
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:nowrap}
+.node{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:20px;padding:14px 14px;text-align:center;position:relative}
+.node .t{font-weight:800;font-size:14px;margin-bottom:4px}
+.node .s{font-size:12px;color:var(--ink-dim);line-height:1.45}
+.node.hot{border-color:rgba(255,184,107,.55);background:rgba(255,184,107,.09)}
+.arrow{display:grid;place-items:center;width:34px;flex:none;color:var(--amber);font-size:17px;position:relative}
+.arrow::after{content:"";position:absolute;left:2px;right:2px;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,184,107,.5),transparent);z-index:-1}
+.vflow{display:flex;flex-direction:column;align-items:center;gap:0}
+.vnode{width:min(430px,100%);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:20px;padding:13px 18px;text-align:center}
+.vnode .t{font-weight:800;font-size:15px}
+.vnode .s{font-size:12.5px;color:var(--ink-dim)}
+.vnode.hot{border-color:rgba(255,184,107,.55);background:rgba(255,184,107,.09)}
+.varrow{height:30px;width:2px;background:linear-gradient(180deg,rgba(255,184,107,.15),var(--amber),rgba(255,184,107,.15));position:relative}
+.varrow::after{content:"▾";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);color:var(--amber);font-size:13px}
+.pulse-dot{position:absolute;left:50%;top:0;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--gold);animation:drop 1.6s ease-in infinite}
+@keyframes drop{0%{top:0;opacity:0}25%{opacity:1}100%{top:24px;opacity:0}}
+.split{display:flex;gap:14px;width:min(640px,100%)}
+.split .vnode{flex:1}
+.formula{font-family:var(--mono);font-size:clamp(13.5px,1.9vw,18px);text-align:center;padding:18px 10px;color:var(--ink);line-height:1.7;overflow-x:auto}
+.formula b{color:var(--amber)}
+.formula .op{color:var(--coral);padding:0 6px}
+.formula .res{color:var(--good);font-weight:700}
+.matrix{display:grid;grid-template-columns:118px 1fr 1fr;gap:8px;font-size:13.5px}
+.matrix .mh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);display:grid;place-items:center;text-align:center;padding:6px}
+.matrix .cell{border-radius:16px;padding:14px;text-align:center;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.matrix .cell b{display:block;font-family:var(--mono);font-size:24px}
+.matrix .cell.ok{background:rgba(143,227,176,.1);border-color:rgba(143,227,176,.3)}
+.matrix .cell.err{background:rgba(255,107,94,.12);border-color:rgba(255,107,94,.38)}
+.matrix .cell span{color:var(--ink-dim);font-size:12px}
+.annot{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px}
+.annot:last-child{border-bottom:none}
+.annot .f{font-family:var(--mono);color:var(--gold);font-size:12.5px;min-width:132px;flex:none;padding-top:1px}
+.annot .d{color:var(--ink-dim);line-height:1.45}
+.annot .d b{color:var(--ink)}
+.nav{display:flex;align-items:center;gap:12px;padding:10px 22px 16px}
+.nav .hint{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-left:6px}
+.nav .spacer{flex:1}
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(16,7,4,.9);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:none;overflow-y:auto;padding:34px clamp(18px,4vw,54px)}
+.overlay.open{display:block}
+.overlay h2{margin-bottom:18px}
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:12px;max-width:1180px}
+.ov-item{text-align:left;background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:14px 16px;color:var(--ink);transition:border-color .2s,background .2s}
+.ov-item:hover{background:var(--glass-strong)}
+.ov-item.cur{border-color:var(--amber)}
+.ov-item .n{font-family:var(--mono);font-size:11px;color:var(--amber)}
+.ov-item .t{font-weight:700;font-size:14px;line-height:1.35;margin-top:4px}
+.title-meta{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 22px}
+.presenter{display:flex;align-items:center;gap:14px;margin-top:8px}
+.avatar{width:48px;height:48px;border-radius:16px;background:linear-gradient(130deg,var(--coral),var(--amber) 60%,var(--gold));display:grid;place-items:center;font-weight:800;font-size:17px;color:#2A1206;flex:none}
+.presenter .who b{display:block;font-size:15.5px}
+.presenter .who span{color:var(--ink-dim);font-size:13px}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;background:rgba(255,255,255,.06)}
+.stack{display:grid;gap:8px}
+.stack .layer{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:18px;padding:11px 16px;display:flex;gap:14px;align-items:flex-start}
+.stack .layer .ln{font-family:var(--mono);font-weight:700;font-size:12px;color:#2A1206;background:linear-gradient(120deg,var(--coral),var(--amber));border-radius:8px;width:26px;height:26px;display:grid;place-items:center;flex:none}
+.stack .layer .lt{font-weight:800;font-size:14.5px}
+.stack .layer .ls{font-size:13px;color:var(--ink-dim);line-height:1.45}
+.stack .layer.hot{border-color:rgba(255,184,107,.55);background:rgba(255,184,107,.07)}
+@media (max-width:820px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .arrow{width:100%;height:26px;transform:rotate(90deg)}
+  .metric{grid-template-columns:1fr;gap:6px}
+  .metric .val{text-align:left}
+  .matrix{grid-template-columns:82px 1fr 1fr}
+  .chrome .course{display:none}
+  .nav .hint{display:none}
+  .slide-inner{justify-content:flex-start}
+  .split{flex-direction:column}
+  .annot{flex-direction:column;gap:2px}
+  .annot .f{min-width:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+</style>
+</head>
+<body>
+<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div>
+
+<div class="deck">
+  <div class="chrome">
+    <div class="course"><b>LLM Evals From Zero</b> &nbsp;Chapter 8 of 9</div>
+    <div class="spacer"></div>
+    <div class="pbar" aria-hidden="true"><i id="pbarFill"></i></div>
+    <div class="counter"><b id="curNum">01</b> / 22</div>
+    <button class="btn" id="ovBtn" type="button">All slides</button>
+  </div>
+
+  <main class="slides" id="slides">
+
+  <!-- 1 TITLE -->
+  <section class="slide" data-title="Title: The Gate">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Chapter 8 · Evaluation in CI</div>
+      <h1 class="rise" style="--i:1">The <span class="hl">Gate</span></h1>
+      <p class="lede rise" style="--i:2">Wiring the eval suite into CI so a bad release blocks itself. Chapters 4 to 7 built scores you can trust: deterministic checks, a calibrated judge, stage attribution for RAG and agents. None of that changes a single release decision until a policy file, a baseline, and a required status check stand between a pull request and the merge button. This chapter builds that machinery, with its decision arithmetic exposed.</p>
+      <div class="grid2">
+        <div class="glass rise" style="--i:3">
+          <h3>By the end, you can answer four questions</h3>
+          <ul class="tight">
+            <li>Where do gate thresholds come from, if not from <b>someone picking a round number</b>?</li>
+            <li>What exactly happens, step by step, between <b>PR opened</b> and <b>merge blocked</b>?</li>
+            <li>Why is an <b>infrastructure error</b> a different outcome from a quality failure, and who acts on each?</li>
+            <li>How do you roll a gate out so the team <b>keeps it switched on</b>?</li>
+          </ul>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>How this lecture runs</h3>
+          <ul class="tight">
+            <li><b>20 to 25 minutes, 22 slides</b>: one PR, followed from open to blocked merge</li>
+            <li><b>Section 1</b>: policy as code, slides 4 to 7</li>
+            <li><b>Section 2</b>: pipeline engineering, slides 8 to 14</li>
+            <li><b>Section 3</b>: operating the gate, slides 15 to 21</li>
+            <li>Every threshold on screen is either <b>derived from measured noise</b> or labeled an example policy value</li>
+          </ul>
+        </div>
+      </div>
+      <div class="title-meta rise" style="--i:5">
+        <span class="chip"><span class="dot"></span>Input: <b>trusted scores</b> from Chapters 4 to 7 + the Chapter 6 trust table</span>
+        <span class="chip">Output: <b>gate.yaml</b> + a required status check + a PR report</span>
+        <span class="chip">Running case: <b>the v13 prompt PR</b> from Chapter 1, reopened</span>
+      </div>
+      <div class="presenter rise" style="--i:6">
+        <div class="avatar">SG</div>
+        <div class="who"><b>Saloni Garg</b><span>Senior Machine Learning Engineer, Adobe</span></div>
+      </div>
+      <div class="foot rise" style="--i:7"><span>SLIDE 01 / 22</span><span>PACE 0:00</span></div>
+    </div>
+  </section>
+
+  <!-- 2 DELIVERABLE AND END STATE -->
+  <section class="slide" data-title="The deliverable: a PR that cannot merge">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 02 · Deliverable and end state</div>
+      <h2 class="rise" style="--i:1">The v13 prompt PR, reopened. <span class="hl">This time it cannot merge.</span></h2>
+      <div class="grid2">
+        <div class="rise" style="--i:2">
+          <div class="code"><div class="codebar"><span class="lights"><i></i><i></i><i></i></span> pull request · support-rag #214 · prompt v13</div><span class="cm"># Chapter 1: v13 shipped on a 5 example spot check</span>
+<span class="cm"># and regressed on the 500 query production set.</span>
+<span class="cm"># Reopened against the gate, the same PR now ends:</span>
+
+  Checks
+  <span class="add">✓ unit tests                     passed</span>
+  <span class="add">✓ lint and typecheck             passed</span>
+  <span class="del">✗ eval-gate / policy-check       failed</span>
+<span class="del">    3 BLOCK rows · report posted as PR comment</span>
+
+  <span class="del">Merge blocked: required status check has not passed.</span></div>
+          <div class="glass rise" style="--i:3;margin-top:16px">
+            <h3>The deliverable, precisely</h3>
+            <ul class="tight">
+              <li><b>gate.yaml:</b> the release policy as a reviewed file in the repo. Slide 4.</li>
+              <li><b>A two tier pipeline:</b> a fast PR subset and a full nightly run that owns the baseline. Slides 8 and 14.</li>
+              <li><b>A PR comment report:</b> paired deltas plus the new failures list a reviewer actually reads. Slide 11.</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:4">
+            <h3>Recap: what Chapters 4 to 7 produced</h3>
+            <ul class="tight">
+              <li><b>Chapter 4</b> scored single answers deterministically, with paired diffs against a baseline.</li>
+              <li><b>Chapters 5 and 6</b> built the judge, then calibrated it and marked each capability GATE, WARN ONLY, or HUMAN ALWAYS.</li>
+              <li><b>Chapter 7</b> attributed every RAG and agent failure to its first failing stage, and set stage thresholds: Recall@10, tool arguments, pass@1, zero tolerance policy violations.</li>
+            </ul>
+          </div>
+          <div class="glass rise" style="--i:5;margin-top:16px;border-color:rgba(255,184,107,.5)">
+            <h3>The gap this chapter closes</h3>
+            <p>A score nobody enforces is a dashboard. Dashboards get read after incidents. The gate moves the same numbers into the one place a release cannot route around: <b style="color:var(--ink)">a required status check on the protected branch</b>. Everything in this chapter is plumbing in service of that single fact.</p>
+          </div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:6"><span>SLIDE 02 / 22</span><span>PACE 1:05</span></div>
+    </div>
+  </section>
+
+  <!-- 3 GATE ARCHITECTURE -->
+  <section class="slide" data-title="Gate architecture: PR to merge or block">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 03 · Gate architecture</div>
+      <h2 class="rise" style="--i:1">Eight components between <span class="hl">a pull request and a decision</span></h2>
+      <div class="vflow rise" style="--i:2">
+        <div class="vnode hot"><div class="t">1 · Pull request opened</div><div class="s">Run config extracted from the PR itself: model id, prompt hash, index version. The config is read from code, never typed into the workflow by hand.</div></div>
+        <div class="varrow"><span class="pulse-dot"></span></div>
+        <div class="vnode"><div class="t">2 · Eval run</div><div class="s">Candidate executes against the fixed gate subset, traces written per case, scorers from Chapters 4 to 7.</div></div>
+        <div class="varrow"><span class="pulse-dot"></span></div>
+        <div class="vnode"><div class="t">3 · Paired compare</div><div class="s">Candidate report diffed case by case against the stored baseline report. Same cases, same dataset version, same judge version.</div></div>
+        <div class="varrow"><span class="pulse-dot"></span></div>
+        <div class="vnode hot"><div class="t">4 · Policy engine</div><div class="s">gate.yaml applied to the diff. Output is one of three status outcomes, slide 13, plus a rendered report.</div></div>
+      </div>
+      <div class="split rise" style="--i:3;margin:18px auto 0">
+        <div class="vnode"><div class="t">Pass</div><div class="s">Status check green. Report artifact uploaded, PR comment posted. Merge allowed.</div></div>
+        <div class="vnode"><div class="t">Quality fail</div><div class="s">Status check red. Merge blocked by branch protection.</div></div>
+        <div class="vnode"><div class="t">Infra error</div><div class="s">Status check red with a different label and a different owner. Never rendered as a quality verdict.</div></div>
+      </div>
+      <p class="q rise" style="--i:4">Two outputs leave every run, win or lose: the status check that branch protection reads, and the report artifact plus PR comment that humans read. The first decides. The second explains.</p>
+      <div class="foot rise" style="--i:5"><span>SLIDE 03 / 22</span><span>PACE 2:10</span></div>
+    </div>
+  </section>
+
+  <!-- 4 SECTION 1 BANNER + GATE.YAML -->
+  <section class="slide" data-title="Section 1: gate.yaml, the policy file">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 1</span>
+        <span class="st">Policy as Code</span>
+        <span class="ss">SLIDES 4 TO 7 · GATE.YAML · NOISE DERIVED THRESHOLDS · DECISION RULE · TRUST WIRING</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 04 · gate.yaml · example policy values, tuned per app</div>
+      <h2 class="rise" style="--i:2">The release policy is <span class="hl">a file, reviewed like code</span></h2>
+      <div class="grid2">
+        <div class="code rise" style="--i:3"><div class="codebar"><span class="lights"><i></i><i></i><i></i></span> evals/gate.yaml</div><span class="kw">dataset_version</span>: golden_v1.2
+<span class="kw">subset</span>: gate_subset_v1
+<span class="kw">capabilities</span>:
+  - {<span class="kw">name</span>: faithfulness, <span class="kw">metric</span>: judge_pass_rate,
+     <span class="kw">max_drop_points</span>: 2.0, <span class="kw">severity</span>: block, <span class="kw">min_cases</span>: 120}
+  - {<span class="kw">name</span>: citation_accuracy, <span class="kw">metric</span>: per_claim_precision,
+     <span class="kw">max_drop_points</span>: 2.0, <span class="kw">severity</span>: block, <span class="kw">min_cases</span>: 100}
+  - {<span class="kw">name</span>: refusal, <span class="kw">metric</span>: refusal_correctness,
+     <span class="kw">max_drop_points</span>: 5.0, <span class="kw">severity</span>: block, <span class="kw">min_cases</span>: 80}
+  - {<span class="kw">name</span>: safety, <span class="kw">metric</span>: violation_count,
+     <span class="kw">max_drop_points</span>: 0, <span class="kw">severity</span>: block, <span class="kw">min_cases</span>: 60}
+  - {<span class="kw">name</span>: latency_p95, <span class="kw">metric</span>: seconds,
+     <span class="kw">max_increase_percent</span>: 25, <span class="kw">severity</span>: warn}</div>
+        <div class="glass rise" style="--i:4">
+          <h3>Field by field</h3>
+          <div class="annot"><span class="f">max_drop_points</span><span class="d">The largest candidate vs baseline drop this capability may take before the policy engine blocks. Derived from measured noise, slide 5, not chosen for roundness.</span></div>
+          <div class="annot"><span class="f">severity</span><span class="d"><b>block</b> fails the status check. <b>warn</b> renders in the report and changes nothing about mergeability.</span></div>
+          <div class="annot"><span class="f">min_cases</span><span class="d">The slice size below which the capability may not block at all. A drop measured on 30 cases is inside the Chapter 3 confidence band for a 5 point effect; the engine downgrades it to warn and says why.</span></div>
+          <div class="annot"><span class="f">safety: 0</span><span class="d"><b>Zero tolerance.</b> One new violation blocks, carrying the Chapter 7 rule forward unchanged: violations are counted, never averaged.</span></div>
+          <div class="annot"><span class="f">in the repo</span><span class="d">The file lives beside the code it gates. Changing a threshold is a pull request, with review, history, and a blame line. Slide 18 protects it with CODEOWNERS.</span></div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 04 / 22</span><span>PACE 3:15</span></div>
+    </div>
+  </section>
+
+  <!-- 5 THRESHOLDS FROM NOISE -->
+  <section class="slide" data-title="Thresholds come from noise, not taste">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 05 · Threshold derivation · example noise run</div>
+      <h2 class="rise" style="--i:1">Measure the noise first. <span class="hl">Then place the threshold outside it.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>The protocol</h3>
+          <ol class="steps">
+            <li><b>Freeze everything:</b> same model, same prompt, same index, same dataset version. The candidate is the baseline.</li>
+            <li><b>Run it 5 times.</b> Any spread across identical runs is pure measurement noise: judge variance, sampling, serving nondeterminism.</li>
+            <li><b>Record the spread per capability,</b> max minus min across the 5 runs.</li>
+            <li><b>Set max_drop_points above the spread</b> and below the smallest regression worth blocking. If no such gap exists for a capability, that capability cannot gate yet. It stays warn while you grow the slice or cut judge variance.</li>
+          </ol>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>Example noise run · Faithfulness, 5 identical runs</h3>
+          <table>
+            <tr><th>Run</th><th>Faithfulness</th><th>Note</th></tr>
+            <tr><td class="num">1</td><td class="num">95.2</td><td></td></tr>
+            <tr><td class="num">2</td><td class="num">94.8</td><td>Lowest of the five</td></tr>
+            <tr><td class="num">3</td><td class="num">95.6</td><td>Highest of the five</td></tr>
+            <tr><td class="num">4</td><td class="num">95.0</td><td></td></tr>
+            <tr><td class="num">5</td><td class="num">95.4</td><td></td></tr>
+          </table>
+          <div class="formula">spread <span class="op">=</span> 95.6 <span class="op">-</span> 94.8 <span class="op">=</span> <span class="res">0.8 points</span><br>gate.yaml threshold <span class="op">=</span> <span class="res">drop over 2.0 points blocks</span></div>
+          <p>The 2.0 threshold sits <b style="color:var(--ink)">outside the 0.8 point noise spread</b> and inside what the slice can resolve: at the gate subset slice sizes on slide 9, a 2 point paired shift is detectable, per the Chapter 3 confidence band logic, because paired comparison removes per case difficulty from the variance.</p>
+        </div>
+      </div>
+      <p class="lede rise" style="--i:4;margin-top:14px">A threshold placed inside the noise band fires on unchanged code roughly as often as the noise crosses it. The team learns the gate cries wolf, starts rerunning CI until green, and the gate is dead while still technically enabled. Noise first is not rigor for its own sake; it is what keeps the gate believed.</p>
+      <div class="foot rise" style="--i:5"><span>SLIDE 05 / 22</span><span>PACE 4:20</span></div>
+    </div>
+  </section>
+
+  <!-- 6 DECISION RULE -->
+  <section class="slide" data-title="The decision rule: pass, warn, block">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 06 · Decision rule per capability · example numbers</div>
+      <h2 class="rise" style="--i:1">Three outcomes, <span class="hl">decided by two numbers per capability</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th>Capability</th><th>Baseline</th><th>Candidate</th><th>Delta</th><th>Paired 95% interval</th><th>Threshold</th><th>Outcome</th></tr>
+          <tr><td><b>Faithfulness</b></td><td class="num">95.6</td><td class="num">95.1</td><td class="num">-0.5</td><td class="num">[-1.1, +0.1]</td><td class="num">block over 2.0</td><td><span class="pill pass">PASS</span></td></tr>
+          <tr><td><b>Refusal correctness</b></td><td class="num">88.5</td><td class="num">86.2</td><td class="num">-2.3</td><td class="num">[-4.9, +0.3]</td><td class="num">block over 5.0</td><td><span class="pill warn">WARN</span></td></tr>
+          <tr><td><b>Citation accuracy</b></td><td class="num">96.8</td><td class="num">91.5</td><td class="num">-5.3</td><td class="num">[-7.0, -3.6]</td><td class="num">block over 2.0</td><td><span class="pill fail">BLOCK</span></td></tr>
+        </table>
+      </div>
+      <div class="grid3" style="margin-top:16px">
+        <div class="glass rise" style="--i:3">
+          <h3>PASS</h3>
+          <p>Drop is <b style="color:var(--ink)">within the noise band</b>. Faithfulness moved 0.5 points against a measured spread of 0.8. Nothing to review; the row renders green and the run moves on.</p>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>WARN · human review</h3>
+          <p>Drop sits <b style="color:var(--ink)">between noise and threshold, or the paired interval includes zero</b>. Refusal fell 2.3 points, but the interval [-4.9, +0.3] cannot exclude no change. A human reads the flipped cases before merge.</p>
+        </div>
+        <div class="glass rise" style="--i:5">
+          <h3>BLOCK</h3>
+          <p>Drop is <b style="color:var(--ink)">beyond the threshold and the interval excludes zero</b>. Citation accuracy fell 5.3 points against a 2.0 threshold, worst case end of the interval still a 3.6 point loss. The status check fails.</p>
+        </div>
+      </div>
+      <p class="q rise" style="--i:6">The interval does the epistemic work: the point delta says how much, the interval says how sure. Blocking on a point delta alone blocks on noise one run in twenty by construction.</p>
+      <div class="foot rise" style="--i:7"><span>SLIDE 06 / 22</span><span>PACE 5:25</span></div>
+    </div>
+  </section>
+
+  <!-- 7 TRUST WIRING -->
+  <section class="slide" data-title="Trust wiring: what may block, what may not">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 07 · Trust wiring · from the Chapter 6 trust table</div>
+      <h2 class="rise" style="--i:1">Calibration decided who may block. <span class="hl">The gate only wires it up.</span></h2>
+      <div class="stack rise" style="--i:2">
+        <div class="layer hot"><span class="ln">G</span><div><div class="lt">GATE capabilities + all deterministic checks</div><div class="ls">Route: policy engine, severity block. A violation fails the status check. Entry condition from Chapter 6: judge agreement with blind human labels at or above the per capability bar, on a slice at or above min_cases. Deterministic checks skip the judge question entirely; a malformed JSON output or a missing citation target is a fact, not an opinion.</div></div></div>
+        <div class="layer"><span class="ln">W</span><div><div class="lt">WARN ONLY capabilities</div><div class="ls">Route: report only. The row renders with baseline, candidate, and delta, and carries <b style="color:var(--ink)">no status effect whatsoever</b>. The judge was directionally useful in calibration but not accurate enough to hold a release hostage, so it advises and never decides.</div></div></div>
+        <div class="layer"><span class="ln">H</span><div><div class="lt">HUMAN ALWAYS capabilities</div><div class="ls">Route: review task. The pipeline opens a labeled review task, links it in the PR comment, and the capability row shows <span class="num">awaiting review</span> until a named reviewer resolves it. No score this capability produces can clear or fail the check on its own.</div></div></div>
+      </div>
+      <div class="glass rise" style="--i:3;margin-top:16px">
+        <h3>Why the wiring is one directional</h3>
+        <p>Promotion flows from calibration evidence, never from convenience. A capability moves from WARN ONLY to GATE only through a new Chapter 6 calibration run with the agreement numbers attached, landed as a gate.yaml change with eval owner review. <b style="color:var(--ink)">A team under release pressure cannot promote a metric inside the PR that metric is failing.</b> That is slide 17's standing rule, enforced here by file ownership.</p>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 07 / 22</span><span>PACE 6:30</span></div>
+    </div>
+  </section>
+
+  <!-- 8 SECTION 2 BANNER + TWO TIER EXECUTION -->
+  <section class="slide" data-title="Section 2: two tier execution">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 2</span>
+        <span class="st">Pipeline Engineering</span>
+        <span class="ss">SLIDES 8 TO 14 · TWO TIERS · SUBSET · WORKFLOW · REPORT · COST · OUTCOMES · BASELINE</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 08 · Two tier execution · example budget</div>
+      <h2 class="rise" style="--i:2">A fast tier guards the PR. <span class="hl">A full tier owns the truth.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:3">
+          <h3>PR tier · target under 10 minutes</h3>
+          <table>
+            <tr><th>Stage</th><th>Minutes</th></tr>
+            <tr><td>Checkout, setup, config extraction</td><td class="num">0.8</td></tr>
+            <tr><td>Generate: 150 subset cases</td><td class="num">3.4</td></tr>
+            <tr><td>Deterministic + reference scorers</td><td class="num">0.3</td></tr>
+            <tr><td>Judge pass, gate capabilities only</td><td class="num">3.2</td></tr>
+            <tr><td>Paired compare + policy engine</td><td class="num">0.4</td></tr>
+            <tr><td>Upload artifacts, post PR comment</td><td class="num">0.3</td></tr>
+            <tr><td><b>Total</b></td><td class="num"><b>8.4</b></td></tr>
+          </table>
+          <p style="margin-top:10px">Fixed stratified 150 case subset, slide 9. Deterministic checks on everything, judge only where Chapter 6 granted gate trust. 1.6 minutes of headroom absorbs runner variance without breaching the target.</p>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>Nightly tier · completeness over speed</h3>
+          <ul class="tight">
+            <li><b>Full 500 cases</b> from golden_v1.2, every capability, every scorer.</li>
+            <li><b>Agent tasks at 3 repeated runs</b>, per the Chapter 7 protocol, so pass@1 and pass-all-3 both trend.</li>
+            <li><b>Full judge pass</b>, including WARN ONLY capabilities, whose trend lines are the evidence base for future promotion.</li>
+            <li><b>Report trended, not gated:</b> nightly output feeds the baseline on merged code, slide 14, and the gate health metrics on slide 20.</li>
+            <li><b>Failure mode it catches:</b> slow drift inside the PR subset's blind spots, and subset level noise that only the full slice can resolve.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 08 / 22</span><span>PACE 7:35</span></div>
+    </div>
+  </section>
+
+  <!-- 9 PR SUBSET SELECTION -->
+  <section class="slide" data-title="The PR subset: fixed, stratified, versioned">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 09 · PR subset selection · gate_subset_v1, 150 of 500 cases</div>
+      <h2 class="rise" style="--i:1">Same 150 cases on every PR, <span class="hl">or no two PRs are comparable</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>Stratification · proportional, with floors</h3>
+          <table>
+            <tr><th>Capability slice</th><th>Full set</th><th>Subset</th></tr>
+            <tr><td>Faithfulness</td><td class="num">200</td><td class="num">60</td></tr>
+            <tr><td>Refusal</td><td class="num">120</td><td class="num">36</td></tr>
+            <tr><td>Citation accuracy</td><td class="num">100</td><td class="num">30</td></tr>
+            <tr><td>Safety</td><td class="num">80</td><td class="num">24</td></tr>
+            <tr><td><b>Total</b></td><td class="num"><b>500</b></td><td class="num"><b>150</b></td></tr>
+          </table>
+          <p style="margin-top:10px">Proportional at 30 percent per slice, then checked against gate.yaml: every gate slice must clear its <b style="color:var(--ink)">min_cases</b> floor at subset scale for paired comparison, and difficulty strata from Chapter 3 are preserved inside each slice, so the subset is not 150 easy cases.</p>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:3">
+            <h3>Why fixed beats random</h3>
+            <p>Random per run sampling makes each PR fight a different exam. A delta between two PRs then mixes the code change with the sample change, and the paired interval on slide 6 loses its meaning, because pairing requires <b style="color:var(--ink)">identical case ids on both sides</b>. Fixed ids restore the pairing and make the subset itself a versioned artifact: <span class="num">gate_subset_v1</span>, changed only by its own reviewed PR.</p>
+          </div>
+          <div class="glass rise" style="--i:4;margin-top:16px">
+            <h3>Why fixed beats hand picked</h3>
+            <p>A hand picked subset drifts toward cases the current system passes; that is how demos were built in Chapter 1. Stratified selection from the frozen set, with floors per slice, is mechanical and auditable. Anyone can regenerate the subset from the rule and get the same 150 ids.</p>
+          </div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 09 / 22</span><span>PACE 8:40</span></div>
+    </div>
+  </section>
+
+  <!-- 10 WORKFLOW CODE -->
+  <section class="slide" data-title="The workflow: GitHub Actions">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 10 · Workflow code · .github/workflows/eval-gate.yml</div>
+      <h2 class="rise" style="--i:1">One workflow. <span class="hl">One step owns the exit code.</span></h2>
+      <div class="grid2">
+        <div class="code rise" style="--i:2"><div class="codebar"><span class="lights"><i></i><i></i><i></i></span> eval-gate.yml · PR tier</div><span class="kw">on</span>: [pull_request]
+<span class="kw">jobs</span>:
+  <span class="kw">eval-gate</span>:
+    <span class="kw">runs-on</span>: ubuntu-latest
+    <span class="kw">steps</span>:
+      - <span class="kw">uses</span>: actions/checkout@v4
+      - <span class="kw">uses</span>: actions/setup-python@v5
+        <span class="kw">with</span>: {<span class="kw">python-version</span>: <span class="str">"3.12"</span>}
+      - <span class="kw">run</span>: pip install -r evals/requirements.txt
+      - <span class="kw">run</span>: &gt;-
+          python evals/run_eval.py
+          --config <span class="str">"$CANDIDATE_CONFIG"</span>
+          --subset gate_subset_v1
+          --out runs/candidate
+      - <span class="kw">run</span>: &gt;-
+          python evals/compare.py
+          --baseline artifacts/baseline_report.json
+          --candidate runs/candidate/report.json
+          --out runs/diff.json
+      - <span class="kw">id</span>: policy
+        <span class="kw">run</span>: python evals/policy_check.py --gate evals/gate.yaml --diff runs/diff.json
+      - <span class="kw">if</span>: always()
+        <span class="kw">uses</span>: actions/upload-artifact@v4
+        <span class="kw">with</span>: {<span class="kw">name</span>: eval-report, <span class="kw">path</span>: runs/}
+      - <span class="kw">if</span>: always()
+        <span class="kw">run</span>: python evals/post_comment.py --diff runs/diff.json</div>
+        <div class="glass rise" style="--i:3">
+          <h3>Three properties to notice</h3>
+          <div class="annot"><span class="f">exit code</span><span class="d">Only the <b>policy step</b> decides the job's exit status. Generation, compare, upload, and comment steps report; the policy step verdicts. Branch protection reads exactly one signal and it traces to gate.yaml.</span></div>
+          <div class="annot"><span class="f">if: always()</span><span class="d">Artifacts and the PR comment post <b>even when the policy step fails</b>. A blocked PR with no report is a dead end; a blocked PR with a report is a work list, slide 11.</span></div>
+          <div class="annot"><span class="f">baseline artifact</span><span class="d">compare.py reads the stored baseline report, it does not rerun the baseline. Rerunning doubles cost and reintroduces run noise on both sides of the diff. Baseline provenance is slide 14.</span></div>
+          <div class="annot"><span class="f">config from the PR</span><span class="d"><span class="num">$CANDIDATE_CONFIG</span> is extracted from the PR's own code: model id, prompt hash, index version. What gets evaluated is what would merge, by construction.</span></div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 10 / 22</span><span>PACE 9:45</span></div>
+    </div>
+  </section>
+
+  <!-- 11 PR COMMENT REPORT -->
+  <section class="slide" data-title="The PR comment report">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 11 · PR comment report · rendered example, example run</div>
+      <h2 class="rise" style="--i:1">The report a reviewer reads <span class="hl">leads with new failures</span></h2>
+      <div class="glass rise" style="--i:2">
+        <h3>Eval gate report · PR #214 · candidate prompt v13 vs baseline</h3>
+        <table>
+          <tr><th>Capability</th><th>Baseline</th><th>Candidate</th><th>Delta</th><th>Status</th></tr>
+          <tr><td><b>Faithfulness</b></td><td class="num">95.6</td><td class="num">90.8</td><td class="down">-4.8</td><td><span class="pill fail">BLOCK</span></td></tr>
+          <tr><td><b>Citation accuracy</b></td><td class="num">96.8</td><td class="num">91.5</td><td class="down">-5.3</td><td><span class="pill fail">BLOCK</span></td></tr>
+          <tr><td><b>Refusal correctness</b></td><td class="num">88.5</td><td class="num">86.2</td><td class="num">-2.3</td><td><span class="pill warn">WARN</span></td></tr>
+          <tr><td><b>Safety violations</b></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill pass">PASS</span></td></tr>
+          <tr><td><b>Latency p95</b></td><td class="num">1.8 s</td><td class="num">2.0 s</td><td class="num">+11%</td><td><span class="pill warn">WARN</span></td></tr>
+        </table>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:3;border-color:rgba(255,107,94,.4)">
+          <h3>New failures · passed at baseline, fail now · 14 cases</h3>
+          <p style="font-family:var(--mono);font-size:12.5px;line-height:1.8;color:var(--ink-dim)">faith-0031 · faith-0107 · cite-0019 · cite-0044<br>cite-0082 · ref-0056 · + 8 more in failures.jsonl</p>
+          <p>Each id links to the case, the baseline output, the candidate output, and its Chapter 7 first failing stage. <b style="color:var(--ink)">This list is the review surface.</b> The author works it case by case; nobody debugs an aggregate.</p>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>Fixed · failed at baseline, pass now · 3 cases</h3>
+          <p style="font-family:var(--mono);font-size:12.5px;line-height:1.8;color:var(--ink-dim)">faith-0060 · ref-0012 · cite-0101</p>
+          <p>Improvements are reported with the same precision as regressions. A change that fixes 3 and breaks 14 is a net decision a human can now make with both lists open, instead of a single delta argued over in comments. Full records: <span class="num">failures.jsonl</span> in the run artifact.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 11 / 22</span><span>PACE 10:50</span></div>
+    </div>
+  </section>
+
+  <!-- 12 CACHING AND COST -->
+  <section class="slide" data-title="Caching and per PR cost">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 12 · Caching and cost · example token accounting</div>
+      <h2 class="rise" style="--i:1">Cache the judge. <span class="hl">Never cache the candidate.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>Cache keys, from Chapter 5</h3>
+          <div class="annot"><span class="f">judge verdict cache</span><span class="d">Keyed on hash of <b>case id + candidate output + judge prompt version + judge model id</b>. A rerun of the same PR head hits the cache; the verdicts are bit identical to the first pass.</span></div>
+          <div class="annot"><span class="f">invalidation</span><span class="d">Change the judge prompt or the judge model and the key changes with it: the entire cache misses, correctly, because a new judge is a new measurement instrument.</span></div>
+          <div class="annot"><span class="f">candidate generations</span><span class="d"><b>Never reused across a prompt hash change.</b> The prompt hash is part of the run config; a new hash means new generations, full stop. Reusing generations across prompt versions would grade a prompt the PR does not contain.</span></div>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>The token math · example run</h3>
+          <div class="formula" style="text-align:left">PR tier judge pass<br>150 cases <span class="op">x</span> 2,070 tokens <span class="op">=</span> <span class="res">310,500 tokens / PR</span><br><br>Nightly judge pass<br>500 cases <span class="op">x</span> 2,070 tokens <span class="op">=</span> <span class="res">1,035,000 tokens</span><br><span style="font-size:13px;color:var(--ink-dim)">plus agent tasks at 3 repeated runs, costed per Chapter 7 accounting</span></div>
+          <p>The 2,070 tokens per case is the Chapter 5 measured judge call size: rubric, evidence, and answer. Both totals land in the report as a <b style="color:var(--ink)">cost field on every run</b>, trended on slide 20, so cost drift is a reviewed artifact, not an invoice surprise at month end.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 12 / 22</span><span>PACE 11:55</span></div>
+    </div>
+  </section>
+
+  <!-- 13 THREE RUN OUTCOMES -->
+  <section class="slide" data-title="Three run outcomes, kept distinct">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 13 · Run outcomes and exit codes</div>
+      <h2 class="rise" style="--i:1">An infra error is <span class="hl">never a quality verdict</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th>Outcome</th><th>Trigger</th><th>Exit code</th><th>What the author does next</th></tr>
+          <tr><td><span class="pill pass">PASS</span></td><td>All gate capabilities within policy; warn rows allowed</td><td class="num"><b>0</b></td><td>Merge, subject to normal code review. Warn rows are read, not actioned by rule.</td></tr>
+          <tr><td><span class="pill fail">QUALITY FAIL</span></td><td>At least one BLOCK row from the policy engine</td><td class="num"><b>1</b></td><td>Work the new failures list, slide 17 playbook. The verdict is about the change, and it stands until the change does.</td></tr>
+          <tr><td><span class="pill warn">INFRA ERROR</span></td><td>judge_error rate above its budget, runner timeouts, API failures mid run</td><td class="num"><b>2</b></td><td>Nothing about the change. The run <b>reruns once automatically</b>; a second infra error pages the eval owner, and the PR waits on infrastructure, not on quality.</td></tr>
+        </table>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:3">
+          <h3>Why the judge error budget exists</h3>
+          <p>If 8 percent of judge calls errored and returned no verdict, a report computed over the surviving cases is a report about a different, easier subset. The run declares itself infra error when the judge error rate crosses its budget, set in gate.yaml beside the thresholds, rather than quietly scoring what survived.</p>
+        </div>
+        <div class="glass rise" style="--i:4;border-color:rgba(255,184,107,.5)">
+          <h3>Why the distinction protects trust</h3>
+          <p>Merge the two failure kinds into one red check and authors learn that red sometimes means <b style="color:var(--ink)">the API was down</b>, so red stops meaning anything. Three outcomes, three owners, three next actions: that separation is what lets a quality fail keep its authority.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 13 / 22</span><span>PACE 13:00</span></div>
+    </div>
+  </section>
+
+  <!-- 14 BASELINE MANAGEMENT -->
+  <section class="slide" data-title="Baseline management: the baseline never self updates">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 14 · Baseline management</div>
+      <h2 class="rise" style="--i:1">The baseline is produced on main. <span class="hl">It is never produced by the PR it judges.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>The baseline lifecycle</h3>
+          <ol class="steps">
+            <li><b>Produced nightly on merged code:</b> the nightly tier runs on main, and its full report becomes the candidate baseline.</li>
+            <li><b>Stored as a versioned artifact:</b> baseline report carries dataset version, judge version, model and index versions, and the run id that produced it.</li>
+            <li><b>Promoted by its own PR:</b> adopting a new baseline is a small dedicated pull request with a changelog entry stating what changed and why scores moved.</li>
+            <li><b>Reviewed like a dataset change,</b> because it is one: every future delta is measured against this file.</li>
+          </ol>
+        </div>
+        <div class="glass rise" style="--i:3;border-color:rgba(255,107,94,.45)">
+          <h3>The anti-pattern: the self ratifying baseline</h3>
+          <div class="vflow">
+            <div class="vnode"><div class="t">PR regresses faithfulness by 1.5 points</div><div class="s">Inside a loose threshold, merges.</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Baseline auto updates to the regressed code</div><div class="s">The regression is now the reference.</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Next PR regresses another 1.5 points</div><div class="s">Measured against the lowered baseline, also inside threshold.</div></div>
+          </div>
+          <p style="margin-top:12px">Individually acceptable drops compound into a large quality loss that no single report ever shows, because each report compares against yesterday. <b style="color:var(--ink)">A baseline that updates itself out of a failure is a ratchet pointed down.</b></p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 14 / 22</span><span>PACE 14:05</span></div>
+    </div>
+  </section>
+
+  <!-- 15 SECTION 3 BANNER + BRANCH PROTECTION -->
+  <section class="slide" data-title="Section 3: branch protection and the override">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 3</span>
+        <span class="st">Operating the Gate</span>
+        <span class="ss">SLIDES 15 TO 21 · BRANCH PROTECTION · ROLLOUT · PLAYBOOK · GATE SECURITY · DEMO · GATE HEALTH · THREATS</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 15 · Branch protection · repository settings, rendered as a panel</div>
+      <h2 class="rise" style="--i:2">The gate binds because <span class="hl">the branch requires it</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:3">
+          <h3>Settings · branch protection rule · main</h3>
+          <div class="annot"><span class="f">required checks</span><span class="d"><b>eval-gate / policy-check</b> is listed as a required status check. A PR with a failed or pending check has no merge path in the UI or the API.</span></div>
+          <div class="annot"><span class="f">up to date</span><span class="d">Branches must be current with main before merge, so the evaluated config is the config that lands, not a stale ancestor of it.</span></div>
+          <div class="annot"><span class="f">no self approval</span><span class="d">The check result comes from the workflow run, not from any human's attestation. There is no checkbox a reviewer can tick to simulate a pass.</span></div>
+        </div>
+        <div class="glass rise" style="--i:4;border-color:rgba(255,184,107,.5)">
+          <h3>The emergency override, priced in advance</h3>
+          <p>Admins retain an override for genuine emergencies, and it is deliberately expensive. Using it requires, at the moment of use:</p>
+          <ul class="tight" style="margin-top:10px">
+            <li><b>A linked incident</b> the override is relieving</li>
+            <li><b>A postmortem</b> filed on the incident</li>
+            <li><b>A new golden case within one week</b> covering the failure mode that forced the bypass, so the escape route closes behind it</li>
+          </ul>
+          <p style="margin-top:10px">Every override is <b style="color:var(--ink)">logged with author, PR, and reason, and counted</b> in the gate health metrics on slide 20. An override nobody counts is an unmarked second merge path.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 15 / 22</span><span>PACE 15:10</span></div>
+    </div>
+  </section>
+
+  <!-- 16 ROLLOUT PHASES -->
+  <section class="slide" data-title="Rollout in four phases">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 16 · Rollout · promotion criterion between phases</div>
+      <h2 class="rise" style="--i:1">A gate that blocks on day one <span class="hl">gets disabled by Friday</span></h2>
+      <div class="stack rise" style="--i:2">
+        <div class="layer"><span class="ln">1</span><div><div class="lt">Report only · two weeks</div><div class="ls">The pipeline runs and posts reports; nothing is required, nothing blocks. The deliverable of this phase is a number: the <b style="color:var(--ink)">baseline false block rate</b>, the fraction of PRs the policy would have blocked that reviewers judge, case by case, to have been fine. Threshold and subset bugs surface here, where they cost comments instead of merges.</div></div></div>
+        <div class="layer"><span class="ln">2</span><div><div class="lt">Warn · status visible, merge allowed</div><div class="ls">The check appears on every PR and renders its verdict, but branch protection does not require it. Authors learn to read the report while ignoring it is still free.</div></div></div>
+        <div class="layer hot"><span class="ln">3</span><div><div class="lt">Block on safety and deterministic only</div><div class="ls">The first blocking scope is the one with no judgment in it: safety violations at zero tolerance, malformed outputs, broken citations targets, schema failures. Facts first.</div></div></div>
+        <div class="layer"><span class="ln">4</span><div><div class="lt">Block on all GATE capabilities</div><div class="ls">Judge backed capabilities from the Chapter 6 trust table join the blocking set, with their noise derived thresholds from slide 5.</div></div></div>
+      </div>
+      <p class="lede rise" style="--i:3;margin-top:14px">Promotion between phases is earned by measurement, not scheduled by calendar: the phase advances when the <b style="color:var(--ink)">measured false block rate</b> sits at or below the level the team agreed in Phase 1. A gate that skips the measurement arrives at Phase 4 with unknown credibility and spends it in the first week.</p>
+      <div class="foot rise" style="--i:4"><span>SLIDE 16 / 22</span><span>PACE 16:15</span></div>
+    </div>
+  </section>
+
+  <!-- 17 WHEN THE GATE FIRES -->
+  <section class="slide" data-title="When the gate fires: the playbook">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 17 · The playbook · author facing procedure</div>
+      <h2 class="rise" style="--i:1">Read the failures. <span class="hl">Not the score.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>The procedure, in order</h3>
+          <ol class="steps">
+            <li><b>Open the new failures list</b> from the PR comment, slide 11. Cases that passed at baseline and fail now are the entire initial scope.</li>
+            <li><b>Classify each by first failing stage,</b> using the Chapter 7 triage: retrieval, assembly, generation, attribution, tool selection, tool arguments, recovery.</li>
+            <li><b>Fix the change or revert it.</b> If the cluster points at one prompt hunk or one config line, that is the suspect; verify by rerunning the gate on the fix.</li>
+            <li><b>Add a case for any new failure mode</b> the failures exposed, through the Chapter 3 dataset process, so this exact regression can never pass silently again.</li>
+          </ol>
+        </div>
+        <div class="glass rise" style="--i:3;border-color:rgba(255,107,94,.45)">
+          <h3>The standing rule</h3>
+          <p style="font-size:16px;line-height:1.6;color:var(--ink)">Thresholds and the dataset are never edited in the same PR as the failing product change.</p>
+          <p style="margin-top:10px">A threshold change gets its own PR, its own noise evidence, and eval owner review under slide 18. The mechanism matters more than the intention: if the PR that fails the gate can also edit the gate, then every block is negotiable at exactly the moment negotiation pressure peaks, and the gate's verdicts stop being evidence about the product.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 17 / 22</span><span>PACE 17:20</span></div>
+    </div>
+  </section>
+
+  <!-- 18 PROTECT THE GATE ITSELF -->
+  <section class="slide" data-title="Protect the gate itself">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 18 · Gate security · ownership, secrets, self reference</div>
+      <h2 class="rise" style="--i:1">Whoever can edit the gate <span class="hl">can pass anything</span></h2>
+      <div class="grid2">
+        <div class="code rise" style="--i:2"><div class="codebar"><span class="lights"><i></i><i></i><i></i></span> CODEOWNERS · eval surface</div><span class="cm"># every path that can change a verdict</span>
+/evals/            @eval-owners
+/datasets/         @eval-owners
+/evals/gate.yaml   @eval-owners
+/.github/workflows/eval-gate.yml @eval-owners</div>
+        <div class="glass rise" style="--i:3">
+          <h3>The rules</h3>
+          <div class="annot"><span class="f">ownership</span><span class="d">Changes to the evals directory, the dataset, gate.yaml, or the workflow itself require <b>eval owner review</b>. Product authors can propose; they cannot self approve a weaker gate.</span></div>
+          <div class="annot"><span class="f">secrets</span><span class="d">Judge and model API keys live as <b>CI secrets</b>, never in the repo, never in workflow logs. A key in git history is a compromised key.</span></div>
+          <div class="annot"><span class="f">fork PRs</span><span class="d">Forks run <b>without secrets</b>, so the judge tier cannot execute. Fork PRs get deterministic checks and a report header stating the judge tier did not run; they are never presented as fully gated.</span></div>
+          <div class="annot"><span class="f">self reference</span><span class="d">A PR that edits its own gate has that fact <b>flagged in the report header</b>: gate files changed in this PR. Reviewers see the conflict of interest in the artifact itself, not by inspecting the file list.</span></div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 18 / 22</span><span>PACE 18:25</span></div>
+    </div>
+  </section>
+
+  <!-- 19 THE DEMO END TO END -->
+  <section class="slide" data-title="The demo: v13, caught end to end">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 19 · The demo · timeline reuses the Chapter 1 example report figures</div>
+      <h2 class="rise" style="--i:1">Minute by minute: <span class="hl">the Chapter 1 failure, replayed against the gate</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>The paired report · Chapter 1 example, candidate v13 vs baseline v12</h3>
+          <div class="metric"><span class="name">Faithfulness</span><span class="bar"><i style="--w:91.2%"></i></span><span class="val"><b>91.2%</b> &nbsp;<span class="down">down 4.8 pts</span></span></div>
+          <div class="metric"><span class="name">Citation Accuracy</span><span class="bar"><i style="--w:96.8%"></i></span><span class="val"><b>96.8%</b> &nbsp;<span class="down">down 7.1 pts</span></span></div>
+          <div class="metric"><span class="name">Refusal Correctness</span><span class="bar"><i style="--w:88.5%"></i></span><span class="val"><b>88.5%</b> &nbsp;<span class="down">down 9.4 pts</span></span></div>
+          <div class="metric"><span class="name">Latency</span><span class="bar"><i style="--w:62%"></i></span><span class="val"><b>1.8 s</b> &nbsp;<span class="down">up 0.3 s</span></span></div>
+          <p style="margin-top:12px">Policy engine verdict on these rows: <span class="pill fail">BLOCK</span> <span class="pill fail">BLOCK</span> <span class="pill fail">BLOCK</span> <b style="color:var(--ink)">three BLOCK rows</b>. Status check fails. The merge button is disabled by branch protection. In Chapter 1, this exact report was produced after the release. Here it is produced before it.</p>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>The timeline</h3>
+          <div class="annot"><span class="f">minute 0</span><span class="d"><b>PR opened.</b> Config extracted: prompt hash changes, model and index unchanged. Eval run starts automatically.</span></div>
+          <div class="annot"><span class="f">minute 8</span><span class="d"><b>Paired report posts</b> as a PR comment with the rows at left and the new failures list.</span></div>
+          <div class="annot"><span class="f">minute 8</span><span class="d"><b>Policy engine rules:</b> three BLOCK rows. Status check: failed. Merge: blocked.</span></div>
+          <div class="annot"><span class="f">minute 25</span><span class="d"><b>Author reads the 14 new failures,</b> clusters them by first failing stage, and finds they trace to one prompt hunk: the instruction that loosened citation discipline to sound more confident.</span></div>
+          <div class="annot"><span class="f">minute 40</span><span class="d"><b>Author reverts that hunk,</b> keeps the rest of v13, pushes. The gate reruns against the same baseline.</span></div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 19 / 22</span><span>PACE 19:30</span></div>
+    </div>
+  </section>
+
+  <!-- 20 MEASURE THE GATE ITSELF -->
+  <section class="slide" data-title="Measure the gate itself">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 20 · Gate health metrics · reviewed on the nightly trend</div>
+      <h2 class="rise" style="--i:1">A gate with no measured false block rate <span class="hl">is an opinion with an exit code</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th>Metric</th><th>Definition</th><th>What a bad value triggers</th></tr>
+          <tr><td><b>False block rate</b></td><td>Blocks that reviewers, reading the flipped cases, judge incorrect / all blocks</td><td>Threshold and noise review. This is the Phase 1 measurement from slide 16, kept permanently, not a rollout one off.</td></tr>
+          <tr><td><b>Escape rate</b></td><td>Regressions found in production that the gate passed / releases in the period</td><td>Every escape becomes a golden case through Chapter 3, and its stage attribution names the scorer or slice that missed it.</td></tr>
+          <tr><td><b>Eval duration p95</b></td><td>95th percentile wall clock of the PR tier run</td><td>Subset or judge pass redesign before authors start routing around a slow gate.</td></tr>
+          <tr><td><b>Cost per PR</b></td><td>The run cost field from slide 12, aggregated per PR</td><td>Cache hit review and tier rebalance. Cost is a design constraint with a number, reviewed like latency.</td></tr>
+          <tr><td><b>Override count</b></td><td>Emergency overrides used, from the slide 15 log</td><td>Any rising trend is a governance review, whatever the quality metrics say.</td></tr>
+        </table>
+      </div>
+      <p class="lede rise" style="--i:3;margin-top:14px">The gate is a product with users, failure modes, and an operating cost. These five numbers are its eval suite. A team that measures its model this carefully and its gate not at all has the rigor exactly backwards, because the gate is the component every other measurement flows through.</p>
+      <div class="foot rise" style="--i:4"><span>SLIDE 20 / 22</span><span>PACE 20:35</span></div>
+    </div>
+  </section>
+
+  <!-- 21 THREATS TO THE GATE -->
+  <section class="slide" data-title="Threats to the gate, honestly">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 21 · Threat model · one countermeasure per threat</div>
+      <h2 class="rise" style="--i:1">The gate will be gamed, drift, and erode. <span class="hl">Plan for all three.</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th>Threat</th><th>Mechanism</th><th>Countermeasure</th></tr>
+          <tr><td><b>Goodhart pressure</b></td><td>Prompts get tuned against the frozen gate set until the set measures prompt fitting, not quality</td><td><b>Chapter 3 holdout rotation:</b> a rotated holdout slice is scored nightly; a widening gap between gate set and holdout scores is the detection signal.</td></tr>
+          <tr><td><b>Subset memorization</b></td><td>The fixed 150 are known, so changes can be aimed at exactly those cases</td><td>The nightly full 500 owns the baseline, and subset membership is regenerated by rule when the dataset version bumps, never by the teams being gated.</td></tr>
+          <tr><td><b>Judge drift</b></td><td>The judge model changes or decays, and its verdicts quietly stop matching human labels</td><td><b>Chapter 6 recalibration has an expiry.</b> Past it, judge backed capabilities lose gate trust automatically and drop to warn until recalibrated.</td></tr>
+          <tr><td><b>Override strangulation</b></td><td>Each override is defensible; the count compounds until the exception is the process</td><td>Overrides are counted on slide 20 and the count is reviewed. The countermeasure is visibility with a named reviewer, not a harder lock.</td></tr>
+        </table>
+      </div>
+      <p class="lede rise" style="--i:3;margin-top:14px">None of these threats arrives as an attack. They arrive as reasonable local decisions by busy people, which is why every countermeasure above is a measurement or a rotation, not an exhortation to be careful.</p>
+      <div class="foot rise" style="--i:4"><span>SLIDE 21 / 22</span><span>PACE 21:40</span></div>
+    </div>
+  </section>
+
+  <!-- 22 KEY TAKEAWAYS -->
+  <section class="slide" data-title="Key takeaways and next video">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 22 · Key takeaways</div>
+      <h2 class="rise" style="--i:1">The <span class="hl">Gate</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <ol class="steps">
+            <li><b>Policy is a file, and thresholds come from measured noise.</b> gate.yaml is reviewed like code; a threshold inside the noise band builds a gate nobody believes.</li>
+            <li><b>Three outcomes, kept distinct.</b> Pass, quality fail, infra error: different exit codes, different owners, different next actions. An infra error is never a quality verdict.</li>
+            <li><b>The baseline never updates itself out of a failure.</b> It is produced on main, promoted by its own PR, or it becomes a ratchet pointed down.</li>
+            <li><b>Roll out in phases and measure the gate like a product.</b> False block rate is the promotion criterion, and gate health metrics run for as long as the gate does.</li>
+          </ol>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:3">
+            <h3>Next video · Chapter 9</h3>
+            <p><b style="color:var(--ink)">After the merge.</b> The gate guards the release; it says nothing about next month. Video 9 covers online evals on sampled production traffic, production drift against the golden set's assumptions, and keeping the whole system, dataset, judge, and gate, honest over time.</p>
+            <p class="q">Bring: your gate health table from slide 20, and the date your judge calibration expires.</p>
+          </div>
+          <div class="presenter rise" style="--i:4;margin-top:16px">
+            <div class="avatar">SG</div>
+            <div class="who"><b>Saloni Garg</b><span>Senior Machine Learning Engineer, Adobe</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 22 / 22</span><span>PACE 22:45 · END 24:00</span></div>
+    </div>
+  </section>
+</main>
+
+  <div class="nav">
+    <button class="btn" id="prevBtn" type="button">← Prev</button>
+    <button class="btn primary" id="nextBtn" type="button">Next →</button>
+    <span class="hint">Keyboard: <span class="kbd">←</span> <span class="kbd">→</span> navigate · <span class="kbd">Space</span> next · <span class="kbd">O</span> overview · swipe on touch</span>
+    <div class="spacer"></div>
+    <span class="hint" id="slideTitle"></span>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-label="All slides">
+  <div style="display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto 4px">
+    <h2 style="margin:0">All 22 slides</h2>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn" id="ovClose" type="button">Close ✕</button>
+  </div>
+  <p style="color:var(--ink-dim);max-width:1180px;margin:0 auto 18px;font-size:14px">Chapter 8 · The Gate · Evaluation in CI that blocks bad releases: policy as code, two tier execution, and operating the gate. 20 to 25 minutes.</p>
+  <div class="ov-grid" id="ovGrid" style="margin:0 auto"></div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var cur = 0;
+  var fill = document.getElementById('pbarFill');
+  var num = document.getElementById('curNum');
+  var titleEl = document.getElementById('slideTitle');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var overlay = document.getElementById('overlay');
+  var grid = document.getElementById('ovGrid');
+
+  slides.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ov-item';
+    b.innerHTML = '<div class="n">SLIDE ' + String(i+1).padStart(2,'0') + '</div><div class="t"></div>';
+    b.querySelector('.t').textContent = s.getAttribute('data-title');
+    b.addEventListener('click', function(){ go(i); toggleOv(false); });
+    grid.appendChild(b);
+  });
+  var ovItems = grid.children;
+
+  function go(i){
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function(s, j){
+      s.classList.toggle('active', j === cur);
+      s.classList.toggle('prev', j < cur);
+      if (j === cur) s.scrollTop = 0;
+    });
+    fill.style.width = ((cur + 1) / slides.length * 100) + '%';
+    num.textContent = String(cur + 1).padStart(2,'0');
+    titleEl.textContent = slides[cur].getAttribute('data-title');
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === slides.length - 1;
+    nextBtn.textContent = cur === slides.length - 1 ? 'End of deck' : 'Next →';
+    for (var k = 0; k < ovItems.length; k++) ovItems[k].classList.toggle('cur', k === cur);
+  }
+  function toggleOv(open){ overlay.classList.toggle('open', open); }
+
+  prevBtn.addEventListener('click', function(){ go(cur - 1); });
+  nextBtn.addEventListener('click', function(){ go(cur + 1); });
+  document.getElementById('ovBtn').addEventListener('click', function(){ toggleOv(true); });
+  document.getElementById('ovClose').addEventListener('click', function(){ toggleOv(false); });
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) toggleOv(false); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') { toggleOv(false); return; }
+    if (overlay.classList.contains('open')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(cur + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home') { go(0); }
+    else if (e.key === 'End') { go(slides.length - 1); }
+    else if (e.key === 'o' || e.key === 'O') { toggleOv(true); }
+  });
+
+  var tx = null, ty = null;
+  var main = document.getElementById('slides');
+  main.addEventListener('touchstart', function(e){ tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY; }, {passive:true});
+  main.addEventListener('touchend', function(e){
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 1.6) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, {passive:true});
+
+  go(0);
+})();
+</script>
+</body>
+</html>
