@@ -84,6 +84,16 @@ section p b{color:var(--ink)}
 .linkbtn:hover{background:rgba(246,203,92,.5);color:var(--ink)}
 .linkbtn.sm{font-size:18px;padding:0 16px 2px}
 
+/* enroll form */
+.enroll{background:rgba(255,253,246,.45);border:2.2px solid var(--rule2);border-radius:255px 14px 225px 14px/14px 225px 14px 255px;padding:22px 26px 24px;margin-top:14px}
+.enroll label{display:block;font-family:var(--disp);font-size:20px;color:var(--ink);margin:12px 0 4px}
+.enroll input,.enroll select{width:100%;font-family:var(--hand);font-size:19px;color:var(--ink);background:rgba(255,253,246,.75);border:2.2px solid var(--ink);border-radius:225px 12px 255px 12px/12px 255px 12px 225px;padding:6px 14px 8px;appearance:none;-webkit-appearance:none}
+.enroll select{background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="9"><path d="M1 1l6 6 6-6" fill="none" stroke="%232e2313" stroke-width="2"/></svg>');background-repeat:no-repeat;background-position:right 16px center}
+.enroll input:focus,.enroll select:focus{outline:none;background:rgba(246,203,92,.35)}
+.enroll .submit{cursor:pointer;width:auto;margin-top:18px;font-size:22px;padding:2px 26px 4px}
+.enroll .note{font-size:16.5px;color:var(--faint);margin-top:10px}
+#enrolled-msg{display:none;background:rgba(246,203,92,.45);border:2.2px dashed var(--accent);border-radius:225px 12px 255px 12px/12px 255px 12px 225px;padding:12px 18px;margin-top:14px;color:var(--ink)}
+
 footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-family:var(--label);font-size:15.5px;color:var(--soft);line-height:1.6}
 
 /* mobile refinements */
@@ -119,6 +129,38 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <p class="title">Lectures and course slides</p>
   <p class="summary">Slide decks from invited lectures and from the LLM Evals From Zero course. Each deck is a self-contained HTML presentation; use the arrow keys to move through the slides.</p>
 </div>
+
+<section id="enroll">
+  <h2>Enroll in a future course</h2>
+  <p>New courses are being planned. Leave your email and pick the subject you want to learn, and you will be notified when enrollment opens for that course. Responses are sent directly to Saloni.</p>
+  <div id="enrolled-msg">Thank you. Your interest has been recorded. You will be notified when enrollment opens for your chosen subject.</div>
+  <form class="enroll" action="https://formsubmit.co/saloni8996@gmail.com" method="POST">
+    <input type="hidden" name="_subject" value="New enrollment interest: future course (saloni-garg.github.io)">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_next" value="https://saloni-garg.github.io/courses.html?enrolled=1#enroll">
+    <label for="enroll-email">Your email</label>
+    <input id="enroll-email" type="email" name="email" required placeholder="you@example.com" autocomplete="email">
+    <label for="enroll-subject">What do you want to learn?</label>
+    <select id="enroll-subject" name="subject" required>
+      <option value="" disabled selected>Choose a subject</option>
+      <option>Inference Engineering</option>
+      <option>RLHF and Alignment</option>
+      <option>Distributed Training</option>
+      <option>RAG (Retrieval-Augmented Generation)</option>
+      <option>AI Engineer Crash Course</option>
+      <option>Prompt Engineering</option>
+      <option>LLM Evaluation</option>
+      <option>GPU Programming and CUDA</option>
+      <option>Agentic AI Systems</option>
+      <option>Other / Suggest a topic</option>
+    </select>
+    <input class="linkbtn submit" type="submit" value="Notify me when enrollment opens">
+    <p class="note">Your email is only used to notify you about the course you pick. No spam, no sharing.</p>
+  </form>
+  <p style="margin-top:20px">Want to see what a course looks like first? The current lecture slides are open:</p>
+  <p><a class="linkbtn" href="courses/rag-lecture/">See current course slides</a> <a class="linkbtn" href="#lecture">Browse all lectures and courses</a></p>
+</section>
 
 <section id="lecture">
   <h2><span class="no">01</span>Distinguished lecture</h2>
@@ -158,5 +200,11 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 </footer>
 
 </div>
+<script>
+if (new URLSearchParams(location.search).get('enrolled') === '1') {
+  var m = document.getElementById('enrolled-msg');
+  if (m) m.style.display = 'block';
+}
+</script>
 </body>
 </html>
