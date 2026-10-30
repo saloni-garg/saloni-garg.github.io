@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>LLM Evals From Zero - Chapter 9 Slides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --base:#140B09;
+  --coral:#FF6B5E;
+  --amber:#FFB86B;
+  --gold:#FFD166;
+  --ink:#FFF6EC;
+  --ink-dim:rgba(255,246,236,.72);
+  --ink-faint:rgba(255,246,236,.52);
+  --glass:rgba(255,255,255,.055);
+  --glass-strong:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.14);
+  --bad:#FF7A6B;
+  --good:#8FE3B0;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Manrope',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--base);color:var(--ink);
+  font-family:var(--sans);overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);pointer-events:none;z-index:0;opacity:.55}
+.orb-a{width:520px;height:520px;background:radial-gradient(circle,#FF6B5E 0%,transparent 65%);top:-180px;right:-120px;animation:drift 26s ease-in-out infinite alternate}
+.orb-b{width:460px;height:460px;background:radial-gradient(circle,#FFB86B 0%,transparent 65%);bottom:-200px;left:-140px;animation:drift 32s ease-in-out infinite alternate-reverse}
+.orb-c{width:300px;height:300px;background:radial-gradient(circle,#FFD166 0%,transparent 65%);top:45%;left:55%;opacity:.28;animation:drift 38s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,44px) scale(1.12)}}
+.deck{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
+.chrome{display:flex;align-items:center;gap:14px;padding:14px 22px 8px}
+.chrome .course{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.chrome .course b{color:var(--amber);font-weight:700}
+.chrome .spacer{flex:1}
+.pbar{height:4px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;width:min(320px,38vw)}
+.pbar i{display:block;height:100%;width:5%;background:linear-gradient(90deg,var(--coral),var(--amber),var(--gold));border-radius:99px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.counter{font-family:var(--mono);font-size:12px;color:var(--ink-dim);white-space:nowrap}
+.counter b{color:var(--ink);font-size:14px}
+button{font-family:var(--sans);cursor:pointer}
+.btn{
+  background:var(--glass);border:1px solid var(--line);color:var(--ink);
+  border-radius:99px;padding:8px 16px;font-size:13px;font-weight:700;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  transition:background .2s,transform .2s;
+}
+.btn:hover{background:var(--glass-strong)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(120deg,var(--coral),var(--amber));color:#2A1206;border:none}
+.btn:disabled{opacity:.35;cursor:default}
+.slides{flex:1;position:relative;min-height:0}
+.slide{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  padding:18px clamp(18px,4.5vw,64px) 28px;
+  opacity:0;visibility:hidden;transform:translateX(26px) scale(.995);
+  transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1),visibility 0s .45s;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent;
+}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1)}
+.slide.prev{transform:translateX(-26px) scale(.995)}
+.slide-inner{max-width:1180px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center}
+.slide.active .rise{animation:rise .65s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i,0)*80ms)}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.kicker::after{content:"";height:1px;flex:0 0 54px;background:linear-gradient(90deg,var(--amber),transparent)}
+h1{font-size:clamp(34px,5.2vw,58px);line-height:1.04;font-weight:800;letter-spacing:-.02em;margin:0 0 14px}
+h2{font-size:clamp(26px,3.6vw,40px);line-height:1.1;font-weight:800;letter-spacing:-.015em;margin:0 0 10px}
+h2 .hl,h1 .hl{background:linear-gradient(100deg,var(--coral),var(--amber) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:clamp(15px,1.6vw,18px);line-height:1.55;color:var(--ink-dim);max-width:760px;margin:0 0 20px}
+.q{font-family:var(--mono);font-size:12.5px;color:var(--gold);margin-top:14px}
+.q::before{content:"Q  ";color:var(--coral);font-weight:700}
+.foot{display:flex;justify-content:space-between;gap:12px;margin-top:18px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.06em}
+.section-banner{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  background:linear-gradient(110deg,rgba(255,107,94,.16),rgba(255,184,107,.12) 60%,rgba(255,209,102,.08));
+  border:1px solid rgba(255,184,107,.45);border-radius:24px;
+  padding:14px 20px;margin-bottom:18px;
+  box-shadow:0 14px 34px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.07);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.section-banner .sn{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.14em;color:#2A1206;background:linear-gradient(120deg,var(--coral),var(--amber));border-radius:99px;padding:6px 13px;white-space:nowrap}
+.section-banner .st{font-size:clamp(19px,2.4vw,26px);font-weight:800;letter-spacing:-.01em}
+.section-banner .ss{font-family:var(--mono);font-size:11.5px;color:var(--ink-dim);letter-spacing:.05em}
+.glass{
+  background:var(--glass);border:1px solid var(--line);border-radius:26px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 18px 44px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.06);
+  padding:20px 22px;
+}
+.glass h3{margin:0 0 10px;font-size:16px;font-weight:800;letter-spacing:-.01em}
+.glass p{color:var(--ink-dim);line-height:1.55;font-size:14.5px;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink-dim)}
+.chip b{color:var(--ink)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex:none}
+ul.tight{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+ul.tight li{position:relative;padding-left:20px;color:var(--ink-dim);font-size:14.5px;line-height:1.5}
+ul.tight li::before{content:"";position:absolute;left:2px;top:.52em;width:7px;height:7px;border-radius:2px;background:linear-gradient(120deg,var(--coral),var(--amber))}
+ul.tight li b{color:var(--ink)}
+ol.steps{margin:0;padding:0;list-style:none;display:grid;gap:10px;counter-reset:st}
+ol.steps li{position:relative;padding-left:40px;color:var(--ink-dim);font-size:14.5px;line-height:1.5}
+ol.steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:0;width:27px;height:27px;border-radius:9px;background:linear-gradient(120deg,var(--coral),var(--amber));color:#2A1206;font-family:var(--mono);font-weight:700;font-size:13px;display:grid;place-items:center}
+ol.steps li b{color:var(--ink)}
+.bigquote{font-size:clamp(20px,2.7vw,30px);font-weight:800;line-height:1.3;letter-spacing:-.01em;margin:0}
+.bigquote .hl{background:linear-gradient(100deg,var(--coral),var(--amber) 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.code{
+  background:rgba(10,4,2,.72);border:1px solid var(--line);border-radius:20px;
+  padding:16px 18px;font-family:var(--mono);font-size:12.8px;line-height:1.65;
+  overflow-x:auto;white-space:pre;color:#FFE9D6;
+}
+.code .cm{color:rgba(255,233,214,.45)}
+.code .kw{color:var(--coral)}
+.code .str{color:var(--gold)}
+.code .fn{color:var(--amber)}
+.code .add{color:var(--good)}
+.code .del{color:var(--bad)}
+.codebar{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.codebar .lights{display:flex;gap:6px}
+.codebar .lights i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18)}
+.codebar .lights i:first-child{background:var(--coral)}
+.codebar .lights i:nth-child(2){background:var(--amber)}
+.codebar .lights i:nth-child(3){background:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:13.8px}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.07);color:var(--ink-dim);vertical-align:top;line-height:1.45}
+td b,td strong{color:var(--ink)}
+tr:last-child td{border-bottom:none}
+.num{font-family:var(--mono);white-space:nowrap}
+.down{color:var(--bad);font-family:var(--mono);font-weight:700;white-space:nowrap}
+.good{color:var(--good);font-family:var(--mono);font-weight:700;white-space:nowrap}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.05em}
+.pill.pass{background:rgba(143,227,176,.14);color:var(--good);border:1px solid rgba(143,227,176,.35)}
+.pill.fail{background:rgba(255,107,94,.14);color:var(--bad);border:1px solid rgba(255,107,94,.4)}
+.pill.warn{background:rgba(255,209,102,.13);color:var(--gold);border:1px solid rgba(255,209,102,.35)}
+.metric{display:grid;grid-template-columns:220px 1fr 128px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.metric:last-of-type{border-bottom:none}
+.metric .name{font-weight:700;font-size:14.5px}
+.bar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--coral),var(--amber));transition:width 1s cubic-bezier(.22,1,.36,1) .3s}
+.slide.active .bar i{width:var(--w)}
+.metric .val{font-family:var(--mono);font-size:13px;text-align:right;color:var(--ink-dim)}
+.metric .val b{color:var(--ink);font-size:15px}
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:nowrap}
+.node{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:20px;padding:14px 14px;text-align:center;position:relative}
+.node .t{font-weight:800;font-size:14px;margin-bottom:4px}
+.node .s{font-size:12px;color:var(--ink-dim);line-height:1.45}
+.node.hot{border-color:rgba(255,184,107,.55);background:rgba(255,184,107,.09)}
+.arrow{display:grid;place-items:center;width:34px;flex:none;color:var(--amber);font-size:17px;position:relative}
+.arrow::after{content:"";position:absolute;left:2px;right:2px;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,184,107,.5),transparent);z-index:-1}
+.vflow{display:flex;flex-direction:column;align-items:center;gap:0}
+.vnode{width:min(430px,100%);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:20px;padding:13px 18px;text-align:center}
+.vnode .t{font-weight:800;font-size:15px}
+.vnode .s{font-size:12.5px;color:var(--ink-dim)}
+.vnode.hot{border-color:rgba(255,184,107,.55);background:rgba(255,184,107,.09)}
+.varrow{height:30px;width:2px;background:linear-gradient(180deg,rgba(255,184,107,.15),var(--amber),rgba(255,184,107,.15));position:relative}
+.varrow::after{content:"▾";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);color:var(--amber);font-size:13px}
+.pulse-dot{position:absolute;left:50%;top:0;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--gold);animation:drop 1.6s ease-in infinite}
+@keyframes drop{0%{top:0;opacity:0}25%{opacity:1}100%{top:24px;opacity:0}}
+.split{display:flex;gap:14px;width:min(640px,100%)}
+.split .vnode{flex:1}
+.formula{font-family:var(--mono);font-size:clamp(13.5px,1.9vw,18px);text-align:center;padding:18px 10px;color:var(--ink);line-height:1.7;overflow-x:auto}
+.formula b{color:var(--amber)}
+.formula .op{color:var(--coral);padding:0 6px}
+.formula .res{color:var(--good);font-weight:700}
+.matrix{display:grid;grid-template-columns:118px 1fr 1fr;gap:8px;font-size:13.5px}
+.matrix .mh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);display:grid;place-items:center;text-align:center;padding:6px}
+.matrix .cell{border-radius:16px;padding:14px;text-align:center;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.matrix .cell b{display:block;font-family:var(--mono);font-size:24px}
+.matrix .cell.ok{background:rgba(143,227,176,.1);border-color:rgba(143,227,176,.3)}
+.matrix .cell.err{background:rgba(255,107,94,.12);border-color:rgba(255,107,94,.38)}
+.matrix .cell span{color:var(--ink-dim);font-size:12px}
+.annot{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px}
+.annot:last-child{border-bottom:none}
+.annot .f{font-family:var(--mono);color:var(--gold);font-size:12.5px;min-width:132px;flex:none;padding-top:1px}
+.annot .d{color:var(--ink-dim);line-height:1.45}
+.annot .d b{color:var(--ink)}
+.nav{display:flex;align-items:center;gap:12px;padding:10px 22px 16px}
+.nav .hint{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-left:6px}
+.nav .spacer{flex:1}
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(16,7,4,.9);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:none;overflow-y:auto;padding:34px clamp(18px,4vw,54px)}
+.overlay.open{display:block}
+.overlay h2{margin-bottom:18px}
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:12px;max-width:1180px}
+.ov-item{text-align:left;background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:14px 16px;color:var(--ink);transition:border-color .2s,background .2s}
+.ov-item:hover{background:var(--glass-strong)}
+.ov-item.cur{border-color:var(--amber)}
+.ov-item .n{font-family:var(--mono);font-size:11px;color:var(--amber)}
+.ov-item .t{font-weight:700;font-size:14px;line-height:1.35;margin-top:4px}
+.title-meta{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 22px}
+.presenter{display:flex;align-items:center;gap:14px;margin-top:8px}
+.avatar{width:48px;height:48px;border-radius:16px;background:linear-gradient(130deg,var(--coral),var(--amber) 60%,var(--gold));display:grid;place-items:center;font-weight:800;font-size:17px;color:#2A1206;flex:none}
+.presenter .who b{display:block;font-size:15.5px}
+.presenter .who span{color:var(--ink-dim);font-size:13px}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;background:rgba(255,255,255,.06)}
+.stack{display:grid;gap:8px}
+.stack .layer{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:18px;padding:11px 16px;display:flex;gap:14px;align-items:flex-start}
+.stack .layer .ln{font-family:var(--mono);font-weight:700;font-size:12px;color:#2A1206;background:linear-gradient(120deg,var(--coral),var(--amber));border-radius:8px;width:26px;height:26px;display:grid;place-items:center;flex:none}
+.stack .layer .lt{font-weight:800;font-size:14.5px}
+.stack .layer .ls{font-size:13px;color:var(--ink-dim);line-height:1.45}
+.stack .layer.hot{border-color:rgba(255,184,107,.55);background:rgba(255,184,107,.07)}
+.bars{display:flex;align-items:flex-end;gap:5px;height:170px;padding:8px 4px 0;border-bottom:1px solid var(--line)}
+.bars .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.bars .col i{display:block;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--amber),var(--coral));height:0;transition:height 1s cubic-bezier(.22,1,.36,1) .3s}
+.bars .col.hot i{background:linear-gradient(180deg,var(--gold),var(--bad))}
+.slide.active .bars .col i{height:var(--h)}
+.bars-x{display:flex;gap:5px;font-family:var(--mono);font-size:10px;color:var(--ink-faint);padding-top:6px}
+.bars-x span{flex:1;text-align:center}
+.costbar{display:flex;height:34px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.costbar i{display:block;height:100%}
+.costbar .c1{background:linear-gradient(90deg,var(--coral),#FF8468);width:0;transition:width 1s cubic-bezier(.22,1,.36,1) .3s}
+.costbar .c2{background:linear-gradient(90deg,var(--amber),#FFC287);width:0;transition:width 1s cubic-bezier(.22,1,.36,1) .45s}
+.costbar .c3{background:linear-gradient(90deg,var(--gold),#FFE08F);width:0;transition:width 1s cubic-bezier(.22,1,.36,1) .6s}
+.slide.active .costbar .c1{width:62.5%}
+.slide.active .costbar .c2{width:25%}
+.slide.active .costbar .c3{width:12.5%}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--ink-dim)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:10px;height:10px;border-radius:3px;flex:none}
+@media (max-width:820px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .arrow{width:100%;height:26px;transform:rotate(90deg)}
+  .metric{grid-template-columns:1fr;gap:6px}
+  .metric .val{text-align:left}
+  .matrix{grid-template-columns:82px 1fr 1fr}
+  .chrome .course{display:none}
+  .nav .hint{display:none}
+  .slide-inner{justify-content:flex-start}
+  .split{flex-direction:column}
+  .annot{flex-direction:column;gap:2px}
+  .annot .f{min-width:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+</style>
+</head>
+<body>
+<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div>
+
+<div class="deck">
+  <div class="chrome">
+    <div class="course"><b>LLM Evals From Zero</b> &nbsp;Chapter 9 of 9</div>
+    <div class="spacer"></div>
+    <div class="pbar" aria-hidden="true"><i id="pbarFill"></i></div>
+    <div class="counter"><b id="curNum">01</b> / 22</div>
+    <button class="btn" id="ovBtn" type="button">All slides</button>
+  </div>
+
+  <main class="slides" id="slides">
+
+  <!-- 1 TITLE -->
+  <section class="slide" data-title="Title: After the Merge">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Chapter 9 · Online Evaluation, Drift, and Maintenance</div>
+      <h1 class="rise" style="--i:1">After the <span class="hl">Merge</span></h1>
+      <p class="lede rise" style="--i:2">Online evaluation, drift, and keeping the eval system honest after the gate. Chapter 8 made the release decision trustworthy at merge time. This chapter covers everything that happens after: sampling production traffic for scoring, telling input drift apart from provider drift apart from a changed ruler, and the maintenance operations that keep the dataset, the judge, and the gate from quietly expiring.</p>
+      <div class="grid2">
+        <div class="glass rise" style="--i:3">
+          <h3>By the end, you can answer four questions</h3>
+          <ul class="tight">
+            <li>Which production traces may <b>estimate a rate</b>, and which may only be mined for cases?</li>
+            <li>When a production score moves, how do you decide whether the <b>inputs, the system, or the ruler</b> moved?</li>
+            <li>What does a <b>label that arrives seven days late</b> do to this week's online score?</li>
+            <li>Which maintenance artifacts prove the eval system is <b>still healthy</b>, and who owns each one?</li>
+          </ul>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>How this lecture runs</h3>
+          <ul class="tight">
+            <li><b>20 to 25 minutes, 22 slides</b>: one loop, from merged release back to new golden cases</li>
+            <li><b>Section 1</b>: online evaluation, slides 4 to 8</li>
+            <li><b>Section 2</b>: drift, three kinds, slides 9 to 14</li>
+            <li><b>Section 3</b>: maintenance and eval debt, slides 15 to 21</li>
+            <li>Every invented number is labeled <b>example data</b> or an example threshold on the slide where it appears</li>
+          </ul>
+        </div>
+      </div>
+      <div class="title-meta rise" style="--i:5">
+        <span class="chip"><span class="dot"></span>Input: <b>the Chapter 8 gate</b> + production traces + delayed outcome labels</span>
+        <span class="chip">Output: <b>drift dashboard</b> + golden case PRs + a maintenance cadence</span>
+        <span class="chip">Running system: <b>Support RAG</b>, now live behind the gate</span>
+      </div>
+      <div class="presenter rise" style="--i:6">
+        <div class="avatar">SG</div>
+        <div class="who"><b>Saloni Garg</b><span>Senior Machine Learning Engineer, Adobe</span></div>
+      </div>
+      <div class="foot rise" style="--i:7"><span>SLIDE 01 / 22</span><span>PACE 0:00</span></div>
+    </div>
+  </section>
+
+  <!-- 2 THE FULL LOOP -->
+  <section class="slide" data-title="The full loop: gate on the left, production on the right">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 02 · The full loop</div>
+      <h2 class="rise" style="--i:1">The gate answers one question. <span class="hl">Production answers the other.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>Offline · Chapters 3 to 8 · before the merge</h3>
+          <div class="vflow">
+            <div class="vnode"><div class="t">Golden dataset + holdout</div><div class="s">Frozen, versioned, Chapter 3</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Scorers + calibrated judge</div><div class="s">Chapters 4 to 6, trust per capability</div></div>
+            <div class="varrow"></div>
+            <div class="vnode hot"><div class="t">CI gate</div><div class="s">gate.yaml policy, Chapter 8. Merge or block.</div></div>
+          </div>
+          <p class="q">The gate answers: should this ship?</p>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>Online · this chapter · after the merge</h3>
+          <div class="vflow">
+            <div class="vnode hot"><div class="t">Production system</div><div class="s">Live traffic, real users, real corpus, provider endpoint</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Traces logged in full</div><div class="s">Inputs, retrieved chunks, outputs, tool calls, trace ids</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Sampled and scored</div><div class="s">Core sample scored, enriched stream mined, audits drawn</div></div>
+          </div>
+          <p class="q">Production answers: is it still true?</p>
+        </div>
+      </div>
+      <div class="flow rise" style="--i:4;margin-top:16px">
+        <div class="node"><div class="t">Online scoring</div><div class="s">Same scorers, same report schema, slide 5</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Human audit</div><div class="s">Weekly queue, slide 5. Disagreements logged</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Drift monitors</div><div class="s">Input, system, measurement, slides 9 to 14</div></div>
+        <div class="arrow">→</div>
+        <div class="node hot"><div class="t">New golden cases</div><div class="s">Confirmed failures land as case PRs, slide 14</div></div>
+      </div>
+      <p class="lede rise" style="--i:5;margin-top:14px">The return path is the point of the chapter. Production is not a place the system goes to be forgotten; it is the dataset's editor, continuously proposing new cases, new failure modes, and evidence that the frozen set's assumptions have expired.</p>
+      <div class="foot rise" style="--i:6"><span>SLIDE 02 / 22</span><span>PACE 1:05</span></div>
+    </div>
+  </section>
+
+  <!-- 3 OFFLINE VS ONLINE -->
+  <section class="slide" data-title="Offline vs online: the real split">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 03 · Offline vs online</div>
+      <h2 class="rise" style="--i:1">Two questions, <span class="hl">not two tools</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th>Dimension</th><th>Offline evaluation</th><th>Online evaluation</th></tr>
+          <tr><td><b>Distribution</b></td><td>Frozen golden set. Fixed cases, fixed difficulty mix, fixed corpus snapshot.</td><td>Live traffic. Whatever users actually ask this week, in whatever proportion they ask it.</td></tr>
+          <tr><td><b>Labels</b></td><td>Prewritten. Expected behavior, sources, and must-not-contain are authored before the run.</td><td>Delayed and partial. Outcomes resolve hours to days later, slide 8, and most traces never get a human label at all.</td></tr>
+          <tr><td><b>Repeatability</b></td><td>Exact. Same case ids, same pairing, rerunnable on demand, Chapter 8.</td><td>Never. The traffic of last Tuesday cannot be replayed; only its logged traces can be rescored.</td></tr>
+          <tr><td><b>Primary job</b></td><td>Block regressions. Compare a candidate against a baseline on identical inputs.</td><td>Detect drift and new failure modes. Find what the frozen set never contained.</td></tr>
+        </table>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:3">
+          <h3>Why online cannot replace the gate</h3>
+          <p>Production traffic has no counterfactual. You cannot observe what the rejected candidate would have done on the same users, and the users themselves change when the system changes. Regression blocking needs identical inputs on both sides of a comparison, and only the frozen set provides them.</p>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>Why the gate cannot replace online</h3>
+          <p>The frozen set is a photograph of what users asked when it was built. New topics, new vocabulary, new document versions, and provider side changes all arrive in production first. A gate that passes forever on a stale set is certifying a system that no longer exists.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 03 / 22</span><span>PACE 2:10</span></div>
+    </div>
+  </section>
+
+  <!-- 4 SECTION 1 BANNER + SAMPLING ARCHITECTURE -->
+  <section class="slide" data-title="Section 1: sampling architecture">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 1</span>
+        <span class="st">Online Evaluation</span>
+        <span class="ss">SLIDES 4 TO 8 · SAMPLING · SCORER REUSE · IMPLICIT SIGNALS · SHADOW AND CANARY · DELAYED LABELS</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 04 · Sampling architecture · rates are example design values</div>
+      <h2 class="rise" style="--i:2">Log everything. <span class="hl">Sample in three streams, on purpose.</span></h2>
+      <div class="glass rise" style="--i:3">
+        <h3>The log comes first</h3>
+        <p>Every production trace is logged in full: query, retrieved chunk ids, prompt hash, model and index versions, output, tool calls, latency, trace id. PII is stripped at the log boundary using the Chapter 3 rules, before any sampling happens. Sampling decides what gets scored; it never decides what gets kept, because a failure you did not log cannot become a case later.</p>
+      </div>
+      <div class="stack rise" style="--i:4;margin-top:14px">
+        <div class="layer hot"><span class="ln">A</span><div><div class="lt">Uniform random core sample · 2 percent of all traces</div><div class="ls">Drawn uniformly at random, independent of content, confidence, or outcome. <b style="color:var(--ink)">This is the only stream allowed to estimate a rate.</b> Every online score, drift share, and trend line in this chapter is computed on the core sample or on the full log's deterministic fields, never on the streams below.</div></div></div>
+        <div class="layer"><span class="ln">B</span><div><div class="lt">Enriched stream · case mining only</div><div class="ls">All traces with low retrieval confidence, all escalations to a human, all policy flags, all judge disagreements. Deliberately unrepresentative: it overcollects exactly the traces most likely to contain new failure modes. Its job is to fill the audit queue and the case intake, slide 14.</div></div></div>
+        <div class="layer"><span class="ln">C</span><div><div class="lt">Segment strata · language, plan tier, topic</div><div class="ls">Fixed quotas per segment drawn from the log, so a segment that is 1 percent of traffic still yields enough scored traces to see. Segment rates are reported per stratum and reweighted to the true traffic mix before they are combined with anything.</div></div></div>
+      </div>
+      <p class="q rise" style="--i:5">The bias rule, stated once and enforced in the report code: enriched samples never enter a rate. An escalation heavy sample reporting an escalation rate is measuring the sampler, not the system.</p>
+      <div class="foot rise" style="--i:6"><span>SLIDE 04 / 22</span><span>PACE 3:15</span></div>
+    </div>
+  </section>
+
+  <!-- 5 SAME SCORERS, NEW ENVIRONMENT -->
+  <section class="slide" data-title="Same scorers, new environment">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 05 · Scorer reuse · one package, two runners</div>
+      <h2 class="rise" style="--i:1">Online scoring reuses the offline scorers. <span class="hl">It does not fork them.</span></h2>
+      <div class="flow rise" style="--i:2">
+        <div class="node"><div class="t">CI runner</div><div class="s">Chapter 4 runner. Inputs: golden set cases. Trigger: pull request and nightly</div></div>
+        <div class="arrow">→</div>
+        <div class="node hot"><div class="t">One scorer package</div><div class="s">Deterministic checks, reference scorers, judge client, stage attribution. Versioned once, imported by both runners</div></div>
+        <div class="arrow">←</div>
+        <div class="node"><div class="t">Online batch runner</div><div class="s">Inputs: sampled production traces. Trigger: schedule. Writes to the same report schema</div></div>
+      </div>
+      <div class="grid3" style="margin-top:16px">
+        <div class="glass rise" style="--i:3">
+          <h3>Deterministic scorers · synchronous</h3>
+          <p>Schema validity, citation target existence, refusal classification, latency and token accounting run <b style="color:var(--ink)">on the sampled trace at log time</b>. They are cheap, exact, and need no label, so their online numbers are available within minutes and cover the full log, not just the sample.</p>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>Judge · asynchronous batch</h3>
+          <p>The calibrated judge from Chapters 5 and 6 runs <b style="color:var(--ink)">in batch on the core sample only</b>, with verdict caching keyed exactly as in Chapter 8. Judging the enriched stream would spend the budget where rates cannot be computed anyway.</p>
+        </div>
+        <div class="glass rise" style="--i:5">
+          <h3>Human audit · weekly queue</h3>
+          <p>A fixed size queue drawn each week: part core sample, part enriched stream, part judge disagreement cases. Auditors label blind, as in Chapter 6. The queue is the calibration feedstock and the case intake's front door, slide 14.</p>
+        </div>
+      </div>
+      <p class="lede rise" style="--i:6;margin-top:14px">Because both runners emit the <b style="color:var(--ink)">same report schema</b>, an online faithfulness number and an offline faithfulness number are the same measurement taken in two places, and a divergence between them is itself a finding: same scorer, different distribution. Fork the scorers and that comparison dies; every online number becomes its own dialect.</p>
+      <div class="foot rise" style="--i:7"><span>SLIDE 05 / 22</span><span>PACE 4:20</span></div>
+    </div>
+  </section>
+
+  <!-- 6 IMPLICIT SIGNALS -->
+  <section class="slide" data-title="Implicit signals, with confounds">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 06 · Implicit signals</div>
+      <h2 class="rise" style="--i:1">User behavior is a hint. <span class="hl">Every hint has a confound.</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th>Signal</th><th>What it might mean</th><th>The confound that stops you trusting it alone</th></tr>
+          <tr><td><b>Thumbs down</b></td><td>The answer dissatisfied the user</td><td>Accidental taps and brigaded clicks. Only a small, self selected fraction of users rate anything, and they are not a random sample of the dissatisfied.</td></tr>
+          <tr><td><b>Immediate rephrase</b></td><td>The answer missed, so the user asked again differently</td><td>The user was refining a vague first question. Rephrase rate rises when users learn the system rewards detail, which is a success pattern wearing a failure costume.</td></tr>
+          <tr><td><b>Abandonment</b></td><td>The session failed and the user gave up</td><td>The user got the answer and left. For a support assistant, a short session with no follow up is the goal state as often as it is the failure state.</td></tr>
+          <tr><td><b>Escalation to human</b></td><td>The system could not resolve the issue</td><td>Policy required the escalation: account changes, refunds above a limit, regulated topics. Those escalations are correct behavior counted as failure.</td></tr>
+          <tr><td><b>Copy of the answer</b></td><td>Success proxy: the answer was worth keeping</td><td>The user is copying it into a complaint, a ticket, or a message to a colleague showing the error. Copy records the act, not the intent.</td></tr>
+        </table>
+      </div>
+      <div class="glass rise" style="--i:3;margin-top:16px;border-color:rgba(255,184,107,.5)">
+        <h3>The rule for implicit signals</h3>
+        <p>Implicit signals <b style="color:var(--ink)">trigger investigation; they never gate and never headline a report alone</b>. A spike in rephrases buys a human audit draw oversampled from rephrased sessions. If the auditors confirm real failures, the failures enter case intake with labels attached. The signal opened the door; labeled evidence walks through it. Any dashboard that turns a confounded proxy into a quality percentage has built a random number generator with good branding.</p>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 06 / 22</span><span>PACE 5:25</span></div>
+    </div>
+  </section>
+
+  <!-- 7 SHADOW AND CANARY -->
+  <section class="slide" data-title="Shadow and canary evaluation">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 07 · Shadow and canary · thresholds are example values, declared in advance</div>
+      <h2 class="rise" style="--i:1">Two ways to meet real traffic <span class="hl">before real users depend on you</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>Shadow mode · zero user exposure</h3>
+          <div class="vflow">
+            <div class="vnode"><div class="t">Production input arrives</div><div class="s">Served by the current system as normal</div></div>
+            <div class="varrow"></div>
+            <div class="vnode hot"><div class="t">Candidate runs in parallel</div><div class="s">Same input, same retrieved context. Output logged and scored, never shown to the user</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Diff report</div><div class="s">Output diff rate against the serving system, plus judge score deltas on the shadow outputs, per capability</div></div>
+          </div>
+          <p style="margin-top:12px">Shadow answers: <b style="color:var(--ink)">how would the candidate behave on today's real distribution?</b> It cannot measure user outcomes, because no user ever saw its answers. That limit is the price of zero exposure, and it is worth paying before any canary.</p>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>Canary · 5 percent of traffic, example thresholds</h3>
+          <table>
+            <tr><th>Guardrail metric</th><th>Rollback if</th></tr>
+            <tr><td>Refusal rate vs control</td><td class="num">moves over 3 points</td></tr>
+            <tr><td>Error rate (5xx + empty responses)</td><td class="num">exceeds 1 percent</td></tr>
+            <tr><td>Escalation rate vs control</td><td class="num">rises over 2 points</td></tr>
+            <tr><td>Latency p95 vs control</td><td class="num">rises over 25 percent</td></tr>
+          </table>
+          <p style="margin-top:10px">Thresholds are <b style="color:var(--ink)">written into the rollout config before the canary starts</b>, and breaching one triggers <b style="color:var(--ink)">automatic rollback</b> to the previous version, no meeting required. A threshold negotiated after the metric moves is not a threshold; it is a press release. Canary metrics are computed on the canary's own full log, never on the core sample, because at 5 percent of traffic the sample is too thin to catch a fast regression.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 07 / 22</span><span>PACE 6:30</span></div>
+    </div>
+  </section>
+
+  <!-- 8 DELAYED LABELS -->
+  <section class="slide" data-title="Delayed labels: outcomes arrive late">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 08 · Delayed labels · resolution distribution is example data</div>
+      <h2 class="rise" style="--i:1">The label for Tuesday's answer <span class="hl">may arrive next week</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>The join that makes online labels possible</h3>
+          <div class="annot"><span class="f">trace_id</span><span class="d">Minted at request time and carried through the trace log, the support ticket, and the outcome table. It is the primary key of online evaluation.</span></div>
+          <div class="annot"><span class="f">outcome table</span><span class="d">Ticket resolved, reopened, escalated and closed, refund issued, CSAT returned. Written by the support system hours to days after the answer, joined back to the trace by id.</span></div>
+          <div class="annot"><span class="f">label</span><span class="d">Derived from the outcome by a fixed rule, versioned like a scorer: resolved without reopen in 7 days counts as success; reopened or negatively rated counts as failure. Traces with no outcome yet are <b>unlabeled</b>, not successful.</span></div>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>Label delay · example distribution, support outcomes</h3>
+          <div class="metric"><span class="name">Resolved same day</span><span class="bar"><i style="--w:40%"></i></span><span class="val"><b>40%</b></span></div>
+          <div class="metric"><span class="name">Resolved by day 3</span><span class="bar"><i style="--w:85%"></i></span><span class="val"><b>85%</b></span></div>
+          <div class="metric"><span class="name">Resolved by day 7</span><span class="bar"><i style="--w:98%"></i></span><span class="val"><b>98%</b></span></div>
+          <p style="margin-top:12px">The unresolved remainder is not random. Long running, multi touch, and disputed tickets resolve last, and they are disproportionately the hard cases. <b style="color:var(--ink)">Scoring this week on resolved cases only grades the easy 40 percent and calls it the week.</b></p>
+        </div>
+      </div>
+      <div class="glass rise" style="--i:4;margin-top:16px">
+        <h3>The reporting consequence</h3>
+        <p>Every online score carries its <b style="color:var(--ink)">unresolved fraction</b> beside it, computed at report time: faithfulness on the core sample is final, but outcome based success is reported as, for example, <span class="num">success 91.0% · unresolved 23%</span>, and the number is restated when the window matures. A score whose denominator is still arriving is a preliminary result, and the report says so in the same font size as the score.</p>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 08 / 22</span><span>PACE 7:35</span></div>
+    </div>
+  </section>
+
+  <!-- 9 SECTION 2 BANNER + THREE DRIFTS -->
+  <section class="slide" data-title="Section 2: drift, three kinds">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 2</span>
+        <span class="st">Drift, Three Kinds</span>
+        <span class="ss">SLIDES 9 TO 14 · INPUT · SYSTEM · MEASUREMENT · DECISION TABLE · CASE INTAKE</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 09 · Three drifts</div>
+      <h2 class="rise" style="--i:2">A score moved. <span class="hl">Three different things could have moved it.</span></h2>
+      <div class="grid3">
+        <div class="glass rise" style="--i:3">
+          <h3>Input drift</h3>
+          <div class="vflow">
+            <div class="vnode"><div class="t">Who asks what changes</div><div class="s">Topic mix, language mix, new vocabulary, new user segments</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Same system, harder week</div><div class="s">Scores move because the exam changed, not the student</div></div>
+          </div>
+          <p style="margin-top:10px"><b style="color:var(--ink)">Owner:</b> product and eval team jointly. <b style="color:var(--ink)">Fix:</b> dataset intake, slide 14. Measured on slide 10.</p>
+        </div>
+        <div class="glass rise" style="--i:4">
+          <h3>System drift</h3>
+          <div class="vflow">
+            <div class="vnode"><div class="t">The stack changes under a frozen prompt</div><div class="s">Corpus edits, index rebuilds, provider model updates</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Same prompt, different machine</div><div class="s">Nothing in your repo changed; the behavior did</div></div>
+          </div>
+          <p style="margin-top:10px"><b style="color:var(--ink)">Owner:</b> platform team. <b style="color:var(--ink)">Fix:</b> changelogs, fingerprints, revalidation. Slides 11 and 12.</p>
+        </div>
+        <div class="glass rise" style="--i:5">
+          <h3>Measurement drift</h3>
+          <div class="vflow">
+            <div class="vnode"><div class="t">The ruler changes</div><div class="s">Judge model or rubric version changes, calibration expires, Chapter 6</div></div>
+            <div class="varrow"></div>
+            <div class="vnode"><div class="t">Same outputs, different verdicts</div><div class="s">The score moved and nothing in the world did</div></div>
+          </div>
+          <p style="margin-top:10px"><b style="color:var(--ink)">Owner:</b> eval team. <b style="color:var(--ink)">Fix:</b> recalibration protocol, Chapter 6, and version pinning everywhere.</p>
+        </div>
+      </div>
+      <p class="lede rise" style="--i:6;margin-top:14px">The drift report separates the three by construction: input mix computed from the log, system changes read from changelogs and fingerprints, ruler changes read from scorer version fields. A report that merges them into one "quality went down" line sends three owners hunting for one cause that does not exist.</p>
+      <div class="foot rise" style="--i:7"><span>SLIDE 09 / 22</span><span>PACE 8:40</span></div>
+    </div>
+  </section>
+
+  <!-- 10 INPUT DRIFT MEASURED -->
+  <section class="slide" data-title="Input drift, measured">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 10 · Input drift · topic mix is example data</div>
+      <h2 class="rise" style="--i:1">Measure the mix before <span class="hl">blaming the model</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>Topic mix · share of core sample queries, example weeks</h3>
+          <table>
+            <tr><th>Topic</th><th>Baseline week</th><th>Current week</th><th>Move</th></tr>
+            <tr><td><b>Billing</b></td><td class="num">18%</td><td class="num">27%</td><td class="num">+9 pts</td></tr>
+            <tr><td><b>Setup</b></td><td class="num">22%</td><td class="num">20%</td><td class="num">-2 pts</td></tr>
+            <tr><td><b>Refunds</b></td><td class="num">15%</td><td class="num">14%</td><td class="num">-1 pt</td></tr>
+            <tr><td><b>API</b></td><td class="num">12%</td><td class="num">12%</td><td class="num">0 pts</td></tr>
+            <tr><td><b>Other</b></td><td class="num">33%</td><td class="num">27%</td><td class="num">-6 pts</td></tr>
+            <tr><td><b>Total</b></td><td class="num"><b>100%</b></td><td class="num"><b>100%</b></td><td class="num"></td></tr>
+          </table>
+          <p style="margin-top:10px">Topic labels come from the same classifier run on both weeks, version pinned; relabeling history with a new classifier manufactures drift that never happened.</p>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:3">
+            <h3>Two companion signals</h3>
+            <div class="annot"><span class="f">new term rate</span><span class="d">Share of query tokens in the core sample that <b>never appeared in the baseline month</b>. Product launches, outages in the news, and competitor shutdowns all surface here first, days before they show up as failures.</span></div>
+            <div class="annot"><span class="f">language mix</span><span class="d">Share per detected language, same table shape as topics. A language growing from 2 to 6 percent of traffic is a segment your golden set covers thinly, whether or not scores have moved yet.</span></div>
+          </div>
+          <div class="glass rise" style="--i:4;margin-top:16px;border-color:rgba(255,184,107,.5)">
+            <h3>Why mix explains scores mechanically</h3>
+            <p>Billing questions in this system carry the oldest policy documents and the highest refusal rate. If billing grows from 18 to 27 percent of the mix, the aggregate faithfulness and refusal numbers move even if <b style="color:var(--ink)">per topic quality is completely unchanged</b>. That is why the drift report always shows per segment scores beside the aggregate: the aggregate is a weighted average, and the weights just changed.</p>
+          </div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 10 / 22</span><span>PACE 9:45</span></div>
+    </div>
+  </section>
+
+  <!-- 11 CORPUS AND INDEX DRIFT -->
+  <section class="slide" data-title="Corpus and index drift">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 11 · Corpus and index drift · changelog metrics are example data</div>
+      <h2 class="rise" style="--i:1">Retired evidence invalidates cases, <span class="hl">not just answers</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>Corpus changelog · per week, example week</h3>
+          <table>
+            <tr><th>Change</th><th>Count</th><th>Why the eval system cares</th></tr>
+            <tr><td><b>Docs added</b></td><td class="num">41</td><td>New answerable territory with zero golden coverage until intake runs</td></tr>
+            <tr><td><b>Docs changed</b></td><td class="num">63</td><td>Expected answers and must-contain strings may now be wrong</td></tr>
+            <tr><td><b>Docs retired</b></td><td class="num">7</td><td>Cases pointing at them are unanswerable as written</td></tr>
+            <tr><td><b>Index rebuilds</b></td><td class="num">2</td><td>Recorded in the run manifest diff: embedding model, chunking config, rebuild timestamp</td></tr>
+          </table>
+          <p style="margin-top:10px">The changelog is a diff of document ids and content hashes between corpus snapshots, generated by the indexing job, not assembled by hand for the report.</p>
+        </div>
+        <div class="glass rise" style="--i:3;border-color:rgba(255,107,94,.4)">
+          <h3>The stale pointer check · Chapter 3 lint, run against production</h3>
+          <p>The Chapter 3 dataset lint gains a production mode: for every golden case, resolve its <span class="num">expected_sources</span> against the <b style="color:var(--ink)">current</b> corpus, not the snapshot the case was written against.</p>
+          <ul class="tight" style="margin-top:10px">
+            <li><b>Retired source:</b> the case's evidence no longer exists. The case is stale, and any score it produces this week measures a ghost.</li>
+            <li><b>Materially edited source:</b> content hash changed beyond the lint's edit threshold. Expected answer fields are queued for human re-verification.</li>
+            <li><b>Counted, not vibes:</b> the check emits a number per dataset version, the stale case count, which feeds the health dashboard on slide 15.</li>
+          </ul>
+          <p style="margin-top:10px">A RAG system is evaluated against its corpus. When the corpus moves and the cases do not, the eval stops describing the deployed system while continuing to produce confident looking numbers.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 11 / 22</span><span>PACE 10:50</span></div>
+    </div>
+  </section>
+
+  <!-- 12 PROVIDER DRIFT AND FINGERPRINTING -->
+  <section class="slide" data-title="Provider drift and fingerprinting">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 12 · Provider fingerprint · diff rates are example data</div>
+      <h2 class="rise" style="--i:1">A frozen probe set <span class="hl">catches the change nobody announced</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>The fingerprint protocol</h3>
+          <ol class="steps">
+            <li><b>Freeze a probe set:</b> 200 prompts, fixed text, fixed parameters, temperature 0, spanning the system's capability slices. The probe set is not the golden set; it never gates and is never tuned against.</li>
+            <li><b>Run it daily</b> against the production endpoint, from a scheduled job with its own small budget line.</li>
+            <li><b>Hash every output</b> and diff against the previous day's outputs, case by case. The daily output diff rate is the fraction of probe outputs whose hash changed.</li>
+            <li><b>Store the raw outputs.</b> When the rate steps, the diff itself is the evidence: which slices changed, and how the text moved.</li>
+          </ol>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>Daily output diff rate · example, 20 days</h3>
+          <div class="bars">
+            <div class="col" style="--h:12%"><i></i></div><div class="col" style="--h:8%"><i></i></div><div class="col" style="--h:15%"><i></i></div><div class="col" style="--h:10%"><i></i></div><div class="col" style="--h:12%"><i></i></div><div class="col" style="--h:9%"><i></i></div><div class="col" style="--h:14%"><i></i></div><div class="col" style="--h:11%"><i></i></div><div class="col" style="--h:8%"><i></i></div><div class="col" style="--h:13%"><i></i></div><div class="col" style="--h:10%"><i></i></div><div class="col" style="--h:12%"><i></i></div><div class="col" style="--h:9%"><i></i></div><div class="col hot" style="--h:88%"><i></i></div><div class="col hot" style="--h:84%"><i></i></div><div class="col hot" style="--h:90%"><i></i></div><div class="col hot" style="--h:86%"><i></i></div><div class="col hot" style="--h:88%"><i></i></div><div class="col hot" style="--h:85%"><i></i></div><div class="col hot" style="--h:89%"><i></i></div>
+          </div>
+          <div class="bars-x"><span>d1</span><span></span><span></span><span></span><span>d5</span><span></span><span></span><span></span><span></span><span>d10</span><span></span><span></span><span></span><span>d14</span><span></span><span></span><span></span><span></span><span></span><span>d20</span></div>
+          <p style="margin-top:12px">Baseline noise sits at <b style="color:var(--ink)">1 to 2 percent</b>: serving nondeterminism flips a few outputs daily even at temperature 0. On day 14 the rate steps to <b style="color:var(--ink)">11 percent</b> and stays there. Deploy log for day 14: <b style="color:var(--ink)">no deploy on our side</b>.</p>
+          <p style="margin-top:8px">That step is <b style="color:var(--ink)">a provider change until proven otherwise</b>. The response is mechanical: trigger a full offline gate run against the current endpoint, compare capability scores to the stored baseline, and open the incident path on slide 19 if gate capabilities moved. Not an argument with the provider; a measurement.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 12 / 22</span><span>PACE 11:55</span></div>
+    </div>
+  </section>
+
+  <!-- 13 DRIFT IS NOT REGRESSION -->
+  <section class="slide" data-title="Drift is not regression: the decision table">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 13 · Decision table · read top to bottom, first matching row wins</div>
+      <h2 class="rise" style="--i:1">Four signatures, <span class="hl">four different first actions</span></h2>
+      <div class="glass rise" style="--i:2">
+        <table>
+          <tr><th>What the evidence shows</th><th>Diagnosis to test first</th><th>First action</th></tr>
+          <tr><td>Score moved <b>and</b> input mix moved</td><td>Mix shift, slide 10</td><td><b>Investigate mix first.</b> Compare per segment scores across the two weeks. If per segment scores are flat, there is no quality event yet; route new topics to case intake.</td></tr>
+          <tr><td>Score moved, mix flat, <b>fingerprint stepped</b></td><td>Provider drift, slide 12</td><td><b>Provider drift protocol.</b> Full offline gate run on the frozen set against the current endpoint. The frozen set is what makes the provider's change measurable at all.</td></tr>
+          <tr><td>Score moved, mix flat, <b>our deploy yesterday</b></td><td>Regression</td><td><b>Chapter 8 regression protocol.</b> The deploy diff is the suspect list; work the new failures by first failing stage, and the gate thresholds decide whether rollback or fix forward applies.</td></tr>
+          <tr><td>Score moved and the <b>judge or rubric version changed</b></td><td>Measurement drift</td><td><b>Chapter 6 recalibration protocol.</b> Rescore a fixed output set under both judge versions. If verdicts differ, the ruler moved; recalibrate before any product conclusion is drawn.</td></tr>
+        </table>
+      </div>
+      <p class="lede rise" style="--i:3;margin-top:14px">The cost of skipping this table is symmetric: treat drift as regression and you roll back a healthy deploy while the real cause keeps moving; treat regression as drift and a defect you shipped gets a monitoring dashboard instead of a fix. Diagnosis order is an engineering control, not a discussion topic.</p>
+      <div class="foot rise" style="--i:4"><span>SLIDE 13 / 22</span><span>PACE 13:00</span></div>
+    </div>
+  </section>
+
+  <!-- 14 CASE INTAKE FROM DRIFT -->
+  <section class="slide" data-title="Case intake: drift becomes dataset">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 14 · Case intake · the drift report's definition of done</div>
+      <h2 class="rise" style="--i:1">A drift report is done <span class="hl">when its cases land</span></h2>
+      <div class="flow rise" style="--i:2">
+        <div class="node"><div class="t">Confirmed failure mode</div><div class="s">From audit labels, outcome joins, or drift investigation. Confirmed means a human or a deterministic check verified it, not a signal spike</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Sanitized trace attached</div><div class="s">The production trace, PII stripped under Chapter 3 rules, becomes the case's provenance record</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Case PR opened</div><div class="s">Expected behavior, sources, capability, difficulty authored per the Chapter 3 schema; second reviewer for refusal and safety</div></div>
+        <div class="arrow">→</div>
+        <div class="node hot"><div class="t">Dataset version bumped</div><div class="s">Case ships in the next dataset release, slide 16. From then on, the gate tests for this failure on every PR</div></div>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="code rise" style="--i:3"><div class="codebar"><span class="lights"><i></i><i></i><i></i></span> case PR · datasets/golden_v1.3 · excerpt</div>{<span class="str">"id"</span>: <span class="str">"drift-2026-10-billing-014"</span>,
+ <span class="str">"query"</span>: <span class="str">"Why was my October invoice charged twice?"</span>,
+ <span class="str">"expected_behavior"</span>: <span class="str">"answer_with_citation"</span>,
+ <span class="str">"expected_sources"</span>: [<span class="str">"billing/duplicate-charges"</span>],
+ <span class="str">"must_not_contain"</span>: [<span class="str">"refund in 30 days"</span>],
+ <span class="str">"capability"</span>: <span class="str">"faithfulness"</span>, <span class="str">"difficulty"</span>: <span class="str">"hard"</span>,
+ <span class="str">"source"</span>: <span class="str">"failure_archive"</span>,
+ <span class="str">"provenance"</span>: {<span class="str">"trace_id"</span>: <span class="str">"tr_8f31c"</span>,
+   <span class="str">"intake"</span>: <span class="str">"drift_review_2026-10-27"</span>}}</div>
+        <div class="glass rise" style="--i:4">
+          <h3>Why the PR, not a script</h3>
+          <p>Auto generated cases would import production's noise along with its signal, including mislabeled outcomes and one off user errors. The PR forces the Chapter 3 disciplines onto production material: an authored expectation, a named capability, a review. Volume is deliberately capped by reviewer time; the intake queue prioritizes <b style="color:var(--ink)">new failure modes over more instances of known ones</b>, because the gate already tests what it knows.</p>
+          <p style="margin-top:10px">This is the loop from slide 2 closing. Every case that lands here is production teaching the frozen set something the frozen set could not have known on its own.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 14 / 22</span><span>PACE 14:05</span></div>
+    </div>
+  </section>
+
+  <!-- 15 SECTION 3 BANNER + EVAL HEALTH DASHBOARD -->
+  <section class="slide" data-title="Section 3: the eval health dashboard">
+    <div class="slide-inner">
+      <div class="section-banner rise" style="--i:0">
+        <span class="sn">SECTION 3</span>
+        <span class="st">Maintenance and Eval Debt</span>
+        <span class="ss">SLIDES 15 TO 21 · HEALTH DASHBOARD · DATASET OPS · ONBOARDING · COST · INCIDENT · FULL SYSTEM · RECAP</span>
+      </div>
+      <div class="kicker rise" style="--i:1">Slide 15 · Eval health dashboard · alert values are example thresholds</div>
+      <h2 class="rise" style="--i:2">The eval system gets a dashboard too. <span class="hl">One owner per row.</span></h2>
+      <div class="glass rise" style="--i:3">
+        <table>
+          <tr><th>Health metric</th><th>Definition</th><th>Alert, example</th><th>Owner</th></tr>
+          <tr><td><b>Stale case rate</b></td><td>Cases untouched across two corpus versions / all cases, from the slide 11 lint</td><td class="num">over 8%</td><td>Dataset owner</td></tr>
+          <tr><td><b>Quarantined case count</b></td><td>Cases parked in Chapter 7 quarantine: disputed expectation or unstable verdict</td><td class="num">over 15 open</td><td>Dataset owner</td></tr>
+          <tr><td><b>Calibration days remaining</b></td><td>Days until the Chapter 6 judge calibration expires</td><td class="num">under 14 days</td><td>Eval owner</td></tr>
+          <tr><td><b>Coverage gaps</b></td><td>Shipped product features and tools with zero golden cases</td><td class="num">any high risk gap</td><td>Feature team</td></tr>
+          <tr><td><b>Judge error rate trend</b></td><td>judge_error share of online and CI judge calls, from Chapter 8 accounting</td><td class="num">over 2% or rising 3 weeks</td><td>Eval owner</td></tr>
+          <tr><td><b>Gate false block rate</b></td><td>Blocks reviewers judged incorrect / all blocks, Chapter 8 health metric</td><td class="num">over 10%</td><td>Eval owner</td></tr>
+        </table>
+      </div>
+      <p class="lede rise" style="--i:4;margin-top:14px">Each row is a number the earlier chapters already produce; this slide's work is putting them on one page with a threshold and a name. Eval debt is invisible precisely because its symptoms appear in other systems' dashboards: the stale case shows up as a confusing gate failure, the expired calibration as a judge argument. The health dashboard is where those symptoms get their own line.</p>
+      <div class="foot rise" style="--i:5"><span>SLIDE 15 / 22</span><span>PACE 15:10</span></div>
+    </div>
+  </section>
+
+  <!-- 16 DATASET LIFECYCLE OPERATIONS -->
+  <section class="slide" data-title="Dataset lifecycle operations">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 16 · Dataset operations · weekly intake, versioned releases</div>
+      <h2 class="rise" style="--i:1">Three exits only. <span class="hl">Everything else is a backlog that lies.</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <h3>Weekly failure intake review · inputs</h3>
+          <ul class="tight">
+            <li><b>Production failures</b> confirmed through outcome joins and audits, slide 8 and slide 14</li>
+            <li><b>Audit disagreements</b> between human labels and judge verdicts from the weekly queue, slide 5</li>
+            <li><b>Drift cases</b> nominated by the drift report, slides 10 to 12</li>
+            <li><b>Stale pointer results</b> from the slide 11 lint: retired or edited expected sources</li>
+          </ul>
+          <h3 style="margin-top:16px">The three exits, applied to every item</h3>
+          <ol class="steps">
+            <li><b>Add a case.</b> Authored and reviewed per Chapter 3, scheduled into the next dataset release.</li>
+            <li><b>Retire a case, with a reason.</b> Evidence retired, behavior spec changed, duplicate of a stronger case. The reason is recorded in the dataset changelog; silent deletion is not an exit.</li>
+            <li><b>Open a scorer bug.</b> The case is right and the scorer is wrong: a lint gap, a judge rubric hole, a deterministic check misfiring. The fix lands in the scorer package, with the case as its regression test.</li>
+          </ol>
+        </div>
+        <div class="glass rise" style="--i:3">
+          <h3>Dataset releases · versioned, on a cadence</h3>
+          <div class="annot"><span class="f">release</span><span class="d">Cases land in <b>batched dataset releases</b>, golden_v1.3 and onward, each with a changelog: cases added, retired with reasons, expectations corrected. Between releases the gate set is frozen.</span></div>
+          <div class="annot"><span class="f">re-stratification</span><span class="d">The Chapter 8 gate subset is <b>re-stratified only inside a dataset release</b>, by the Chapter 3 rule, never ad hoc. A subset changed quietly between two PRs destroys the pairing those PRs were compared under.</span></div>
+          <div class="annot"><span class="f">score comparability</span><span class="d">Scores are comparable <b>within</b> a dataset version. A release bumps the baseline through the Chapter 8 promotion process, and trend lines carry a version marker so a score step at a release boundary is read as a dataset event first.</span></div>
+          <div class="annot"><span class="f">holdout rotation</span><span class="d">Each release rotates part of the Chapter 3 holdout into the frozen set and retires long serving cases into the holdout, keeping a slice of the exam nobody has been optimizing against.</span></div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 16 / 22</span><span>PACE 16:15</span></div>
+    </div>
+  </section>
+
+  <!-- 17 NEW CAPABILITY ONBOARDING -->
+  <section class="slide" data-title="New capability onboarding: a gate of its own">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 17 · Onboarding checklist · enforced before launch, not after</div>
+      <h2 class="rise" style="--i:1">No cases, no gate entry, <span class="hl">no launch</span></h2>
+      <div class="stack rise" style="--i:2">
+        <div class="layer"><span class="ln">1</span><div><div class="lt">Cases exist for success and failure modes</div><div class="ls">Before the feature ships, its golden cases are written: the happy path, the malformed input, the tool returning an error, the request it must refuse. Case count per mode follows the Chapter 3 sizing rule: a slice too small to resolve the regression you care about is a launch blocker, not a footnote.</div></div></div>
+        <div class="layer"><span class="ln">2</span><div><div class="lt">Deterministic predicates are written</div><div class="ls">Chapter 7 state checks for the new tool or feature: postconditions on real system state, argument validity, idempotency where it applies. If success cannot be checked deterministically, that fact is recorded and the capability starts life in a stricter trust tier.</div></div></div>
+        <div class="layer"><span class="ln">3</span><div><div class="lt">Judge trust is calibrated, if the judge scores it</div><div class="ls">A Chapter 6 calibration run on the new capability's outputs, blind human labels first, agreement measured per capability. Uncalibrated judge scores for a new capability render as WARN ONLY by default.</div></div></div>
+        <div class="layer hot"><span class="ln">4</span><div><div class="lt">A policy entry exists in gate.yaml</div><div class="ls">Metric, noise derived threshold, severity, min_cases: the Chapter 8 fields, present before the first release the capability participates in. The launch review checks the file, not a promise to add it later.</div></div></div>
+      </div>
+      <p class="lede rise" style="--i:3;margin-top:14px">The checklist is deliberately ordered: cases define the behavior, predicates make it checkable, calibration decides who may judge the rest, and the policy entry wires the result into the gate. Skipping to step 4 produces the failure mode this course opened with: a number that exists, attached to nothing, blocking nothing.</p>
+      <div class="foot rise" style="--i:4"><span>SLIDE 17 / 22</span><span>PACE 17:20</span></div>
+    </div>
+  </section>
+
+  <!-- 18 COST OF STAYING HONEST -->
+  <section class="slide" data-title="The cost of staying honest">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 18 · Monthly eval budget · all figures are example data</div>
+      <h2 class="rise" style="--i:1">Honesty has a budget line. <span class="hl">Report it next to the escape rate.</span></h2>
+      <div class="glass rise" style="--i:2">
+        <h3>Judge tokens per month · example accounting</h3>
+        <div class="costbar"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div>
+        <div class="legend">
+          <span><i style="background:var(--coral)"></i>Nightly full runs · 31.05M (30 runs x 1.035M, Chapter 5 judge pass)</span>
+          <span><i style="background:var(--amber)"></i>Per PR gate runs · 12.4M (about 40 PRs x 310,500, Chapter 8)</span>
+          <span><i style="background:var(--gold)"></i>Online judge batches · 6.2M (core sample, slide 5)</span>
+        </div>
+        <p style="margin-top:12px">Total example: <b style="color:var(--ink)">about 49.7M judge tokens per month</b>, plus candidate generation tokens accounted separately in the same report. Human time, example: <b style="color:var(--ink)">24 hours per month</b>: 12 audit and labeling, 8 intake review and case authoring, 4 calibration maintenance.</p>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="glass rise" style="--i:3">
+          <h3>Levers when the budget grows</h3>
+          <ul class="tight">
+            <li><b>Subset sizes:</b> shrink the PR tier subset where slice counts exceed what the thresholds need to resolve, Chapter 8 math, never below min_cases</li>
+            <li><b>Verdict caching:</b> Chapter 5 cache keys make reruns of unchanged PR heads nearly free</li>
+            <li><b>Judge tiering:</b> capabilities with the highest calibrated agreement graduate to a cheaper judge model, revalidated by a Chapter 6 spot calibration</li>
+            <li><b>Audit sample rate:</b> the weekly queue size is a dial, turned down only with the disagreement rate in view</li>
+          </ul>
+        </div>
+        <div class="glass rise" style="--i:4;border-color:rgba(255,184,107,.5)">
+          <h3>Why cost sits beside escape rate</h3>
+          <p>The Chapter 8 escape rate, regressions production found that the gate passed, is the price of too little evaluation. The budget is the price of enough. <b style="color:var(--ink)">Reported together, monthly, in the same review</b>, a proposal to cut eval spend has to state which escapes it is buying. Reported separately, the cut looks free for exactly one quarter, until the escapes arrive.</p>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 18 / 22</span><span>PACE 18:25</span></div>
+    </div>
+  </section>
+
+  <!-- 19 INCIDENT WALKTHROUGH -->
+  <section class="slide" data-title="Incident walkthrough: the provider step">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 19 · Incident walkthrough · example scenario, end to end</div>
+      <h2 class="rise" style="--i:1">Five days of drift protocol, <span class="hl">in order</span></h2>
+      <div class="glass rise" style="--i:2">
+        <div class="annot"><span class="f">day 1 · detect</span><span class="d"><b>Fingerprint diff rate steps to 11 percent</b> from its 1 to 2 percent band, slide 12. Input mix is flat, no internal deploy. Decision table row 2: provider drift protocol.</span></div>
+        <div class="annot"><span class="f">day 1 · measure</span><span class="d"><b>Full offline gate run</b> on the frozen golden set against the live endpoint: faithfulness down 3.1 points, beyond its Chapter 8 threshold, with mix and prompt held constant by construction. The movement is real and it is not ours.</span></div>
+        <div class="annot"><span class="f">day 1 · identify</span><span class="d"><b>Provider snapshot identified as the change.</b> The endpoint's model snapshot differs from the previous day's; the fingerprint diff localizes the change to generation style on long answers, matching the faithfulness losses.</span></div>
+        <div class="annot"><span class="f">day 2 · mitigate</span><span class="d"><b>Traffic pinned to the previous snapshot</b> where the API allows pinning. Where it does not, a prompt mitigation is written, run through the full gate like any other change, and shipped only when the gate passes against the new snapshot.</span></div>
+        <div class="annot"><span class="f">day 3 to 5 · convert</span><span class="d"><b>23 production failures from the window become golden cases</b> through slide 14 intake, landing in the next dataset release. The failures the provider change exposed are now permanent tests.</span></div>
+        <div class="annot"><span class="f">day 5 · record</span><span class="d"><b>Postmortem entry added to the drift log:</b> detection signal, time to detect, protocol followed, mitigation, cases added. The next provider step starts from this entry, not from memory.</span></div>
+      </div>
+      <p class="lede rise" style="--i:3;margin-top:14px">Nothing in this timeline required a hero. Each step was a protocol written down in an earlier chapter, executed in order. That is the entire argument of the course, demonstrated once at production scale.</p>
+      <div class="foot rise" style="--i:4"><span>SLIDE 19 / 22</span><span>PACE 19:30</span></div>
+    </div>
+  </section>
+
+  <!-- 20 THE COMPLETE SYSTEM -->
+  <section class="slide" data-title="The complete system: the whole course, one diagram">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 20 · The complete system · every arrow labeled with its chapter</div>
+      <h2 class="rise" style="--i:1">Nine chapters, <span class="hl">one loop</span></h2>
+      <div class="flow rise" style="--i:2">
+        <div class="node hot"><div class="t">Golden dataset + holdout</div><div class="s">Ch 3 · versioned spec, stratified, linted</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Runner</div><div class="s">Ch 4 · paired runs vs baseline</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Deterministic + reference scorers</div><div class="s">Ch 4 · facts before opinions</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Calibrated judge</div><div class="s">Ch 5 and 6 · trust per capability, expiring</div></div>
+      </div>
+      <div class="flow rise" style="--i:3;margin-top:14px">
+        <div class="node"><div class="t">Stage attribution</div><div class="s">Ch 7 · first failing stage, RAG and agents</div></div>
+        <div class="arrow">→</div>
+        <div class="node hot"><div class="t">gate.yaml + CI</div><div class="s">Ch 8 · policy as code, required check</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Production sampling</div><div class="s">Ch 9 · core, enriched, strata streams</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">Drift monitors</div><div class="s">Ch 9 · input, system, measurement</div></div>
+      </div>
+      <div class="glass rise" style="--i:4;margin-top:16px">
+        <h3>The arrow that closes the system</h3>
+        <p><b style="color:var(--ink)">Case intake, Chapter 9:</b> confirmed production failures and drift findings return to the golden dataset as reviewed case PRs, where they become part of the specification the gate enforces. Remove this arrow and the diagram is a pipeline that ages. With it, every component downstream of the dataset is also a sensor feeding the dataset, and the system's knowledge compounds instead of decaying.</p>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 20 / 22</span><span>PACE 20:35</span></div>
+    </div>
+  </section>
+
+  <!-- 21 COURSE RECAP MAP -->
+  <section class="slide" data-title="Course recap: nine videos, nine artifacts">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 21 · Course recap map</div>
+      <h2 class="rise" style="--i:1">Every video <span class="hl">left an artifact in the repo</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <table>
+            <tr><th>Video</th><th>Title</th><th>Artifact</th></tr>
+            <tr><td class="num">1</td><td>Why Your App Is Already Broken</td><td><b>failure taxonomy</b></td></tr>
+            <tr><td class="num">2</td><td>Anatomy of an Eval Suite</td><td><b>suite architecture</b></td></tr>
+            <tr><td class="num">3</td><td>Building the Golden Dataset</td><td><b>golden_v1.jsonl, schema.json, DATASHEET.md</b></td></tr>
+            <tr><td class="num">4</td><td>Scoring Without an LLM</td><td><b>deterministic + reference scorers</b></td></tr>
+            <tr><td class="num">5</td><td>LLM-as-Judge, Implemented</td><td><b>judge prompts + verdict cache</b></td></tr>
+            <tr><td class="num">6</td><td>Calibrating the Judge</td><td><b>calibration report + trust table</b></td></tr>
+            <tr><td class="num">7</td><td>RAG and Agent Evals</td><td><b>stage attribution</b></td></tr>
+            <tr><td class="num">8</td><td>The Gate</td><td><b>gate.yaml + CI workflow</b></td></tr>
+            <tr><td class="num">9</td><td>After the Merge</td><td><b>drift dashboard + intake process</b></td></tr>
+          </table>
+        </div>
+        <div class="code rise" style="--i:3"><div class="codebar"><span class="lights"><i></i><i></i><i></i></span> repo · final state</div>support-rag/
+├─ app/                  <span class="cm"># the system under test</span>
+├─ datasets/
+│  ├─ golden_v1.3.jsonl  <span class="cm"># Ch 3, grown by Ch 9 intake</span>
+│  ├─ holdout.jsonl
+│  ├─ schema.json
+│  └─ DATASHEET.md
+├─ evals/
+│  ├─ scorers/           <span class="cm"># Ch 4, one package, two runners</span>
+│  ├─ judge/             <span class="cm"># Ch 5 prompts, Ch 6 calibration</span>
+│  ├─ attribution.py     <span class="cm"># Ch 7 first failing stage</span>
+│  ├─ gate.yaml          <span class="cm"># Ch 8 policy as code</span>
+│  ├─ online/            <span class="cm"># Ch 9 samplers, batch runner</span>
+│  └─ drift/             <span class="cm"># Ch 9 monitors, fingerprint probes</span>
+└─ .github/workflows/
+   ├─ eval-gate.yml      <span class="cm"># Ch 8 required check</span>
+   └─ nightly-evals.yml  <span class="cm"># full runs, baseline, drift</span></div>
+      </div>
+      <div class="foot rise" style="--i:4"><span>SLIDE 21 / 22</span><span>PACE 21:40</span></div>
+    </div>
+  </section>
+
+  <!-- 22 COURSE TAKEAWAYS AND CLOSE -->
+  <section class="slide" data-title="Course takeaways and close">
+    <div class="slide-inner">
+      <div class="kicker rise" style="--i:0">Slide 22 · Course takeaways</div>
+      <h2 class="rise" style="--i:1">LLM Evals <span class="hl">From Zero</span></h2>
+      <div class="grid2">
+        <div class="glass rise" style="--i:2">
+          <ol class="steps">
+            <li><b>Evaluation is a system, not a metric.</b> Dataset, scorers, judge, gate, and drift monitors, each with an owner and a failure mode of its own.</li>
+            <li><b>The dataset is the specification and production is its editor.</b> The frozen set defines correct behavior; production traffic continuously proposes what the specification is missing.</li>
+            <li><b>Trust is measured per capability and it expires.</b> Judge agreement, calibration windows, and gate authority are all numbers with dates on them.</li>
+            <li><b>Gates work when policy is code and thresholds come from noise.</b> A threshold inside the noise band builds a gate nobody believes; a policy in a wiki blocks nothing.</li>
+            <li><b>Every escape becomes a case.</b> The system learns from what it missed, permanently, in the dataset, or it repeats the miss on schedule.</li>
+          </ol>
+        </div>
+        <div>
+          <div class="glass rise" style="--i:3;border-color:rgba(255,184,107,.5)">
+            <h3>Where to start on Monday</h3>
+            <p>Build the smallest version of this loop first: <b style="color:var(--ink)">one dataset, one scorer, one gate</b>. Then grow it in the order these nine videos did, because each step's output is the next step's input, and skipping ahead produces artifacts with nothing underneath them. The course repo is the template; your system, your corpus, and your users supply everything that makes it true.</p>
+            <p class="q">Bring to your first build session: 50 real queries from your own logs, and one release you regret.</p>
+          </div>
+          <div class="presenter rise" style="--i:4;margin-top:16px">
+            <div class="avatar">SG</div>
+            <div class="who"><b>Saloni Garg</b><span>Senior Machine Learning Engineer, Adobe</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="foot rise" style="--i:5"><span>SLIDE 22 / 22</span><span>PACE 22:45 · END 24:00</span></div>
+    </div>
+  </section>
+</main>
+
+  <div class="nav">
+    <button class="btn" id="prevBtn" type="button">← Prev</button>
+    <button class="btn primary" id="nextBtn" type="button">Next →</button>
+    <span class="hint">Keyboard: <span class="kbd">←</span> <span class="kbd">→</span> navigate · <span class="kbd">Space</span> next · <span class="kbd">O</span> overview · swipe on touch</span>
+    <div class="spacer"></div>
+    <span class="hint" id="slideTitle"></span>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-label="All slides">
+  <div style="display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto 4px">
+    <h2 style="margin:0">All 22 slides</h2>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn" id="ovClose" type="button">Close ✕</button>
+  </div>
+  <p style="color:var(--ink-dim);max-width:1180px;margin:0 auto 18px;font-size:14px">Chapter 9 · After the Merge · Online evaluation, drift, and keeping the eval system honest after the gate. Final chapter of LLM Evals From Zero. 20 to 25 minutes.</p>
+  <div class="ov-grid" id="ovGrid" style="margin:0 auto"></div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var cur = 0;
+  var fill = document.getElementById('pbarFill');
+  var num = document.getElementById('curNum');
+  var titleEl = document.getElementById('slideTitle');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var overlay = document.getElementById('overlay');
+  var grid = document.getElementById('ovGrid');
+
+  slides.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ov-item';
+    b.innerHTML = '<div class="n">SLIDE ' + String(i+1).padStart(2,'0') + '</div><div class="t"></div>';
+    b.querySelector('.t').textContent = s.getAttribute('data-title');
+    b.addEventListener('click', function(){ go(i); toggleOv(false); });
+    grid.appendChild(b);
+  });
+  var ovItems = grid.children;
+
+  function go(i){
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function(s, j){
+      s.classList.toggle('active', j === cur);
+      s.classList.toggle('prev', j < cur);
+      if (j === cur) s.scrollTop = 0;
+    });
+    fill.style.width = ((cur + 1) / slides.length * 100) + '%';
+    num.textContent = String(cur + 1).padStart(2,'0');
+    titleEl.textContent = slides[cur].getAttribute('data-title');
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === slides.length - 1;
+    nextBtn.textContent = cur === slides.length - 1 ? 'End of deck' : 'Next →';
+    for (var k = 0; k < ovItems.length; k++) ovItems[k].classList.toggle('cur', k === cur);
+  }
+  function toggleOv(open){ overlay.classList.toggle('open', open); }
+
+  prevBtn.addEventListener('click', function(){ go(cur - 1); });
+  nextBtn.addEventListener('click', function(){ go(cur + 1); });
+  document.getElementById('ovBtn').addEventListener('click', function(){ toggleOv(true); });
+  document.getElementById('ovClose').addEventListener('click', function(){ toggleOv(false); });
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) toggleOv(false); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') { toggleOv(false); return; }
+    if (overlay.classList.contains('open')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(cur + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home') { go(0); }
+    else if (e.key === 'End') { go(slides.length - 1); }
+    else if (e.key === 'o' || e.key === 'O') { toggleOv(true); }
+  });
+
+  var tx = null, ty = null;
+  var main = document.getElementById('slides');
+  main.addEventListener('touchstart', function(e){ tx = e.changedTouches[0].clientX; ty = e.changedTouches[0].clientY; }, {passive:true});
+  main.addEventListener('touchend', function(e){
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 1.6) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, {passive:true});
+
+  go(0);
+})();
+</script>
+</body>
+</html>
