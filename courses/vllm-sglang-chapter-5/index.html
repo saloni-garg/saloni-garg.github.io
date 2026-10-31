@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>Chapter 5: Benchmarking Without Lying To Yourself — vLLM vs SGLang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#140B09; --bg2:#1E110D;
+  --coral:#FF6B5E; --amber:#FFB86B; --gold:#FFD166;
+  --text:#FFF6EE; --muted:rgba(255,246,238,.72); --faint:rgba(255,246,238,.52);
+  --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.13);
+  --radius:28px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;height:100dvh}
+a{color:var(--amber)}
+.orbs{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55}
+.orb.c1{width:520px;height:520px;background:#FF6B5E;top:-160px;left:-100px;animation:drift1 18s ease-in-out infinite alternate}
+.orb.c2{width:460px;height:460px;background:#FFB86B;bottom:-180px;right:-80px;animation:drift2 22s ease-in-out infinite alternate;opacity:.38}
+.orb.c3{width:280px;height:280px;background:#FFD166;top:42%;left:55%;animation:drift1 26s ease-in-out infinite alternate-reverse;opacity:.22}
+@keyframes drift1{from{transform:translate(0,0) scale(1)}to{transform:translate(70px,40px) scale(1.08)}}
+@keyframes drift2{from{transform:translate(0,0)}to{transform:translate(-60px,-50px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.topbar{position:relative;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:14px 22px;gap:12px;flex:0 0 auto}
+.topbar .course{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--amber)}
+.topbar .course span{color:var(--faint);font-weight:600;letter-spacing:.08em}
+.pill{font-family:"JetBrains Mono",monospace;font-size:12px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.06);backdrop-filter:blur(14px)}
+.progressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:30;background:rgba(255,255,255,.08)}
+#progress{height:100%;background:linear-gradient(90deg,var(--coral),var(--amber),var(--gold));width:5%;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.deck{position:relative;z-index:1;flex:1 1 auto;min-height:0}
+.slide{position:absolute;inset:0;padding:20px 28px 24px;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateX(28px) scale(.995);transition:opacity .55s ease,transform .55s cubic-bezier(.22,1,.36,1);overflow-y:auto;overflow-x:hidden}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.prev{transform:translateX(-28px)}
+.inner{width:min(1120px,100%);margin:auto;min-width:0}
+.grid2>*,.grid3>*,.grid4>*{min-width:0}
+.kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);font-weight:800;margin-bottom:14px}
+h1{font-size:clamp(42px,6.2vw,76px);line-height:.92;letter-spacing:-.04em;margin:0 0 18px;font-weight:800}
+h1 em{font-style:normal;color:var(--coral)}
+h2{font-size:clamp(32px,4.6vw,56px);line-height:.98;letter-spacing:-.035em;margin:0 0 16px;font-weight:800}
+h2 em{font-style:normal;color:var(--coral)}
+h3{margin:0 0 8px;font-size:17px;line-height:1.2}
+p.lead{font-size:clamp(17px,2vw,21px);line-height:1.55;color:var(--muted);max-width:760px;margin:0}
+p{line-height:1.6;color:var(--muted)}
+.small{font-size:13px;color:var(--faint);line-height:1.6}
+.mono{font-family:"JetBrains Mono",monospace}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;backdrop-filter:blur(16px);box-shadow:0 18px 50px rgba(0,0,0,.22)}
+.card strong{color:var(--text)}
+.num{font-family:"JetBrains Mono",monospace;font-size:clamp(28px,3.6vw,44px);font-weight:700;letter-spacing:-.04em;line-height:1;color:#fff}
+.label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:800;margin-bottom:10px}
+.tag{display:inline-flex;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid var(--line);font-size:12px;font-weight:700}
+.coral{color:var(--coral)} .amber{color:var(--amber)} .gold{color:var(--gold)}
+.ok{color:var(--gold);font-weight:800} .bad{color:var(--coral);font-weight:800}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.22,1,.36,1);transition-delay:calc(var(--i,0)*90ms)}
+.slide.active .reveal{opacity:1;transform:none}
+.pipeline{display:flex;align-items:stretch;gap:8px;margin-top:22px}
+.pipe{flex:1;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 14px;position:relative;overflow:hidden}
+.pipe::after{content:"";position:absolute;inset:auto -20% -55% -20%;height:70%;background:radial-gradient(ellipse at center,rgba(255,107,94,.28),transparent 70%)}
+.pipe b{display:block;font-size:14px;margin-bottom:6px}
+.pipe span{font-size:12.5px;color:var(--muted);line-height:1.45;display:block}
+.arrow{align-self:center;color:var(--amber);font-weight:800}
+.barRow{display:grid;grid-template-columns:170px 1fr 96px;gap:12px;align-items:center;margin:12px 0;font-size:13px}
+.track{height:14px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;display:flex}
+.seg{height:100%;width:0;transition:width 1s cubic-bezier(.22,1,.36,1) .25s}
+.slide.active .seg{width:var(--w)}
+.s-q{background:#8A6A5B}.s-p{background:var(--coral)}.s-d{background:var(--amber)}.s-n{background:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);padding:12px;border-bottom:1px solid var(--line)}
+td{padding:13px 12px;border-bottom:1px solid rgba(255,255,255,.07);color:var(--muted);vertical-align:top}
+td:first-child{color:var(--text);font-weight:700}
+pre{margin:0;background:#0E0705;border:1px solid var(--line);border-radius:22px;padding:20px;overflow:auto;max-width:100%;font-family:"JetBrains Mono",monospace;font-size:13.5px;line-height:1.65;color:#FFE8D6}
+pre .k{color:var(--coral)} pre .s{color:var(--gold)} pre .c{color:rgba(255,246,238,.42)}
+.controls{position:relative;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:12px 22px calc(12px + env(safe-area-inset-bottom));gap:12px;flex:0 0 auto}
+.navBtns{display:flex;gap:8px}
+button{font-family:Manrope,sans-serif;cursor:pointer}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--text);backdrop-filter:blur(14px);border-radius:999px;padding:11px 16px;font-weight:800;font-size:14px}
+.btn.primary{background:var(--coral);border-color:transparent;color:#1A0B08}
+.btn:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:46vw}
+.dot{width:7px;height:7px;border-radius:50%;border:0;background:rgba(255,255,255,.22);padding:0}
+.dot.on{background:var(--coral);transform:scale(1.35)}
+.hint{font-size:12px;color:var(--faint)}
+svg text{font-family:"JetBrains Mono",monospace}
+.drawPath{stroke-dasharray:900;stroke-dashoffset:900;transition:stroke-dashoffset 1.4s ease .3s}
+.slide.active .drawPath{stroke-dashoffset:0}
+.formula{font-family:"JetBrains Mono",monospace;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:18px;padding:16px;font-size:14px;line-height:1.7;overflow-wrap:anywhere;white-space:normal;max-width:100%}
+.callout{border-radius:22px;padding:18px 20px;background:linear-gradient(135deg,rgba(255,107,94,.16),rgba(255,184,107,.10));border:1px solid rgba(255,184,107,.28)}
+ul.tight{margin:8px 0 0;padding-left:18px;color:var(--muted);line-height:1.65}
+ul.tight li{margin:6px 0}
+.tenantChat{border-top:4px solid var(--coral)} .tenantDoc{border-top:4px solid var(--gold)}
+.engV{border-top:4px solid var(--coral)} .engS{border-top:4px solid var(--gold)}
+.step{display:flex;gap:14px;align-items:flex-start;margin:13px 0}
+.step .sn{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:700;color:var(--amber)}
+.step .sb{flex:1;min-width:0}
+/* arrival strips (open vs closed loop) */
+.stripWrap{margin-top:18px}
+.stripLabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);font-weight:800;margin:14px 0 6px}
+.strip{position:relative;height:36px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid var(--line);overflow:hidden}
+.stallBand{position:absolute;top:0;bottom:0;left:44%;width:13%;background:repeating-linear-gradient(45deg,rgba(255,107,94,.30) 0 6px,rgba(255,107,94,.14) 6px 12px);border-left:1px solid rgba(255,107,94,.6);border-right:1px solid rgba(255,107,94,.6)}
+.arrDot{position:absolute;top:7px;width:3px;height:22px;border-radius:2px;background:var(--amber);opacity:0}
+.slide.active .arrDot{animation:arrIn .3s ease forwards;animation-delay:calc(.3s + var(--i)*22ms)}
+.arrDot.inStall{background:var(--coral)}
+@keyframes arrIn{from{opacity:0;transform:translateY(-6px)}to{opacity:.9;transform:none}}
+.stripScale{display:flex;justify-content:space-between;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint);margin-top:7px}
+/* SLO verdict chips */
+.verdictRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;color:var(--muted)}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.chip.pass{border-color:rgba(255,209,102,.5);color:var(--gold)}
+.chip.pass::before{background:var(--gold)}
+.chip.fail{border-color:rgba(255,107,94,.55);color:var(--coral)}
+.chip.fail::before{background:var(--coral)}
+.calcField label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-weight:800;margin-bottom:6px}
+.calcField input[type=range]{width:100%;accent-color:var(--coral);height:28px}
+.calcOut{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.calcOut .co{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:18px;padding:14px}
+.calcOut .co .v{font-family:"JetBrains Mono",monospace;font-size:clamp(19px,2.2vw,26px);font-weight:700;color:#fff;line-height:1.1}
+.calcOut .co .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:800;margin-top:6px}
+/* audit checklist */
+ul.checks{list-style:none;margin:6px 0 0;padding:0}
+ul.checks li{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07);color:var(--muted);line-height:1.55}
+ul.checks li:last-child{border-bottom:0}
+ul.checks .ck{flex:0 0 auto;width:22px;height:22px;border-radius:7px;border:1px solid rgba(255,209,102,.45);background:rgba(255,209,102,.08);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:"JetBrains Mono",monospace;margin-top:1px}
+ul.checks strong{color:var(--text)}
+@media(max-width:820px){
+  .grid2,.grid3,.grid4{grid-template-columns:1fr}
+  .pipeline{flex-direction:column}.arrow{transform:rotate(90deg)}
+  .slide{padding:14px 16px 18px;align-items:flex-start}
+  pre{font-size:12px;padding:14px;white-space:pre-wrap;word-break:break-word}
+  .formula{font-size:12.5px}
+  .dots{display:none}.hint{display:none}
+  .barRow{grid-template-columns:110px 1fr 70px}
+  .calcOut{grid-template-columns:1fr 1fr}
+  table{font-size:12.5px} th,td{padding:9px 7px}
+  .stackTable,.stackTable tbody,.stackTable tr,.stackTable td{display:block;width:100%}
+  .stackTable tr{border-bottom:1px solid var(--line);padding:10px 0}
+  .stackTable tr:first-child{display:none}
+  .stackTable td{border-bottom:0;padding:4px 2px}
+  .stackTable td:first-child{font-size:14.5px;padding-top:2px}
+  h1{font-size:44px} h2{font-size:36px}
+  .topbar{padding:12px 14px}.controls{padding:12px 14px}
+}
+</style>
+</head>
+<body>
+<div class="orbs"><div class="orb c1"></div><div class="orb c2"></div><div class="orb c3"></div></div>
+<div class="progressWrap"><div id="progress"></div></div>
+<header class="topbar">
+  <div class="course">vLLM vs SGLang <span>· Production Serving, Measured</span></div>
+  <div class="pill" id="counter">1 / 20</div>
+</header>
+
+<main class="deck" id="deck">
+
+<!-- 1 TITLE -->
+<section class="slide active">
+  <div class="inner">
+    <div class="kicker reveal" style="--i:0">Chapter 5 · Technical Tutorial</div>
+    <h1 class="reveal" style="--i:1">Benchmarking Without<br><em>Lying To Yourself.</em></h1>
+    <p class="lead reveal" style="--i:2">Every number in Chapters 1 to 4 came out of a harness. This chapter builds that harness properly, because the standard way of load-testing an LLM server does not merely add noise to the truth. It systematically reverses it: it ranks the worst configuration first, hides the tenant that is breaching, and reports a throughput no SLO can survive.</p>
+    <div class="grid3" style="margin-top:26px">
+      <div class="card reveal" style="--i:3"><div class="label">The lie</div><p style="margin:0">A closed-loop load test throttles itself when the server slows down. The worse the server behaves, the gentler the load it is offered, and the better its latencies look. <strong>Coordinated omission</strong>, priced on slide 4.</p></div>
+      <div class="card reveal" style="--i:4"><div class="label">The fix</div><p style="margin:0">Open-loop Poisson replay of the frozen trace, cache state controlled between runs, output lengths forced identical, percentiles reported <strong>per tenant</strong>, and one headline metric: <strong>goodput</strong>.</p></div>
+      <div class="card reveal" style="--i:5"><div class="label">Deliverable</div><p style="margin:0">The <strong class="mono" style="font-size:14px">bench/</strong> repo: trace, open-loop runner, analysis, and a results schema that <strong>forces method disclosure</strong> on every number it emits.</p></div>
+    </div>
+    <p class="small reveal" style="--i:6;margin-top:18px">Fixed for this chapter: the Chapter 4 operating point (chunk 512, TP=4, BF16, Llama-3.1-70B on 4 × H100). SLOs unchanged: chat TTFT p95 ≤ 800 ms, chat TPOT p95 ≤ 50 ms, doc completion p99 ≤ 30 s. All benchmark figures are one example run at the pinned engine builds, produced with the protocol in this chapter so you can reproduce, and dispute, every digit. Use ← → or Space to move.</p>
+  </div>
+</section>
+
+<!-- 2 THESIS -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">01 · The thesis</div>
+  <h2 class="reveal" style="--i:1">A benchmark is an instrument. <em>Most are miscalibrated by design.</em></h2>
+  <p class="lead reveal" style="--i:2">Four failure modes account for nearly every misleading serving benchmark in the wild. Each one is a property of the harness, not the engine, and each one biases the result in the vendor's favour.</p>
+  <div class="grid4" style="margin-top:20px">
+    <div class="card reveal" style="--i:3"><div class="label coral">Lie 1 · Arrival process</div><p>Closed-loop clients issue the next request only when the previous one returns. Offered load becomes a function of server speed, so <strong>queues can never form in the data</strong>, and queueing is where production latency lives.</p></div>
+    <div class="card reveal" style="--i:4"><div class="label coral">Lie 2 · Blended percentiles</div><p>One histogram for all tenants. Doc QA is <strong>2% of requests</strong> in our workload, so a blended p95 is a chat statistic wearing a fleet costume. The breaching tenant is arithmetically invisible.</p></div>
+    <div class="card reveal" style="--i:5"><div class="label coral">Lie 3 · Uncontrolled cache state</div><p>Prefix cache hit rate drifts upward as a run proceeds. Numbers averaged across cold and warm states describe <strong>a system that never existed</strong> at any moment during the run.</p></div>
+    <div class="card reveal" style="--i:6"><div class="label coral">Lie 4 · Unforced work</div><p>If output lengths are sampled live, the two engines generate <strong>different amounts of work</strong>. The one that stops early wins the throughput chart for doing less.</p></div>
+  </div>
+  <div class="callout reveal" style="--i:7;margin-top:16px"><strong>The standard is not "is this number accurate?" but "could this harness have produced a bad number if the engine deserved one?"</strong> A harness that cannot report failure is not measuring. It is marketing with extra steps.</div>
+</div></section>
+
+<!-- 3 CLOSED LOOP MECHANICS -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">02 · The closed loop, mechanically</div>
+  <h2 class="reveal" style="--i:1">Fixed concurrency is <em>a governor on the truth.</em></h2>
+  <div class="grid2">
+    <div class="card reveal" style="--i:2"><div class="label">The closed-loop contract</div>
+      <div class="formula" style="white-space:normal">N clients · each client: send → wait → send<br>offered_rate = N ÷ mean_latency<br><br>latency doubles → offered rate <span style="color:var(--gold)">halves</span><br>server stalls → arrivals <span style="color:var(--gold)">stop entirely</span></div>
+      <p>The load generator and the server form a feedback loop with negative gain: every degradation reduces the pressure that would reveal it. What the harness calls "throughput at concurrency 64" is the server's service rate under self-administered, perfectly smooth load, a traffic pattern no user population has ever produced.</p></div>
+    <div class="reveal" style="--i:3">
+      <ul class="tight" style="font-size:15px">
+        <li><strong style="color:#fff">No queue can form:</strong> with N clients, at most N requests exist. The instant a request would have queued behind 200 others, the harness simply has not created it yet. TTFT measures an empty waiting room.</li>
+        <li><strong style="color:#fff">Arrivals are anti-correlated with pain:</strong> real traffic bursts hardest exactly when the system is least able to absorb it (retries, failovers, cron-aligned jobs). Closed loop produces the opposite correlation, by construction.</li>
+        <li><strong style="color:#fff">Latency is measured on a censored sample:</strong> the requests that would have recorded the worst latencies are precisely the ones never issued. The mean improves <em>because</em> the system got slower. That inversion has a name, and it is next.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- 4 COORDINATED OMISSION -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">03 · Coordinated omission, priced</div>
+  <h2 class="reveal" style="--i:1">The stall deletes <em>its own victims.</em></h2>
+  <p class="lead reveal" style="--i:2">A doc burst saturates prefill and the server effectively stalls for ~1.4 s inside a 10 s window. Watch what each harness issues during the stall, shown as arrivals:</p>
+  <div class="stripWrap reveal" style="--i:3">
+    <div class="stripLabel">Open loop · Poisson replay at 15 req/s</div>
+    <div class="strip" id="stripOpen" role="img" aria-label="Arrival strip for open-loop replay: request ticks continue at full rate through the shaded stall band."><div class="stallBand"></div></div>
+    <div class="stripLabel">Closed loop · 64 clients</div>
+    <div class="strip" id="stripClosed" role="img" aria-label="Arrival strip for closed-loop clients: request ticks stop entirely during the shaded stall band and resume afterwards."><div class="stallBand"></div></div>
+    <div class="stripScale"><span>0 s</span><span>hatched band = server stall ≈ 1.4 s</span><span>10 s</span></div>
+  </div>
+  <div class="grid3" style="margin-top:16px">
+    <div class="card reveal" style="--i:4"><div class="label">Intended arrivals in the stall</div><div class="num">~21</div><p>At 15 req/s, a 1.4 s stall should collect about 21 arrivals. Every one of them experiences the stall in full.</p></div>
+    <div class="card reveal" style="--i:5"><div class="label coral">Closed loop records</div><div class="num" style="color:var(--coral)">≤ 64</div><p>At most 64 samples of the stall, one per blocked client. Each records <em>one</em> slow request. The arrivals that should have occurred during the stall are never created, so they cannot be slow. They are omitted, in coordination with the failure.</p></div>
+    <div class="card reveal" style="--i:6"><div class="label">The bias compounds</div><p>Percentiles are computed over issued requests. Delete the worst 1.4 s worth of demand from the sample and <strong>p95 improves while users wait longer</strong>. Longer stall, cleaner chart. This is not a subtle statistical effect; at production stall rates it moves p95 by multiples.</p></div>
+  </div>
+</div></section>
+
+<!-- 5 BROCHURE VS HARNESS -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">04 · Same engine. Same config. Two harnesses.</div>
+  <h2 class="reveal" style="--i:1">The brochure number is <em>72% higher.</em></h2>
+  <div class="grid2">
+    <div class="card reveal" style="--i:2"><div class="label coral">Closed loop · the vendor setup</div>
+      <div class="barRow"><span>Peak output tok/s (conc. 256)</span><div class="track"><div class="seg s-p" style="--w:100%"></div></div><b class="mono">5,900</b></div>
+      <div class="barRow"><span>TTFT p95 (conc. 64)</span><div class="track"><div class="seg s-p" style="--w:26%"></div></div><b class="mono">210 ms</b></div>
+      <div class="barRow"><span>TPOT p95 (conc. 64)</span><div class="track"><div class="seg s-p" style="--w:82%"></div></div><b class="mono">41 ms</b></div>
+      <p class="small">Every figure individually true, of a workload that never occurs: no arrival process, no queue, no burst, concurrency as the only load concept. Nothing here is fabricated. It is selected.</p></div>
+    <div class="card reveal" style="--i:3"><div class="label" style="color:var(--gold)">Open loop · this course's harness</div>
+      <div class="barRow"><span>Goodput output tok/s (SLOs held)</span><div class="track"><div class="seg s-n" style="--w:58%"></div></div><b class="mono">3,425</b></div>
+      <div class="barRow"><span>TTFT p95 at goodput rate</span><div class="track"><div class="seg s-n" style="--w:80%"></div></div><b class="mono">640 ms</b></div>
+      <div class="barRow"><span>TPOT p95 at goodput rate</span><div class="track"><div class="seg s-n" style="--w:98%"></div></div><b class="mono">49 ms</b></div>
+      <p class="small">Bars to scale within each row pair. The honest throughput is 58% of the brochure figure, and the honest TTFT is 3× worse, because the queue the brochure never built is in these numbers.</p></div>
+  </div>
+  <div class="callout reveal" style="--i:4;margin-top:16px"><strong>Neither harness is "the engine's real speed."</strong> The engine has a service curve; a harness samples it under a stated load process. The closed loop's sin is not arithmetic, it is disclosure: it publishes samples from a load process that cannot occur in production, next to SLOs that must hold in production.</div>
+</div></section>
+
+<!-- 6 OPEN LOOP -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">05 · Open loop, done right</div>
+  <h2 class="reveal" style="--i:1">Arrivals that <em>ignore the server.</em></h2>
+  <div class="grid2">
+    <div class="reveal" style="--i:2">
+      <div class="formula">inter-arrival ~ Exponential(λ) · CV = 1<br>issue at scheduled t, whatever is still running<br><br>queue length is an <span style="color:var(--gold)">output</span>, never an input<br><br>Little's law check: L = λ · W<br>chat: 12/s × ~3.1 s ≈ 37 in flight<br>doc:&nbsp; 0.25/s × ~20 s ≈ 5 in flight<br>Σ ≈ 42 → the batch sizes Chapter 4's sweep saw (40–60)</div>
+      <p style="margin-top:14px">Poisson is not an affectation. It is the maximum-entropy arrival process for independent users, and its burstiness is the point: at λ = 12/s a 250 ms window expects 3 arrivals and receives 8 or more about 1% of the time. Those micro-bursts are what queues are made of. A harness without them is testing a world without queues.</p>
+    </div>
+    <div class="reveal" style="--i:3">
+      <ul class="tight" style="font-size:15px">
+        <li><strong style="color:#fff">The sanity check is free:</strong> Little's law ties arrival rate, latency, and concurrency into one identity. If your harness reports λ and W that imply L = 42 while the server shows 200 running sequences, one of the three numbers is wrong, and now you know to look.</li>
+        <li><strong style="color:#fff">Overload is a result, not a crash:</strong> offer 20 req/s to a system whose goodput is 15 and the queue grows without bound. The run is not invalid; it is the measurement. Report latency as a function of offered rate, and let the curve confess where the knee is (slide 12).</li>
+        <li><strong style="color:#fff">The burst profile stays separate:</strong> the frozen trace's 3× burst windows (Chapter 1) are replayed as their own condition and reported as their own row. Folding bursts into a steady-state average is Lie 2 wearing a different coat.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- 7 THE TRACE -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">06 · The trace is the experiment</div>
+  <h2 class="reveal" style="--i:1">One file. <em>Both engines. No resampling.</em></h2>
+  <div class="grid2">
+    <div class="reveal" style="--i:2"><pre><span class="c"># traces/two-tenant-v1.jsonl · generated once, seed 2027</span>
+{<span class="s">"t_ms"</span>: 0,     <span class="s">"tenant"</span>: <span class="s">"chat"</span>, <span class="s">"in"</span>: 350,  <span class="s">"out"</span>: 220,  <span class="s">"prompt"</span>: <span class="s">"chat/0417"</span>}
+{<span class="s">"t_ms"</span>: 83,    <span class="s">"tenant"</span>: <span class="s">"chat"</span>, <span class="s">"in"</span>: 350,  <span class="s">"out"</span>: 220,  <span class="s">"prompt"</span>: <span class="s">"chat/1093"</span>}
+{<span class="s">"t_ms"</span>: 4120,  <span class="s">"tenant"</span>: <span class="s">"doc"</span>,  <span class="s">"in"</span>: 18400, <span class="s">"out"</span>: 400, <span class="s">"prompt"</span>: <span class="s">"doc/007"</span>}
+{<span class="s">"t_ms"</span>: 4311,  <span class="s">"tenant"</span>: <span class="s">"chat"</span>, <span class="s">"in"</span>: 350,  <span class="s">"out"</span>: 220,  <span class="s">"prompt"</span>: <span class="s">"chat/2210"</span>}
+
+<span class="c"># arrival times: exponential draws at λ per tenant</span>
+<span class="c"># prompt ids index a fixed corpus on disk — same text,</span>
+<span class="c"># same token counts, every run, every engine (paired design)</span></pre></div>
+    <div class="reveal" style="--i:3">
+      <ul class="tight" style="font-size:15px">
+        <li><strong style="color:#fff">Paired comparison:</strong> both engines replay the identical file, so run-to-run arrival luck is shared. Differences in the results are engine differences, not different dice. An unpaired benchmark spends most of its variance budget re-rolling arrivals.</li>
+        <li><strong style="color:#fff">Token counts live in the trace:</strong> <span class="mono" style="font-size:13.5px">in</span> / <span class="mono" style="font-size:13.5px">out</span> are counted with the model's own tokenizer, offline, once. Never estimate tokens as characters ÷ 4: on the doc corpus (JSON and table-heavy) that heuristic errs by up to ±30%, and the error lands directly in your throughput denominator.</li>
+        <li><strong style="color:#fff">The corpus is content, not lorem ipsum:</strong> prompts are drawn from fixed chat and document sets with realistic prefix overlap (shared system prompt, shared doc corpus), because prefix overlap is what makes the cache a variable worth controlling (slide 10). Random-token prompts would benchmark a cache that never hits.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- 8 FORCING IDENTICAL WORK -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">07 · Force the work to be identical</div>
+  <h2 class="reveal" style="--i:1">If the engines do different work, <em>the faster one is just lazier.</em></h2>
+  <div class="grid2">
+    <div class="reveal" style="--i:2"><pre><span class="c"># per-request sampling, both engines, from the trace</span>
+vLLM   SamplingParams(
+         temperature=<span class="s">0</span>, seed=<span class="s">trace.seed</span>,
+         min_tokens=<span class="s">out</span>, max_tokens=<span class="s">out</span>,
+         ignore_eos=<span class="s">True</span>)
+SGLang sampling_params={
+         <span class="s">"temperature"</span>: <span class="s">0</span>, <span class="s">"max_new_tokens"</span>: out,
+         <span class="s">"min_new_tokens"</span>: out, <span class="s">"ignore_eos"</span>: <span class="s">True</span>}</pre>
+      <p style="margin-top:12px">Every request generates exactly <span class="mono">out</span> tokens on both engines. Decode work per request is identical by construction, so a tok/s difference is a speed difference, full stop.</p></div>
+    <div class="reveal" style="--i:3">
+      <ul class="tight" style="font-size:15px">
+        <li><strong style="color:#fff">The failure mode is silent:</strong> with live sampling, output length is a draw from the model's distribution conditioned on the prompt, and small numeric differences between engines (kernel order, sampling implementation) shift where EOS lands. A 6% shorter mean output is a 6% "throughput win" that required no engineering at all.</li>
+        <li><strong style="color:#fff">Greedy + seeded:</strong> temperature 0 removes sampling variance from latency paths that depend on it (speculative acceptance is Chapter 8's problem; here it would be uncontrolled noise).</li>
+        <li><strong style="color:#fff">Forcing is a measurement choice, not a workload claim:</strong> real traffic has variable outputs, and Chapter 4's trace already encodes that variability in <span class="mono" style="font-size:13.5px">out</span>. What forcing removes is <em>engine-dependent</em> variability. Quality under each precision is measured on golden sets in Chapter 6, not by this harness.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- 9 WARM-UP -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">08 · Warm-up is part of the method</div>
+  <h2 class="reveal" style="--i:1">The first minute <em>is a different system.</em></h2>
+  <div class="grid2">
+    <div class="card reveal" style="--i:2"><div class="label">What is still warming after process start</div><ul class="tight">
+      <li><strong style="color:#fff">Kernel loading and autotuning:</strong> attention and GEMM kernels are selected, loaded, and in places tuned on first shapes seen. Early requests pay costs later requests never see.</li>
+      <li><strong style="color:#fff">Allocator growth:</strong> the caching allocator expands to its working set in steps; each expansion can stall a step. Steady state begins when allocations stop growing, not when the health endpoint turns green.</li>
+      <li><strong style="color:#fff">The prefix cache itself:</strong> a "warm cache" run begins only once the corpus is resident (slide 10). Before that, the run is a cold run mislabelled.</li></ul></div>
+    <div class="reveal" style="--i:3">
+      <div class="formula">protocol (this course, all runs)<br>discard: first <span style="color:var(--gold)">60 s</span> AND first <span style="color:var(--gold)">200 requests</span>,<br>whichever ends later · stated in every result file<br><br>example run: request #1 TTFT ≈ 8.3 s;<br>TTFT p50 stable (±5%) after ~50 requests</div>
+      <p style="margin-top:14px">Warm-up exclusion is not cherry-picking when it is <strong style="color:#fff">pre-registered in the protocol and reported with the results</strong>. It is cherry-picking when the window is chosen after looking at the data, per run, per engine. The difference between rigour and fraud here is a sentence in the method block, written before the run.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 10 CACHE STATE -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">09 · Cache state: a controlled variable</div>
+  <h2 class="reveal" style="--i:1">Cold and warm are <em>different products.</em></h2>
+  <div class="card reveal" style="--i:2;padding:8px 22px">
+    <table class="stackTable">
+      <tr><th>Metric (example run)</th><th>Cold cache</th><th>Warm cache</th><th>What changed</th></tr>
+      <tr><td>Doc TTFT p50</td><td class="mono">1.92 s</td><td class="mono">0.81 s</td><td>~62% of the 18K prompt is prefix hits (shared corpus + system prompt); uncached compute falls from 18K to ~6.8K tokens</td></tr>
+      <tr><td>Chat TTFT p95</td><td class="mono">486 ms</td><td class="mono">310 ms</td><td>The 78-token system prompt is small; the cold penalty here is allocator and kernel state riding along, not prefix misses</td></tr>
+      <tr><td>Doc prefix hit rate</td><td class="mono">0% → climbs during run</td><td class="mono">~62% steady</td><td>In a cold run the hit rate is a function of elapsed time: the run is non-stationary by construction</td></tr>
+    </table>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card reveal" style="--i:3"><h3>The rules</h3><ul class="tight"><li>Report cold and warm as <strong style="color:#fff">separate rows, never an average</strong>. An uncontrolled run that drifts from cold to warm reports ~1.35 s doc TTFT: a number true of no moment in the run.</li><li>State how the state was produced: warm = corpus replayed once before timing; cold = engine restarted.</li></ul></div>
+    <div class="card reveal" style="--i:4"><h3>Resetting honestly</h3><p>SGLang exposes a cache flush endpoint; on vLLM at the pinned build the trustworthy cold state is a <strong style="color:#fff">process restart</strong> (or a verified eviction). Whichever you use, <strong style="color:#fff">prove it</strong>: measure the hit rate on the first timed requests. A flush that does not move the hit rate to zero is a rumour, and your cold numbers are warm numbers with worse labels.</p></div>
+  </div>
+</div></section>
+
+<!-- 11 PER-TENANT PERCENTILES -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">10 · Percentiles per tenant, or it didn't happen</div>
+  <h2 class="reveal" style="--i:1">The blended histogram <em>erases the doc tenant.</em></h2>
+  <div class="grid2">
+    <div class="card reveal" style="--i:2">
+      <svg viewBox="0 0 560 300" style="width:100%;height:auto" role="img" aria-label="Schematic cumulative distribution of time to first token. The chat curve rises steeply and plateaus early; the doc curve rises slowly and plateaus far right; the blended curve lies almost exactly on top of the chat curve.">
+        <line x1="60" y1="255" x2="520" y2="255" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+        <line x1="60" y1="255" x2="60" y2="30" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+        <path class="drawPath" d="M60 252 C130 250 165 190 195 120 C215 75 235 48 300 42 L520 42" fill="none" stroke="#FF6B5E" stroke-width="2.5"/>
+        <path d="M60 253 C140 252 175 195 205 128 C228 82 250 52 310 45 L520 45" fill="none" stroke="#FFF6EE" stroke-width="1.5" stroke-dasharray="5 5" opacity=".65"/>
+        <path class="drawPath" d="M60 254 C220 252 330 235 410 180 C465 140 495 80 512 44" fill="none" stroke="#FFD166" stroke-width="2.5"/>
+        <line x1="235" y1="42" x2="235" y2="255" stroke="rgba(255,246,238,.3)" stroke-width="1" stroke-dasharray="3 4"/>
+        <text x="150" y="105" fill="#FF6B5E" font-size="11.5">chat TTFT</text>
+        <text x="330" y="215" fill="#FFD166" font-size="11.5">doc TTFT</text>
+        <text x="330" y="60" fill="rgba(255,246,238,.7)" font-size="11">blended ≈ chat</text>
+        <text x="242" y="248" fill="rgba(255,246,238,.55)" font-size="10.5">chat p95 · 310 ms</text>
+        <text x="180" y="282" fill="rgba(255,246,238,.55)" font-size="11">TTFT (schematic CDFs, warm cache, example run)</text>
+        <text x="8" y="46" fill="rgba(255,246,238,.55)" font-size="11">CDF</text>
+      </svg>
+      <p class="small">The dashed blended curve is visually indistinguishable from chat's. That is the whole problem, drawn.</p>
+    </div>
+    <div class="reveal" style="--i:3">
+      <div class="formula">doc share of requests = 0.25 ÷ (12 + 0.25) ≈ <span style="color:var(--gold)">2%</span><br><br>blended p95 ← chat's ~p93<br>blended p98 ← still ~0% doc<br>the doc tenant exists only above p98</div>
+      <p style="margin-top:14px">A blended report can show every percentile green while doc completion sits at 45 s against a 30 s SLO, because the breaching population is 2% of the sample and the reported percentiles stop at p95. <strong style="color:#fff">Percentiles are per-tenant, per-metric, always:</strong> TTFT and TPOT for chat, completion for doc, each at p50 / p95 / p99. If a report cannot tell you which tenant a percentile belongs to, it cannot tell you whether an SLO held.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 12 GOODPUT DEFINED -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">11 · Goodput: the headline metric</div>
+  <h2 class="reveal" style="--i:1">Throughput, <em>conditioned on the SLOs.</em></h2>
+  <div class="grid2">
+    <div class="card reveal" style="--i:2">
+      <svg viewBox="0 0 560 300" style="width:100%;height:auto" role="img" aria-label="Goodput chart: completions within SLO track offered rate along the diagonal until the goodput knee, 15 requests per second for vLLM and 16 for SGLang, then fall as overload pushes requests out of SLO.">
+        <line x1="60" y1="260" x2="520" y2="260" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+        <line x1="60" y1="260" x2="60" y2="30" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+        <line x1="60" y1="260" x2="520" y2="40" stroke="rgba(255,246,238,.35)" stroke-width="1" stroke-dasharray="5 5"/>
+        <path class="drawPath" d="M60 260 L405 95 C450 88 490 105 520 128" fill="none" stroke="#FF6B5E" stroke-width="2.5"/>
+        <path class="drawPath" d="M60 260 L428 84 C465 80 500 96 520 116" fill="none" stroke="#FFD166" stroke-width="2.5"/>
+        <circle cx="405" cy="95" r="5" fill="#FF6B5E"/>
+        <circle cx="428" cy="84" r="5" fill="#FFD166"/>
+        <text x="330" y="80" fill="#FF6B5E" font-size="11.5">vLLM knee · 15/s</text>
+        <text x="392" y="66" fill="#FFD166" font-size="11.5">SGLang knee · 16/s</text>
+        <text x="352" y="150" fill="rgba(255,246,238,.55)" font-size="10.5">completed = offered (no SLO)</text>
+        <text x="330" y="282" fill="rgba(255,246,238,.55)" font-size="11">offered chat rate (req/s, doc at fixed 1:48)</text>
+        <text x="8" y="46" fill="rgba(255,246,238,.55)" font-size="11">in-SLO /s</text>
+      </svg>
+      <p class="small">Schematic from the slide 14 sweep. Past the knee, in-SLO completions fall in absolute terms: overload does not just add latency, it destroys useful work.</p>
+    </div>
+    <div class="reveal" style="--i:3">
+      <div class="formula">goodput = max offered rate λ such that<br>ALL tenant SLOs hold for the full run<br><br>search: binary search on λ · 3 runs per point<br>verdict: per-tenant percentiles, median run</div>
+      <p style="margin-top:14px">Peak throughput answers "how fast can it go with no promises?" Goodput answers the production question: <strong style="color:#fff">"how much load can I sell against these SLOs?"</strong> It is a single number per engine per config, it degrades gracefully into cost (Chapter 9 turns it into $/1M tokens), and unlike peak tok/s it cannot be improved by removing the queue from the measurement.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 13 GOODPUT EXPLORER -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">12 · Find the knee yourself</div>
+  <h2 class="reveal" style="--i:1">Drag the offered rate <em>until it breaks.</em></h2>
+  <div class="card reveal" style="--i:2">
+    <div class="calcField"><label for="rateRange">Offered chat rate (req/s) · doc follows at 1:48 · vLLM, chunk 512, warm cache</label><input type="range" id="rateRange" min="8" max="20" step="0.5" value="12" aria-label="Offered chat request rate in requests per second"></div>
+    <div class="calcOut">
+      <div class="co"><div class="v" id="oUtil">67%</div><div class="k">Prefill utilisation</div></div>
+      <div class="co"><div class="v" id="oTtft">310 ms</div><div class="k">Chat TTFT p95</div></div>
+      <div class="co"><div class="v" id="oTpot">47 ms</div><div class="k">Chat TPOT p95</div></div>
+      <div class="co"><div class="v" id="oDoc">24.6 s</div><div class="k">Doc completion p99</div></div>
+    </div>
+    <div class="verdictRow" role="status" aria-live="polite">
+      <span class="chip pass" id="chipTtft">TTFT p95 ≤ 800 ms</span>
+      <span class="chip pass" id="chipTpot">TPOT p95 ≤ 50 ms</span>
+      <span class="chip pass" id="chipDoc">Doc p99 ≤ 30 s</span>
+      <span class="chip pass" id="chipVerdict">SLOs hold</span>
+    </div>
+    <p class="small" style="margin-top:12px">Interpolated from the slide 14 example-run sweep; prefill utilisation from Chapter 4's capacities (350·λ + 18,000·λ/48, against ~13K tok/s). Watch the failure arrive before saturation: at 89% prefill utilisation all three SLOs breach together, while the fleet still has decode headroom. Queueing, not capacity, is the binding constraint, and goodput (15 req/s) sits at ~84%.</p>
+  </div>
+  <div class="callout reveal" style="--i:3;margin-top:16px"><strong>Provisioning rule this buys you:</strong> a fleet sized to its goodput runs at roughly 80 to 85% of its bottleneck resource at peak. Anyone who budgets an inference fleet at 100% of a benchmark's peak throughput has planned, precisely, to breach every SLO at peak.</div>
+</div></section>
+
+<!-- 14 THE SWEEP -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">13 · The goodput sweep (example run)</div>
+  <h2 class="reveal" style="--i:1">Five rates. <em>One knee each.</em></h2>
+  <div class="card reveal" style="--i:2;padding:8px 22px"><div class="label" style="margin-top:14px">vLLM · chunk 512 · warm cache · frozen trace · 3 runs, median</div>
+    <table class="stackTable">
+      <tr><th>Chat rate</th><th>Prefill util</th><th>TTFT p95</th><th>TPOT p95</th><th>Doc p99</th><th>Verdict</th></tr>
+      <tr><td>12 /s (Ch 4 point)</td><td class="mono">67%</td><td class="mono ok">310 ms</td><td class="mono ok">47 ms</td><td class="mono ok">24.6 s</td><td class="ok">PASS</td></tr>
+      <tr><td>14 /s</td><td class="mono">78%</td><td class="mono ok">470 ms</td><td class="mono ok">48 ms</td><td class="mono ok">26.1 s</td><td class="ok">PASS</td></tr>
+      <tr><td>15 /s</td><td class="mono">84%</td><td class="mono ok">640 ms</td><td class="mono ok">49 ms</td><td class="mono ok">27.8 s</td><td class="ok">PASS · goodput</td></tr>
+      <tr><td>16 /s</td><td class="mono">89%</td><td class="mono bad">980 ms</td><td class="mono bad">53 ms</td><td class="mono bad">31.5 s</td><td class="bad">FAIL · all three</td></tr>
+      <tr><td>18 /s</td><td class="mono">100%</td><td class="mono bad">2,900 ms</td><td class="mono bad">68 ms</td><td class="mono bad">44 s</td><td class="bad">FAIL · unstable queue</td></tr>
+    </table>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card reveal" style="--i:3"><h3>SGLang at the same points</h3><p>Passes 16 /s (TTFT p95 <strong style="color:#fff">760 ms</strong>, TPOT <strong style="color:#fff">49 ms</strong>, doc p99 <strong style="color:#fff">29.4 s</strong>) and fails at 17 /s (95% prefill utilisation, TTFT 1,240 ms). Goodput <strong style="color:#fff">16 vs 15 req/s</strong>: the same overlap-scheduling edge Chapter 4 priced at ~3 ms of TPOT, here worth one extra request per second of sellable load.</p></div>
+    <div class="card reveal" style="--i:4"><h3>Read the failure shape</h3><p>Between 15 and 16 req/s, prefill utilisation moves 5 points and TTFT p95 moves <strong style="color:#fff">53%</strong>. Nothing degrades linearly near saturation; that is the queueing curve from Chapter 1 with measured numbers on it. At 18 /s the offered load exceeds prefill capacity outright: the queue diverges and every percentile becomes a function of when you stopped the run. Numbers from a diverging queue are reported as <em>unstable</em>, never averaged into a table as if they were steady state.</p></div>
+  </div>
+</div></section>
+
+<!-- 15 HEADLINE RESULTS -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">14 · Headline results (example run, this harness)</div>
+  <h2 class="reveal" style="--i:1">Two engines, <em>one honest table.</em></h2>
+  <div class="grid2">
+    <div class="card engV reveal" style="--i:2;padding:8px 22px"><div class="label" style="margin-top:14px">vLLM · chunk 512 · warm cache</div>
+      <table>
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Goodput (chat req/s at 1:48 mix)</td><td class="mono">15.0</td></tr>
+        <tr><td>Output tok/s at goodput</td><td class="mono">3,425</td></tr>
+        <tr><td>TTFT p95 at goodput</td><td class="mono">640 ms</td></tr>
+        <tr><td>Doc TTFT p50, cold cache</td><td class="mono">1.92 s</td></tr>
+        <tr><td>Closed-loop peak tok/s (no SLO)</td><td class="mono">5,900</td></tr>
+      </table>
+    </div>
+    <div class="card engS reveal" style="--i:3;padding:8px 22px"><div class="label" style="margin-top:14px;color:var(--gold)">SGLang · chunk 512 · warm cache</div>
+      <table>
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Goodput (chat req/s at 1:48 mix)</td><td class="mono">16.0</td></tr>
+        <tr><td>Output tok/s at goodput</td><td class="mono">3,653</td></tr>
+        <tr><td>TTFT p95 at goodput</td><td class="mono">760 ms</td></tr>
+        <tr><td>Doc TTFT p50, cold cache</td><td class="mono">1.84 s</td></tr>
+        <tr><td>Closed-loop peak tok/s (no SLO)</td><td class="mono">6,050</td></tr>
+      </table>
+    </div>
+  </div>
+  <p class="reveal" style="--i:4;margin-top:14px">Inter-run spread on goodput-adjacent percentiles was ±4% across the 3 runs (TTFT p95 at 15 /s: 622 / 640 / 671 ms, median reported). The last row is included only to be retired: it is the number each engine would advertise, it ranks the engines the same way goodput does here, and it overstates sellable capacity by <strong style="color:#fff">~70%</strong> for both. Agreement between a lying metric and an honest one, when it happens, is luck, not validation.</p>
+</div></section>
+
+<!-- 16 RANKING REVERSAL -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">15 · The reversal, as promised in Chapter 4</div>
+  <h2 class="reveal" style="--i:1">Closed loop ranks <em>the worst config first.</em></h2>
+  <div class="grid2">
+    <div class="card reveal" style="--i:2"><div class="label coral">Closed loop · output tok/s at conc. 64</div>
+      <div class="barRow"><span>Chunk off (Ch 4's worst)</span><div class="track"><div class="seg s-p" style="--w:100%"></div></div><b class="mono">5,990</b></div>
+      <div class="barRow"><span>Chunk 512 (Ch 4's pick)</span><div class="track"><div class="seg s-p" style="--w:97%"></div></div><b class="mono">5,860</b></div>
+      <p>Unchunked prefill wins: with no arrival process, its 1.4 s stalls never queue anyone, clients simply wait inside their own request, and raw completion rate is all that is measured. The config that froze forty chats per doc in Chapter 4 is the benchmark's champion.</p></div>
+    <div class="card reveal" style="--i:3"><div class="label" style="color:var(--gold)">Open loop · goodput, chat req/s</div>
+      <div class="barRow"><span>Chunk off</span><div class="track"><div class="seg s-n" style="--w:20%"></div></div><b class="mono">≈ 3</b></div>
+      <div class="barRow"><span>Chunk 512</span><div class="track"><div class="seg s-n" style="--w:100%"></div></div><b class="mono">15</b></div>
+      <p>With arrivals that ignore the server, chunk-off collapses: a 1.4 s stall lands roughly every 12 s even at minimal doc rates, covering ~12% of wall-clock, so chat's p95 cannot dodge it at any sellable rate. <strong style="color:#fff">A 2% closed-loop win becomes a 5× open-loop loss.</strong> Same engines, same configs, opposite answer: the harness was the variable.</p></div>
+  </div>
+  <div class="callout reveal" style="--i:4;margin-top:16px"><strong>This is why the harness chapter comes before the quantization and scale-out chapters.</strong> Every comparison from here on (FP8 vs AWQ, TP widths, disaggregation) is only as real as this instrument. A 3% engine delta measured with a harness that can be off by 5× is not a result; it is a rounding error with a chart.</div>
+</div></section>
+
+<!-- 17 RESULTS SCHEMA -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">16 · Method disclosure, enforced by schema</div>
+  <h2 class="reveal" style="--i:1">A number without its method <em>is an anecdote.</em></h2>
+  <div class="grid2">
+    <div class="reveal" style="--i:2"><pre><span class="c"># results/schema.yaml — required fields, run rejected without them</span>
+result:
+  engine:        <span class="s">vllm @ &lt;pinned commit&gt;</span>  <span class="c"># ENV.lock</span>
+  config:        {chunk: <span class="s">512</span>, tp: <span class="s">4</span>, kv_dtype: <span class="s">bf16</span>}
+  trace:         <span class="s">two-tenant-v1.jsonl (sha256 …)</span>
+  arrival:       <span class="s">open-loop poisson replay</span>
+  cache_state:   <span class="s">warm | cold</span>   <span class="c"># + how produced</span>
+  warmup:        <span class="s">discarded 60 s + 200 req</span>
+  output_control: <span class="s">min=max tokens, ignore_eos, temp 0</span>
+  generator:     <span class="s">send-lag p99 logged, &lt; 5 ms</span>
+  runs:          <span class="s">3 · median · spread reported</span>
+  metrics:       <span class="s">per-tenant p50/p95/p99 TTFT, TPOT, completion</span></pre></div>
+    <div class="reveal" style="--i:3">
+      <ul class="tight" style="font-size:15px">
+        <li><strong style="color:#fff">Environment is data:</strong> <span class="mono" style="font-size:13.5px">ENV.lock</span> pins engine commits, driver, CUDA, GPU clock policy (locked clocks for benchmark runs; an unlocked H100's boost variance alone is worth several percent), and host topology. "Same GPU" is not an environment.</li>
+        <li><strong style="color:#fff">The generator must prove it wasn't the bottleneck:</strong> the runner logs scheduled vs actual send time per request. If send-lag p99 exceeds 5 ms, the client fell behind the trace and the run measured the load generator. That run is void, and the schema makes the voiding automatic.</li>
+        <li><strong style="color:#fff">Disclose or delete:</strong> any result file missing a field does not render in the report. This is deliberately bureaucratic: benchmarks decay into folklore exactly when the method stops travelling with the number.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- 18 AUDIT CHECKLIST -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">17 · The eight-point benchmark audit</div>
+  <h2 class="reveal" style="--i:1">Run this on <em>anyone's numbers. Including ours.</em></h2>
+  <div class="grid2">
+    <div class="card reveal" style="--i:2"><ul class="checks">
+      <li><span class="ck">1</span><span><strong>Arrival process stated?</strong> Open-loop with a named process, or closed-loop? If closed, every latency is conditional on self-throttled load.</span></li>
+      <li><span class="ck">2</span><span><strong>Cache state controlled?</strong> Cold and warm reported separately, with the production method (restart, flush) and a hit-rate proof.</span></li>
+      <li><span class="ck">3</span><span><strong>Work forced identical?</strong> Output lengths fixed or their distributions published per engine. Unforced outputs make throughput a sampling artefact.</span></li>
+      <li><span class="ck">4</span><span><strong>Warm-up excluded, window pre-stated?</strong> Discard rule written before the run, identical for every contender.</span></li>
+    </ul></div>
+    <div class="card reveal" style="--i:3"><ul class="checks">
+      <li><span class="ck">5</span><span><strong>Percentiles per tenant?</strong> Any blended histogram must be accompanied by the per-tenant breakdown, or the smallest tenant is unaudited.</span></li>
+      <li><span class="ck">6</span><span><strong>Generator headroom proven?</strong> Send-lag or client CPU logged. A saturated load generator manufactures excellent server latencies.</span></li>
+      <li><span class="ck">7</span><span><strong>Environment locked?</strong> Versions, driver, clocks, topology in a file that travels with the results.</span></li>
+      <li><span class="ck">8</span><span><strong>Repeats and spread?</strong> At least 3 runs, median and spread reported, seeds fixed. A single run is a story about one afternoon.</span></li>
+    </ul></div>
+  </div>
+  <p class="reveal" style="--i:4;margin-top:14px">Score the vendor post from slide 5 against this list: it fails 1, 2, 4, 5, and 8 outright, and is silent on 3, 6, and 7. <strong style="color:#fff">Zero of eight.</strong> That is the median state of published serving benchmarks, and it is why this course measures everything itself.</p>
+</div></section>
+
+<!-- 19 DELIVERABLE -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">18 · Deliverable: the bench/ repo</div>
+  <h2 class="reveal" style="--i:1">The instrument, <em>checked in.</em></h2>
+  <div class="grid2">
+    <div class="reveal" style="--i:2"><pre>bench/
+├─ traces/
+│  ├─ two-tenant-v1.jsonl   <span class="c"># frozen, sha256 in README</span>
+│  └─ gen_trace.py          <span class="c"># seed 2027, Poisson per tenant</span>
+├─ runner/
+│  ├─ run.py                <span class="c"># open-loop replay, monotonic clock</span>
+│  └─ client.py             <span class="c"># keep-alive pool, send-lag logging</span>
+├─ analysis/
+│  ├─ percentiles.py        <span class="c"># per-tenant TTFT / TPOT / completion</span>
+│  └─ goodput.py            <span class="c"># rate search + SLO verdicts</span>
+├─ results/
+│  ├─ schema.yaml           <span class="c"># method block, required fields</span>
+│  └─ ch5-example-run/      <span class="c"># this chapter's tables, raw</span>
+├─ ENV.lock                 <span class="c"># engines, driver, clocks, topology</span>
+└─ README.md                <span class="c"># the protocol, in prose</span></pre></div>
+    <div class="reveal" style="--i:3">
+      <ul class="tight" style="font-size:15px">
+        <li><strong style="color:#fff">What ships:</strong> everything needed for a stranger to reproduce slide 15 on their own hardware and get a different, defensible answer for their fleet. The trace and protocol are the product; this chapter's digits are a worked example.</li>
+        <li><strong style="color:#fff">How the rest of the course uses it:</strong> Chapter 6 reruns this exact harness per precision (BF16 / FP8 / AWQ) and reports goodput deltas, never raw tok/s deltas. Chapter 7 reruns it per topology. Chapter 9 converts its goodput table into the cost workbook. One instrument, four chapters of comparable numbers.</li>
+        <li><strong style="color:#fff">What it refuses to do:</strong> there is no closed-loop mode and no blended-percentile report. Features that exist only to produce flattering numbers are bugs with good PR.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- 20 CLOSE -->
+<section class="slide"><div class="inner">
+  <div class="kicker reveal" style="--i:0">19 · Chapter close</div>
+  <h2 class="reveal" style="--i:1">Measure like <em>the queue is real. It is.</em></h2>
+  <div class="grid2">
+    <div class="card reveal" style="--i:2"><h3>Decided in Chapter 5</h3><ul class="tight"><li>The course harness: open-loop Poisson replay of the frozen trace, forced output lengths, cache state controlled and proven, warm-up pre-discarded, per-tenant percentiles, 3-run medians</li><li>Headline metric is <strong style="color:#fff">goodput</strong>: 15 req/s (vLLM) vs 16 req/s (SGLang) at the fixed mix, roughly 58% of either engine's advertised peak throughput</li><li>Closed-loop benchmarking is retired from this course, with the reversal on slide 16 as its obituary: it ranked Chapter 4's worst configuration first</li></ul></div>
+    <div class="card reveal" style="--i:3"><h3>Next · Chapter 6</h3><p>Quantization in production: FP8 and AWQ. Every engine × precision cell is rerun through this harness and reported as a goodput delta plus a quality delta on the tenants' golden sets, including the cells where a quantised build silently falls back to a slower kernel and only the harness notices.</p></div>
+  </div>
+  <div class="callout reveal" style="--i:4;margin-top:16px"><strong>End of Chapter 5.</strong> Before Chapter 6: take the last serving benchmark you believed, from a vendor, a paper, or your own team, and score it against the eight-point audit on slide 18. Count the failures. Then ask what decision was made from it, and whether that decision survives the recount.</div>
+</div></section>
+
+</main>
+
+<footer class="controls">
+  <div class="navBtns"><button class="btn" id="prevBtn">← Prev</button><button class="btn primary" id="nextBtn">Next →</button></div>
+  <div class="dots" id="dots" aria-label="Slides"></div>
+  <div class="hint">← → · Space · Swipe</div>
+</footer>
+
+<script>
+(function(){
+  /* arrival strips: deterministic pseudo-Poisson ticks (seeded LCG) */
+  function lcg(seed){ var s=seed; return function(){ s=(s*1103515245+12345)%2147483648; return s/2147483648; }; }
+  function fillStrip(id,count,mode,seed){
+    var g=document.getElementById(id); if(!g) return;
+    var rnd=lcg(seed), pos=1.2, made=0, guard=0;
+    while(made<count && guard<400){
+      guard++;
+      var x, inStall;
+      if(mode==='open'){
+        pos += -Math.log(1-rnd())*1.35;            /* exponential gaps */
+        if(pos>98.5) break;
+        x=pos; inStall=(x>=44&&x<=57);
+      }else{
+        var r=rnd();
+        if(r<0.46) x=2+rnd()*40;                     /* before the stall */
+        else if(r<0.55) continue;                    /* during: nothing issued */
+        else x=59+rnd()*38;                          /* after: resume */
+        inStall=false;
+      }
+      var d=document.createElement('div');
+      d.className='arrDot'+(inStall?' inStall':'');
+      d.style.left=x+'%';
+      d.style.setProperty('--i',made);
+      g.appendChild(d); made++;
+    }
+  }
+  fillStrip('stripOpen',72,'open',2027);
+  fillStrip('stripClosed',52,'closed',4177);
+
+  /* goodput explorer: interpolation over the example-run sweep (vLLM) */
+  var R=[8,10,12,14,15,16,18,20];
+  var TTFT=[190,230,310,470,640,980,2900,6400];
+  var TPOT=[45,46,47,48,49,53,68,92];
+  var DOC=[21.9,23.2,24.6,26.1,27.8,31.5,44,61];
+  function interp(xs,ys,x){
+    if(x<=xs[0]) return ys[0];
+    for(var i=1;i<xs.length;i++){
+      if(x<=xs[i]){ var t=(x-xs[i-1])/(xs[i]-xs[i-1]); return ys[i-1]+t*(ys[i]-ys[i-1]); }
+    }
+    return ys[ys.length-1];
+  }
+  function fmtMs(v){ return Math.round(v).toLocaleString('en-US')+' ms'; }
+  var range=document.getElementById('rateRange');
+  function chip(id,pass){ var c=document.getElementById(id); if(c){ c.className='chip '+(pass?'pass':'fail'); } }
+  function explore(){
+    var r=parseFloat(range.value);
+    var util=(350*r+18000*(r/48))/13000*100;
+    var ttft=interp(R,TTFT,r), tpot=interp(R,TPOT,r), doc=interp(R,DOC,r);
+    document.getElementById('oUtil').textContent=Math.round(util)+'%';
+    document.getElementById('oTtft').textContent=fmtMs(ttft);
+    document.getElementById('oTpot').textContent=fmtMs(tpot);
+    document.getElementById('oDoc').textContent=doc.toFixed(1)+' s';
+    var p1=ttft<=800, p2=tpot<=50, p3=doc<=30, all=p1&&p2&&p3;
+    chip('chipTtft',p1); chip('chipTpot',p2); chip('chipDoc',p3);
+    var v=document.getElementById('chipVerdict');
+    if(v){
+      v.className='chip '+(all?'pass':'fail');
+      v.textContent = all ? ('SLOs hold at '+r+'/s'+(r>=15?' · at goodput':'')) : ('SLO breach at '+r+'/s · goodput is 15/s');
+    }
+  }
+  if(range){ range.addEventListener('input',explore); explore(); }
+
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var dotsWrap=document.getElementById('dots');
+  var counter=document.getElementById('counter');
+  var progress=document.getElementById('progress');
+  var prevBtn=document.getElementById('prevBtn'), nextBtn=document.getElementById('nextBtn');
+  var cur=0;
+  slides.forEach(function(_,i){
+    var d=document.createElement('button'); d.className='dot'+(i===0?' on':''); d.setAttribute('aria-label','Go to slide '+(i+1));
+    d.addEventListener('click',function(){go(i)}); dotsWrap.appendChild(d);
+  });
+  var dots=[].slice.call(dotsWrap.children);
+  function go(n){
+    n=Math.max(0,Math.min(slides.length-1,n));
+    slides[cur].classList.remove('active'); slides[cur].classList.add('prev');
+    cur=n;
+    slides.forEach(function(s,i){ if(i!==cur) s.classList.remove('prev'); });
+    slides[cur].classList.remove('prev'); slides[cur].classList.add('active');
+    slides[cur].scrollTop=0;
+    dots.forEach(function(d,i){ d.classList.toggle('on',i===cur); });
+    counter.textContent=(cur+1)+' / '+slides.length;
+    progress.style.width=((cur+1)/slides.length*100)+'%';
+    prevBtn.disabled=cur===0; nextBtn.disabled=cur===slides.length-1;
+    nextBtn.textContent=cur===slides.length-1?'End':'Next →';
+  }
+  prevBtn.addEventListener('click',function(){go(cur-1)});
+  nextBtn.addEventListener('click',function(){go(cur+1)});
+  document.addEventListener('keydown',function(e){
+    var t=e.target&&e.target.tagName;
+    if(t==='INPUT'||t==='SELECT'||t==='TEXTAREA'){ if(e.key!=='Escape') return; e.target.blur(); return; }
+    if(e.key==='ArrowRight'||e.key===' '){ e.preventDefault(); go(cur+1); }
+    else if(e.key==='ArrowLeft'){ go(cur-1); }
+    else if(e.key==='Home'){ go(0); } else if(e.key==='End'){ go(slides.length-1); }
+  });
+  var tx=null;
+  document.addEventListener('touchstart',function(e){ tx=e.changedTouches[0].clientX; },{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(tx===null) return; var dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>56){ go(cur+(dx<0?1:-1)); } tx=null;
+  },{passive:true});
+  var h=parseInt((location.hash||'').replace('#',''),10);
+  if(!isNaN(h)&&h>=1&&h<=slides.length) go(h-1); else go(0);
+})();
+</script>
+</body>
+</html>
