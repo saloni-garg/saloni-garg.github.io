@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>Chapter 8: Speculative Decoding and Structured Output, Priced — vLLM vs SGLang: Production Serving</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#140B09;
+    --bg2:#1E110C;
+    --coral:#FF6B5E;
+    --amber:#FFB86B;
+    --gold:#FFD166;
+    --ink:#FFF7F0;
+    --ink-dim:rgba(255,240,228,.74);
+    --ink-faint:rgba(255,240,228,.52);
+    --glass:rgba(255,255,255,.055);
+    --glass-strong:rgba(255,255,255,.09);
+    --stroke:rgba(255,255,255,.14);
+    --good:#7CE8A8;
+    --bad:#FF8A7A;
+    --radius:28px;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --sans:'Manrope',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--sans);overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ambient orbs */
+  .orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;opacity:.55}
+  .orb-a{width:520px;height:520px;background:#FF6B5E;top:-180px;right:-120px;animation:drift 26s ease-in-out infinite alternate}
+  .orb-b{width:460px;height:460px;background:#FF9E5E;bottom:-200px;left:-140px;animation:drift 32s ease-in-out infinite alternate-reverse}
+  .orb-c{width:280px;height:280px;background:#FFD166;top:55%;left:62%;opacity:.28;animation:drift 38s ease-in-out infinite alternate}
+  @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,44px) scale(1.08)}}
+
+  /* deck frame */
+  .deck{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
+  .stage{flex:1;position:relative;min-height:0}
+  .slide{
+    position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+    padding:clamp(18px,4vh,44px) clamp(16px,5vw,72px);
+    display:none;flex-direction:column;justify-content:flex-start;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent;
+  }
+  .slide.active{display:flex}
+  .slide-inner{width:100%;max-width:1180px;margin:auto}
+  .slide.leaving{animation:slideOut .38s ease both}
+  .slide.entering{animation:slideIn .5s cubic-bezier(.22,.9,.3,1) both}
+  @keyframes slideIn{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:none}}
+  @keyframes slideOut{from{opacity:1}to{opacity:0;transform:translateX(-30px)}}
+
+  /* staggered entrances */
+  .slide.active .rise{animation:rise .65s cubic-bezier(.2,.8,.25,1) both;animation-delay:calc(var(--i,0)*90ms + 60ms)}
+  @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+  /* type */
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);margin:0 0 14px}
+  h1{font-size:clamp(34px,5.6vw,64px);line-height:1.04;font-weight:800;letter-spacing:-.02em;margin:0 0 18px}
+  h2{font-size:clamp(26px,3.9vw,44px);line-height:1.1;font-weight:800;letter-spacing:-.015em;margin:0 0 16px}
+  h3{font-size:clamp(17px,2vw,21px);font-weight:800;margin:0 0 8px}
+  p,li{font-size:clamp(15px,1.55vw,18px);line-height:1.55;color:var(--ink-dim)}
+  .lead{font-size:clamp(17px,2vw,22px);color:var(--ink-dim);max-width:62ch}
+  .lead b,.hl{color:var(--ink)}
+  .coral{color:var(--coral)} .amber{color:var(--amber)} .gold{color:var(--gold)}
+  .good{color:var(--good)} .bad{color:var(--bad)}
+  code,.mono{font-family:var(--mono)}
+  code{font-size:.88em;background:rgba(255,255,255,.08);padding:.08em .38em;border-radius:6px;color:var(--gold)}
+  .small{font-size:13.5px;color:var(--ink-faint);line-height:1.5}
+  .footnote{margin-top:18px;font-size:13px;color:var(--ink-faint);font-family:var(--mono)}
+  strong{color:var(--ink)}
+
+  /* glass components */
+  .card{
+    background:var(--glass);border:1px solid var(--stroke);border-radius:var(--radius);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 18px 50px rgba(0,0,0,.35);
+    padding:clamp(18px,2.6vw,30px);
+  }
+  .card.tight{padding:18px 20px;border-radius:22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:820px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+  .stat-num{font-family:var(--mono);font-size:clamp(26px,3.4vw,40px);font-weight:700;color:var(--ink);line-height:1.05}
+  .stat-lab{font-size:13px;color:var(--ink-faint);margin-top:6px;line-height:1.45}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    padding:5px 10px;border-radius:999px;border:1px solid var(--stroke);color:var(--amber);background:rgba(255,184,107,.08)}
+  .tag.coral{color:var(--coral);background:rgba(255,107,94,.08)}
+  .tag.good{color:var(--good);background:rgba(124,232,168,.07)}
+  ul.tight{margin:8px 0 0;padding-left:20px}
+  ul.tight li{margin:5px 0}
+  .rule{height:1px;background:linear-gradient(90deg,var(--coral),var(--amber),transparent);border:0;margin:20px 0;opacity:.7}
+
+  pre{
+    font-family:var(--mono);font-size:clamp(12px,1.35vw,14.5px);line-height:1.65;
+    background:rgba(10,5,3,.55);border:1px solid var(--stroke);border-radius:18px;
+    padding:16px 18px;overflow-x:auto;color:#FFE9D6;margin:0;white-space:pre;
+  }
+  pre .c{color:rgba(255,220,190,.45)} pre .k{color:var(--coral)} pre .s{color:var(--gold)} pre .f{color:var(--amber)}
+
+  table{width:100%;border-collapse:collapse;font-size:clamp(13px,1.4vw,15.5px)}
+  th{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);
+     text-align:left;padding:10px 12px;border-bottom:1px solid var(--stroke)}
+  td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.07);color:var(--ink-dim);vertical-align:top}
+  td:first-child{color:var(--ink);font-weight:600}
+  td.num,th.num{font-family:var(--mono);text-align:right}
+  tr.hl-row td{background:rgba(255,184,107,.07)}
+
+  .formula{
+    font-family:var(--mono);font-size:clamp(15px,2vw,21px);color:var(--ink);
+    background:rgba(10,5,3,.5);border:1px solid var(--stroke);border-radius:18px;
+    padding:18px 22px;line-height:1.7;overflow-x:auto;white-space:nowrap;
+  }
+  .formula .v{color:var(--gold)} .formula .o{color:var(--coral)}
+
+  /* token strip animation (spec decoding) */
+  .tok-strip{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+  .tok{
+    font-family:var(--mono);font-size:14px;padding:8px 12px;border-radius:12px;
+    border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:var(--ink-dim);
+  }
+  .slide.active .tok{animation:tokIn .5s ease both;animation-delay:calc(var(--i)*260ms + 300ms)}
+  @keyframes tokIn{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:none}}
+  .slide.active .tok.acc{animation:tokIn .5s ease both, tokAcc .45s ease both;animation-delay:calc(var(--i)*260ms + 300ms),calc(var(--i)*260ms + 1250ms)}
+  @keyframes tokAcc{to{background:rgba(124,232,168,.16);border-color:rgba(124,232,168,.55);color:var(--good)}}
+  .slide.active .tok.rej{animation:tokIn .5s ease both, tokRej .45s ease both;animation-delay:calc(var(--i)*260ms + 300ms),calc(var(--i)*260ms + 1250ms)}
+  @keyframes tokRej{to{background:rgba(255,107,94,.15);border-color:rgba(255,107,94,.6);color:var(--bad);text-decoration:line-through}}
+  .slide.active .tok.bonus{animation:tokIn .5s ease both, tokBonus .5s ease both;animation-delay:calc(var(--i)*260ms + 300ms),calc(5*260ms + 1300ms)}
+  @keyframes tokBonus{to{background:rgba(255,209,102,.18);border-color:rgba(255,209,102,.6);color:var(--gold)}}
+
+  /* animated bars */
+  .bar-row{display:grid;grid-template-columns:150px 1fr 86px;gap:12px;align-items:center;margin:10px 0}
+  .bar-row .bl{font-size:14px;color:var(--ink-dim);text-align:right}
+  .bar-row .bv{font-family:var(--mono);font-size:14px;color:var(--ink)}
+  .bar-track{height:20px;border-radius:10px;background:rgba(255,255,255,.06);overflow:hidden}
+  .bar-fill{height:100%;border-radius:10px;width:0;background:linear-gradient(90deg,var(--coral),var(--amber))}
+  .bar-fill.gold{background:linear-gradient(90deg,var(--amber),var(--gold))}
+  .bar-fill.green{background:linear-gradient(90deg,#3fae72,var(--good))}
+  .slide.active .bar-fill{animation:barGrow 1.15s cubic-bezier(.2,.8,.25,1) both;animation-delay:calc(var(--i,0)*140ms + 350ms)}
+  @keyframes barGrow{from{width:0}to{width:var(--w)}}
+  @media(max-width:640px){.bar-row{grid-template-columns:96px 1fr 70px}}
+
+  /* SVG chart draw */
+  .chart{width:100%;height:auto;display:block}
+  .chart .axis{stroke:rgba(255,255,255,.22);stroke-width:1}
+  .chart .grid{stroke:rgba(255,255,255,.07);stroke-width:1}
+  .chart text{font-family:var(--mono);font-size:11px;fill:rgba(255,240,228,.55)}
+  .chart .curve{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:1400;stroke-dashoffset:1400}
+  .slide.active .curve{animation:draw 1.8s ease forwards;animation-delay:.4s}
+  .slide.active .curve.d2{animation-delay:.8s}.slide.active .curve.d3{animation-delay:1.2s}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .chart .slo{stroke:var(--gold);stroke-width:1.5;stroke-dasharray:6 6}
+
+  /* interactive explorer */
+  .ctl{margin:14px 0}
+  .ctl label{display:flex;justify-content:space-between;font-size:14px;color:var(--ink-dim);margin-bottom:6px}
+  .ctl label output{font-family:var(--mono);color:var(--gold);font-size:14px}
+  input[type=range]{width:100%;accent-color:var(--coral);height:28px;cursor:pointer}
+  select{width:100%;background:rgba(10,5,3,.55);color:var(--ink);border:1px solid var(--stroke);
+    border-radius:12px;padding:10px 12px;font-family:var(--mono);font-size:14px}
+  .verdict{font-family:var(--mono);font-size:15px;padding:12px 16px;border-radius:14px;border:1px solid var(--stroke)}
+  .verdict.win{color:var(--good);background:rgba(124,232,168,.08)}
+  .verdict.lose{color:var(--bad);background:rgba(255,107,94,.09)}
+  .verdict.flat{color:var(--gold);background:rgba(255,209,102,.08)}
+
+  /* FSM / mask viz */
+  .mask-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:10px}
+  .mask-cell{font-family:var(--mono);font-size:11px;text-align:center;padding:8px 2px;border-radius:8px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--ink-faint)}
+  .slide.active .mask-cell{animation:tokIn .4s ease both;animation-delay:calc(var(--i)*45ms + 300ms)}
+  .mask-cell.on{background:rgba(124,232,168,.15);border-color:rgba(124,232,168,.5);color:var(--good)}
+  .mask-cell.off{opacity:.38;text-decoration:line-through}
+
+  /* nav chrome */
+  .chrome{
+    position:relative;z-index:2;display:flex;align-items:center;gap:14px;
+    padding:12px clamp(14px,4vw,36px) calc(12px + env(safe-area-inset-bottom));
+  }
+  .navbtn{
+    width:44px;height:44px;border-radius:50%;border:1px solid var(--stroke);cursor:pointer;
+    background:var(--glass-strong);color:var(--ink);font-size:19px;line-height:1;
+    backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;flex:none;
+    transition:transform .15s ease,background .15s ease;
+  }
+  .navbtn:hover{background:rgba(255,255,255,.16)}
+  .navbtn:active{transform:scale(.93)}
+  .navbtn:disabled{opacity:.35;cursor:default}
+  .progress{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+  .progress-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--coral),var(--amber),var(--gold));transition:width .45s cubic-bezier(.2,.8,.25,1)}
+  .counter{font-family:var(--mono);font-size:13px;color:var(--ink-dim);min-width:58px;text-align:center}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:300px}
+  .dot{width:8px;height:8px;border-radius:50%;border:0;padding:0;cursor:pointer;background:rgba(255,255,255,.22);transition:all .25s}
+  .dot.on{background:var(--amber);transform:scale(1.35)}
+  @media(max-width:760px){.dots{display:none}}
+
+  .agenda-num{font-family:var(--mono);font-size:30px;color:var(--coral);font-weight:700}
+  .vs-head{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+  .vs-dot{width:12px;height:12px;border-radius:50%;flex:none}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.001s !important;animation-delay:0s !important;transition-duration:.001s !important}
+    .slide.active .bar-fill{width:var(--w)}
+    .chart .curve{stroke-dashoffset:0}
+  }
+</style>
+</head>
+<body>
+<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div>
+
+<div class="deck">
+  <div class="stage" id="stage">
+
+  <!-- 1 · TITLE -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">vLLM vs SGLang: Production Serving, Measured · Chapter 8</p>
+      <h1 class="rise" style="--i:1">Speculative Decoding<br/>and Structured Output, <span class="coral">Priced</span></h1>
+      <p class="lead rise" style="--i:2">Two features that demo beautifully and bill quietly. Speculation trades extra compute for lower latency <b>only when the draft is right often enough</b>. Constrained decoding trades per-token CPU and capacity for output you can parse. This chapter puts a price on both, per tenant, on the frozen trace.</p>
+      <div class="grid3" style="margin-top:26px">
+        <div class="card tight rise" style="--i:3"><div class="stat-num">α</div><div class="stat-lab">Acceptance rate: the single number that decides whether speculation pays. Measured per tenant, never assumed.</div></div>
+        <div class="card tight rise" style="--i:4"><div class="stat-num">γ + 1</div><div class="stat-lab">Positions the target model scores per verification pass. The source of both the win and the waste.</div></div>
+        <div class="card tight rise" style="--i:5"><div class="stat-num">16 KB</div><div class="stat-lab">One vocabulary mask for Llama-3.1's 128,256 tokens. Small per token, a capacity line item at concurrency.</div></div>
+      </div>
+      <p class="footnote rise" style="--i:6">Saloni Garg · Workload, SLOs, and harness frozen in Chapters 1 and 5 · All runs at pinned engine versions</p>
+    </div>
+  </section>
+
+  <!-- 2 · THE TWO BETS -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Framing</p>
+      <h2 class="rise" style="--i:1">Two features, two different kinds of bet</h2>
+      <div class="grid2">
+        <div class="card rise" style="--i:2">
+          <span class="tag coral">Bet 1 · Latency</span>
+          <h3 style="margin-top:12px">Speculative decoding</h3>
+          <p>A cheap drafter proposes γ tokens; the 70B target verifies them in <strong>one parallel pass</strong>. Accepted tokens are nearly free. Rejected work is pure waste. The payout is a function of acceptance rate α and batch size, and it <strong>changes sign</strong>: a latency tool at low concurrency, a throughput tax at high concurrency.</p>
+          <p class="small">Lossless by construction: rejection sampling makes the output distribution identical to plain target sampling. You are buying speed, not trading quality. Chapter 6's gates do not move.</p>
+        </div>
+        <div class="card rise" style="--i:3">
+          <span class="tag">Bet 2 · Shape</span>
+          <h3 style="margin-top:12px">Structured generation</h3>
+          <p>A grammar or JSON schema constrains every sampled token. The model can no longer produce unparseable output, so the retry-and-repair loop disappears. The cost is paid elsewhere: <strong>mask computation per token, grammar compilation per schema, and CPU that scales with concurrency</strong>, not with model size.</p>
+          <p class="small">Not lossless in the same sense: you are changing the distribution on purpose, zeroing every token the grammar forbids. That is the point, and it interacts with speculation in ways slide 18 prices.</p>
+        </div>
+      </div>
+      <p class="footnote rise" style="--i:4">Rule for the chapter: no feature is "on" or "off" globally. Every verdict is per tenant, per engine, at a stated batch regime.</p>
+    </div>
+  </section>
+
+  <!-- 3 · MECHANISM -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · The mechanism</p>
+      <h2 class="rise" style="--i:1">Propose γ, verify once, keep the prefix that agrees</h2>
+      <div class="card rise" style="--i:2">
+        <p style="margin-top:0">Prompt so far: <code>"The capital of France is"</code> · draft proposes γ = 4 tokens, target verifies:</p>
+        <div class="tok-strip">
+          <span class="tok acc" style="--i:0">" Paris"</span>
+          <span class="tok acc" style="--i:1">","</span>
+          <span class="tok acc" style="--i:2">" which"</span>
+          <span class="tok rej" style="--i:3">" sits"</span>
+          <span class="tok" style="--i:4">draft: " on"</span>
+          <span class="tok bonus" style="--i:5">bonus: " is"</span>
+        </div>
+        <p class="small">Three accepted, fourth rejected. The target's own distribution resamples the rejected position (<span class="gold">" is"</span> arrives as the correction), and because the target scored one position past the draft, an all-accept step yields a <strong>bonus token</strong>: up to γ + 1 tokens per target pass.</p>
+      </div>
+      <div class="grid3" style="margin-top:18px">
+        <div class="card tight rise" style="--i:3"><h3>1 · Draft</h3><p class="small" style="margin:0">γ sequential cheap steps: a small model, prediction heads, or a lookup. Sequential is the catch: draft latency adds, it does not parallelize.</p></div>
+        <div class="card tight rise" style="--i:4"><h3>2 · Verify</h3><p class="small" style="margin:0">One target forward pass over γ + 1 positions. At decode batch sizes this is still weight-bandwidth bound, so extra positions are close to free. Close to, not equal to: slide 8.</p></div>
+        <div class="card tight rise" style="--i:5"><h3>3 · Accept / resample</h3><p class="small" style="margin:0">Accept each token with probability min(1, p_target / p_draft); on first rejection, resample from the corrected distribution. Expected output: bit-identical distribution to no speculation.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · THE MATH -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · The math</p>
+      <h2 class="rise" style="--i:1">Expected tokens per target pass</h2>
+      <div class="formula rise" style="--i:2">E[tokens] <span class="o">=</span> <span class="v">(1 − α<sup>γ+1</sup>) / (1 − α)</span> <span class="o">=</span> 1 + α + α² + … + α<sup>γ</sup></div>
+      <p class="rise" style="--i:3">If each draft token is accepted independently with probability α, the accepted run length is geometric. Worked for γ = 4 (ceiling: 5 tokens per pass):</p>
+      <div class="card rise" style="--i:4">
+        <div class="bar-row" style="--i:0"><span class="bl">α = 0.50</span><div class="bar-track"><div class="bar-fill" style="--w:39%"></div></div><span class="bv">1.94 tok</span></div>
+        <div class="bar-row" style="--i:1"><span class="bl">α = 0.70</span><div class="bar-track"><div class="bar-fill gold" style="--w:55%"></div></div><span class="bv">2.77 tok</span></div>
+        <div class="bar-row" style="--i:2"><span class="bl">α = 0.80</span><div class="bar-track"><div class="bar-fill gold" style="--w:67%"></div></div><span class="bv">3.36 tok</span></div>
+        <div class="bar-row" style="--i:3"><span class="bl">α = 0.90</span><div class="bar-track"><div class="bar-fill green" style="--w:82%"></div></div><span class="bv">4.10 tok</span></div>
+        <div class="bar-row" style="--i:4"><span class="bl">α = 1.00</span><div class="bar-track"><div class="bar-fill green" style="--w:100%"></div></div><span class="bv">5.00 tok</span></div>
+      </div>
+      <p class="footnote rise" style="--i:5">Check the endpoints: α = 0 gives exactly 1 (the resampled token, speculation wasted its draft cost). α = 0.7, γ = 4: (1 − 0.16807) / 0.3 = 2.77. The curve is convex in α: going 0.7 → 0.9 buys 48% more tokens per pass; 0.5 → 0.7 buys 43%. There is no regime where a mediocre draft wins big.</p>
+    </div>
+  </section>
+
+  <!-- 5 · ACCEPTANCE IS A WORKLOAD PROPERTY -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · Measured acceptance</p>
+      <h2 class="rise" style="--i:1">α is a property of the text, not the engine</h2>
+      <p class="lead rise" style="--i:2">Same draft model (Llama-3.1-8B), same target, same γ = 4. The two tenants produce <b>different drafts' worth of value</b> because their text differs in predictability.</p>
+      <div class="card rise" style="--i:3">
+        <table>
+          <tr><th>Traffic slice</th><th class="num">α (8B draft)</th><th class="num">E[tok/pass]</th><th>Why</th></tr>
+          <tr><td>Chat, open conversation</td><td class="num">0.71</td><td class="num">2.83</td><td>Fluent, high-frequency phrasing; the 8B model genuinely predicts the 70B</td></tr>
+          <tr><td>Chat, code answers</td><td class="num">0.78</td><td class="num">3.13</td><td>Syntax is rigid; boilerplate and idioms repeat</td></tr>
+          <tr class="hl-row"><td>Doc QA, extractive answers</td><td class="num">0.83</td><td class="num">3.42</td><td>Answers copy spans from the retrieved document; the draft sees the same context</td></tr>
+          <tr><td>Doc QA, synthesis / reasoning</td><td class="num">0.58</td><td class="num">2.24</td><td>Novel composition, entity-dense, low-frequency tokens; draft and target diverge</td></tr>
+          <tr><td>Doc QA, numeric / table output</td><td class="num">0.49</td><td class="num">1.90</td><td>Digits are near-uniform to a small draft; one wrong digit rejects the run</td></tr>
+        </table>
+      </div>
+      <p class="footnote rise" style="--i:4">Example run on the frozen trace, Chapter 5 harness, temperature 0.7. Label in the results schema: <span class="mono">acceptance_by_slice</span>. A blended α of 0.68 across tenants would have hidden a 0.49 slice where speculation barely clears its own draft cost.</p>
+    </div>
+  </section>
+
+  <!-- 6 · DRAFT OPTIONS -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · Choosing the drafter</p>
+      <h2 class="rise" style="--i:1">Four drafters, four cost shapes</h2>
+      <div class="card rise" style="--i:2">
+        <table>
+          <tr><th>Drafter</th><th class="num">Cost per draft step*</th><th class="num">Typical α</th><th>Failure mode</th></tr>
+          <tr><td>Separate small model (8B)</td><td class="num">0.11 × target step</td><td class="num">0.6 – 0.85</td><td>Extra weights in HBM (16 GB BF16), its own KV cache, a second model to version and serve</td></tr>
+          <tr><td>EAGLE-style heads</td><td class="num">0.03 × target step</td><td class="num">0.7 – 0.9</td><td>Heads are trained per target model and checkpoint; a target upgrade retrains the drafter</td></tr>
+          <tr><td>Medusa-style heads</td><td class="num">0.03 × target step</td><td class="num">0.6 – 0.8</td><td>Independent heads predict positions without conditioning on each other; tree attention needed to recover the loss</td></tr>
+          <tr class="hl-row"><td>N-gram / prompt lookup</td><td class="num">≈ 0.005 × target step</td><td class="num">0.2 – 0.9†</td><td>No model at all: proposes continuations copied from the prompt or recent output. Superb on copy-heavy text, near zero on novel text</td></tr>
+        </table>
+      </div>
+      <p class="footnote rise" style="--i:3">*As a fraction of one 70B target decode step, bandwidth terms: an 8B BF16 drafter reads 16 GB of weights per step against the target's 140 GB. †N-gram α is bimodal by slice, which is exactly why slide 5 refuses blended numbers.</p>
+    </div>
+  </section>
+
+  <!-- 7 · N-GRAM DEEP DIVE -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · The free drafter</p>
+      <h2 class="rise" style="--i:1">Prompt lookup: doc QA's cheat code, chat's rounding error</h2>
+      <div class="grid2">
+        <div class="card rise" style="--i:2">
+          <span class="tag good">Doc QA tenant</span>
+          <p>The answer is largely <strong>already in the prompt</strong>: the retrieved document contains the spans the model will quote. Matching the last n tokens against the 18K-token context finds the continuation for free.</p>
+          <div class="bar-row" style="--i:0"><span class="bl">α, extractive</span><div class="bar-track"><div class="bar-fill green" style="--w:81%"></div></div><span class="bv">0.81</span></div>
+          <div class="bar-row" style="--i:1"><span class="bl">E[tok/pass], γ=4</span><div class="bar-track"><div class="bar-fill green" style="--w:68%"></div></div><span class="bv">3.38</span></div>
+          <p class="small">Draft cost is a CPU hash lookup. Denominator of the speedup formula stays near 1.1, so almost all of E converts to speed.</p>
+        </div>
+        <div class="card rise" style="--i:3">
+          <span class="tag coral">Chat tenant</span>
+          <p>Open conversation generates <strong>novel text</strong>. The prompt contains the user's words, not the answer's. Lookup finds matches mostly in boilerplate: greetings, list scaffolding, repeated system-prompt echoes.</p>
+          <div class="bar-row" style="--i:0"><span class="bl">α, open chat</span><div class="bar-track"><div class="bar-fill" style="--w:25%"></div></div><span class="bv">0.25</span></div>
+          <div class="bar-row" style="--i:1"><span class="bl">E[tok/pass], γ=4</span><div class="bar-track"><div class="bar-fill" style="--w:27%"></div></div><span class="bv">1.33</span></div>
+          <p class="small">Still slightly positive because the drafter is free, but 1.33 tokens per pass against any verify overhead at all is a coin flip. The 8B draft model is chat's drafter; lookup is doc QA's.</p>
+        </div>
+      </div>
+      <p class="footnote rise" style="--i:4">Configuration consequence: per-tenant drafter selection, not one global speculative config. Both engines allow the method to be set per deployment; splitting tenants across replicas (Chapter 7) is what makes per-tenant drafters operationally clean.</p>
+    </div>
+  </section>
+  <!-- 8 · COST MODEL -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · The cost model</p>
+      <h2 class="rise" style="--i:1">Speedup is a fraction, and both sides move</h2>
+      <div class="formula rise" style="--i:2">Speedup <span class="o">=</span> E[tokens] <span class="o">/</span> ( 1 <span class="o">+</span> γ·r<sub>d</sub> <span class="o">+</span> v(B) )</div>
+      <div class="grid3" style="margin-top:18px">
+        <div class="card tight rise" style="--i:3"><h3>Numerator: E[tokens]</h3><p class="small" style="margin:0">From slide 4. Set by α and γ. The only term marketing quotes.</p></div>
+        <div class="card tight rise" style="--i:4"><h3>γ · r<sub>d</sub>: draft tax</h3><p class="small" style="margin:0">γ sequential draft steps, each costing r<sub>d</sub> of a target step. 8B draft, γ = 4: 4 × 0.11 = <strong>0.44</strong>. EAGLE: 4 × 0.03 = 0.12. N-gram: ≈ 0.02.</p></div>
+        <div class="card tight rise" style="--i:5"><h3>v(B): verify overhead</h3><p class="small" style="margin:0">Scoring γ + 1 positions instead of 1. At batch 1 the weight read dominates and v ≈ 0.08. As batch grows the extra positions become real FLOPs and v climbs toward the compute-bound limit on the next slide.</p></div>
+      </div>
+      <div class="card rise" style="--i:6;margin-top:18px">
+        <h3>Worked: chat tenant, 8B draft, γ = 4, batch 1</h3>
+        <p style="margin:0">E = 2.83 (α = 0.71) · denominator = 1 + 0.44 + 0.08 = 1.52 · <strong>speedup = 2.83 / 1.52 = 1.86×</strong>. TPOT falls from 42 ms to ≈ 22.6 ms per token. Now hold everything fixed and change only the drafter to n-gram at chat's α = 0.25: E = 1.33, denominator 1.10, speedup 1.21×. Same slide-4 formula, a 0.65× spread decided entirely by measured α and r<sub>d</sub>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · BATCH REGIME CHART -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · The batch regime</p>
+      <h2 class="rise" style="--i:1">Where speculation stops paying</h2>
+      <div class="grid2">
+        <div class="card rise" style="--i:2">
+          <svg class="chart" viewBox="0 0 620 300" role="img" aria-label="Line chart of speculative decoding speedup versus batch size for three acceptance rates">
+            <line class="grid" x1="60" y1="86" x2="560" y2="86"/><line class="grid" x1="60" y1="151" x2="560" y2="151"/><line class="grid" x1="60" y1="215" x2="560" y2="215"/>
+            <line class="axis" x1="60" y1="20" x2="60" y2="260"/><line class="axis" x1="60" y1="260" x2="560" y2="260"/>
+            <line class="slo" x1="60" y1="195" x2="560" y2="195"/>
+            <text x="566" y="199">1.0×</text>
+            <polyline class="curve" points="60,45 274,137 345,166 417,187 488,200 560,207" stroke="#7CE8A8"/>
+            <polyline class="curve d2" points="60,128 274,191 345,211 417,232 488,243 560,248" stroke="#FFB86B"/>
+            <polyline class="curve d3" points="60,181 274,225 345,237 417,247 488,253 560,256" stroke="#FF6B5E"/>
+            <text x="60" y="280">batch 1</text><text x="262" y="280">8</text><text x="336" y="280">16</text><text x="408" y="280">32</text><text x="478" y="280">64</text><text x="540" y="280">128</text>
+            <text x="470" y="120" fill="#7CE8A8">α = 0.90</text>
+            <text x="380" y="150" fill="#FFB86B">α = 0.70</text>
+            <text x="200" y="168" fill="#FF6B5E">α = 0.50</text>
+            <text x="66" y="36">speedup ×</text>
+          </svg>
+          <p class="small" style="margin:6px 0 0">Model of slide 8 with an 8B draft (r<sub>d</sub> = 0.11, γ = 4); the compute-bound share w = B / (B + 16) interpolates v(B) to its limit, where speedup tends to E / (γ + 1) &lt; 1.</p>
+        </div>
+        <div class="rise" style="--i:3">
+          <div class="card tight" style="margin-bottom:14px"><h3>Why the curves bend</h3><p class="small" style="margin:0">Decode at low batch is bandwidth bound (Chapter 4): the verify pass reads the weights once whether it scores 1 position or 5. Speculation is spending <strong>idle bandwidth</strong>. As batch grows, decode turns compute bound; now every rejected token burned FLOPs that a real token needed. The same γ + 1 positions that were free become a queue.</p></div>
+          <div class="card tight"><h3>Read the crossings</h3><p class="small" style="margin:0">α = 0.90 stays profitable to batch ≈ 48. α = 0.70 crosses 1.0× near batch 9. α = 0.50 is a latency win only in the single digits and a <strong>throughput loss of nearly 60%</strong> at batch 128 (0.42×). A fleet running chat at batch 40+ with a mediocre draft is paying for slower service.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · BREAK-EVEN MAP -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · Break-even map</p>
+      <h2 class="rise" style="--i:1">Minimum α to break even, by batch and drafter</h2>
+      <div class="card rise" style="--i:2">
+        <table>
+          <tr><th>Drafter (γ = 4)</th><th class="num">Batch 1</th><th class="num">Batch 8</th><th class="num">Batch 32</th><th class="num">Batch 64</th></tr>
+          <tr><td>8B draft model (r<sub>d</sub> = 0.11)</td><td class="num">α ≥ 0.44</td><td class="num">α ≥ 0.69</td><td class="num">α ≥ 0.87</td><td class="num">α ≥ 0.93</td></tr>
+          <tr><td>EAGLE heads (r<sub>d</sub> = 0.03)</td><td class="num">α ≥ 0.30</td><td class="num">α ≥ 0.64</td><td class="num">α ≥ 0.86</td><td class="num">α ≥ 0.92</td></tr>
+          <tr class="hl-row"><td>N-gram lookup (r<sub>d</sub> ≈ 0.005)</td><td class="num">α ≥ 0.25</td><td class="num">α ≥ 0.63</td><td class="num">α ≥ 0.85</td><td class="num">α ≥ 0.92</td></tr>
+        </table>
+      </div>
+      <p class="rise" style="--i:3">Solved from the slide 8 model: the α at which speedup = 1.00. Lay slide 5's measured values on top and the deployment decisions fall out without argument:</p>
+      <div class="grid3">
+        <div class="card tight rise" style="--i:4"><h3 class="good">Ship it</h3><p class="small" style="margin:0">Doc QA extractive + n-gram (α 0.81) clears break-even at every batch the tenant actually runs. Chat + 8B draft (α 0.71) clears it only while chat batches stay in the single digits, up to about batch 9.</p></div>
+        <div class="card tight rise" style="--i:5"><h3 class="gold">Gate it</h3><p class="small" style="margin:0">Chat at burst batch 32+ needs α ≥ 0.87 from a model draft. It has 0.71. Speculation must be <strong>load-aware</strong>: enabled at low concurrency, shed as batch climbs.</p></div>
+        <div class="card tight rise" style="--i:6"><h3 class="bad">Do not ship</h3><p class="small" style="margin:0">Doc QA numeric slice (α 0.49) with any drafter at batch ≥ 8. The verify tax exceeds the accepted-token gain; TPOT and goodput both regress.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · INTERACTIVE EXPLORER -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · Try it</p>
+      <h2 class="rise" style="--i:1">Break-even explorer</h2>
+      <div class="grid2">
+        <div class="card rise" style="--i:2">
+          <div class="ctl"><label>Acceptance rate α <output id="oAlpha">0.71</output></label>
+            <input type="range" id="inAlpha" min="0.05" max="0.97" step="0.01" value="0.71" /></div>
+          <div class="ctl"><label>Decode batch size B <output id="oBatch">8</output></label>
+            <input type="range" id="inBatch" min="0" max="7" step="1" value="3" /></div>
+          <div class="ctl"><label>Draft length γ <output id="oGamma">4</output></label>
+            <input type="range" id="inGamma" min="2" max="7" step="1" value="4" /></div>
+          <div class="ctl"><label>Drafter</label>
+            <select id="inDraft">
+              <option value="0.11" selected>Separate 8B draft model · r_d = 0.11</option>
+              <option value="0.03">EAGLE-style heads · r_d = 0.03</option>
+              <option value="0.005">N-gram / prompt lookup · r_d ≈ 0.005</option>
+            </select></div>
+          <p class="small">Model: speedup = E / ((1 − w)(1 + γ·r<sub>d</sub> + 0.08) + w(γ + 1)), with E = (1 − α<sup>γ+1</sup>)/(1 − α) and compute-bound share w = B/(B + 16). The same model drew slides 9 and 10.</p>
+        </div>
+        <div class="rise" style="--i:3">
+          <div class="grid2" style="gap:14px">
+            <div class="card tight"><div class="stat-num" id="outE">2.83</div><div class="stat-lab">Expected tokens per target pass</div></div>
+            <div class="card tight"><div class="stat-num" id="outSpeed">1.24×</div><div class="stat-lab">Net speedup at this batch</div></div>
+            <div class="card tight"><div class="stat-num" id="outTpot">33.9 ms</div><div class="stat-lab">Effective TPOT (from 42 ms baseline step)</div></div>
+            <div class="card tight"><div class="stat-num" id="outBE">0.66</div><div class="stat-lab">Break-even α at this batch and drafter</div></div>
+          </div>
+          <div class="verdict win" id="outVerdict" style="margin-top:14px">Pays: keep speculation on for this slice.</div>
+          <p class="small" style="margin-top:12px">Drag batch to 64 with α at 0.71 and watch a feature that demos at 1.9× turn into a throughput tax. That drag is the whole chapter.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · ENGINE IMPLEMENTATIONS -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · In the two engines</p>
+      <h2 class="rise" style="--i:1">Same math, different plumbing</h2>
+      <div class="grid2">
+        <div class="card rise" style="--i:2">
+          <div class="vs-head"><span class="vs-dot" style="background:var(--coral)"></span><h3 style="margin:0">vLLM</h3></div>
+<pre><span class="c"># vllm serve, speculative config</span>
+--speculative-config <span class="s">'{
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "num_speculative_tokens": 4,
+  "method": "draft_model"}'</span>
+<span class="c"># n-gram instead of a draft model:</span>
+<span class="c">#   "method": "ngram",</span>
+<span class="c">#   "prompt_lookup_max": 4,</span>
+<span class="c">#   "prompt_lookup_min": 2</span>
+<span class="c"># EAGLE: "method": "eagle3" + draft ckpt</span></pre>
+          <ul class="tight">
+            <li>Speculation is a <strong>per-deployment</strong> config; one drafter per serving instance.</li>
+            <li>Metrics exported per step: acceptance length and rate land in Prometheus for the Chapter 5 harness.</li>
+            <li>Interacts with chunked prefill: draft steps join the same token budget from Chapter 4.</li>
+          </ul>
+        </div>
+        <div class="card rise" style="--i:3">
+          <div class="vs-head"><span class="vs-dot" style="background:var(--amber)"></span><h3 style="margin:0">SGLang</h3></div>
+<pre><span class="c"># sglang launch_server</span>
+--speculative-algorithm <span class="f">EAGLE</span>
+--speculative-draft-model-path <span class="s">&lt;eagle-ckpt&gt;</span>
+--speculative-num-steps <span class="f">3</span>
+--speculative-eagle-topk <span class="f">4</span>
+--speculative-num-draft-tokens <span class="f">16</span>
+<span class="c"># or --speculative-algorithm NGRAM</span></pre>
+          <ul class="tight">
+            <li>EAGLE is the flagship path, with <strong>tree speculation</strong>: top-k branching drafts a tree of candidates, verified in one pass with tree attention.</li>
+            <li>Tree width trades verify positions for acceptance: 16 draft tokens per step is a different point on slide 8's fraction than a chain of 4.</li>
+            <li>Overlap scheduling (Chapter 2) can hide draft latency behind the previous verify, shrinking the γ·r<sub>d</sub> term in practice.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="footnote rise" style="--i:4">Flags as of the pinned versions in Chapter 2's architecture diff. The honest delta: SGLang's tree + overlap story is ahead for EAGLE; vLLM's n-gram and draft-model paths are simpler to operate. Neither changes α. α comes from your text.</p>
+    </div>
+  </section>
+
+  <!-- 13 · MEASURING ACCEPTANCE -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Speculation · Measurement discipline</p>
+      <h2 class="rise" style="--i:1">Measuring α without fooling yourself</h2>
+      <div class="grid2">
+        <div class="card rise" style="--i:2">
+          <h3>Do this</h3>
+          <ul class="tight">
+            <li><strong>Log accepted length per step</strong>, per request, with tenant and slice tags; α is derived, never sampled from a dashboard average.</li>
+            <li>Measure on the <strong>frozen trace replay</strong> (Chapter 5), warm and cold prefix cache reported separately: a warm radix tree changes what the draft sees.</li>
+            <li>Report the <strong>distribution</strong>, not the mean: a bimodal α (0.9 on boilerplate, 0.3 on substance) averages to a fiction.</li>
+            <li>Re-measure after every draft or target upgrade. α is a property of a <em>pair</em> of models on a slice of text.</li>
+          </ul>
+        </div>
+        <div class="card rise" style="--i:3">
+          <h3>Not this</h3>
+          <ul class="tight">
+            <li>Quoting the drafter's paper α. Those numbers are measured on the drafter's training distribution, not your tenants' text.</li>
+            <li>Measuring at temperature 0 and shipping at 0.9. Sampling temperature moves α; greedy traces flatter every drafter.</li>
+            <li>Counting the bonus token as draft skill. E includes it; a "per-draft-token acceptance" that silently includes it overstates α.</li>
+            <li>Benchmarking speculation with closed-loop load. At fixed concurrency the batch stays artificially low, exactly where speculation looks best (Chapter 5's trap, again).</li>
+          </ul>
+        </div>
+      </div>
+      <p class="footnote rise" style="--i:4">Schema addition for <span class="mono">bench/</span>: <span class="mono">spec: {method, gamma, alpha_by_slice, accept_len_hist}</span> is mandatory in any results file that enables speculation. A speedup number without its α is treated as unmeasured.</p>
+    </div>
+  </section>
+
+  <!-- 14 · STRUCTURED OUTPUT MECHANISM -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Structured output · The mechanism</p>
+      <h2 class="rise" style="--i:1">From JSON schema to a per-token mask</h2>
+      <div class="grid3">
+        <div class="card tight rise" style="--i:2"><div class="agenda-num">1</div><h3>Compile</h3><p class="small" style="margin:0">JSON schema → regex → finite-state machine (or a context-free grammar for nested structure). Each state knows exactly which tokens may come next. Compilation happens once per schema, and it is not free: slide 16.</p></div>
+        <div class="card tight rise" style="--i:3"><div class="agenda-num">2</div><h3>Mask</h3><p class="small" style="margin:0">At each decode step, the current state's allowed set becomes a bitmask over the 128,256-token vocabulary. Disallowed logits are set to −∞ before sampling. The model literally cannot pick them.</p></div>
+        <div class="card tight rise" style="--i:4"><div class="agenda-num">3</div><h3>Advance</h3><p class="small" style="margin:0">The sampled token advances the FSM. Strings, numbers, and nesting are tracked character by character inside tokens, so a token is allowed only if <em>every</em> completion of it stays legal.</p></div>
+      </div>
+      <div class="card rise" style="--i:5;margin-top:18px">
+        <p style="margin:0 0 4px">State: just emitted <code>{"severity":</code> and the schema says an integer 1–5 follows. The vocabulary, masked:</p>
+        <div class="mask-grid" id="maskGrid"></div>
+        <p class="small" style="margin-bottom:0">Five tokens survive out of 128,256. Everything else, including perfectly fluent continuations like <code>"high"</code>, is zeroed. Correctness of shape is now a runtime guarantee, not a prompt-engineering hope, and the retry loop from the pre-grammar pipeline can be deleted.</p>
+      </div>
+    </div>
+  </section>
+  <!-- 15 · MASK COST -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Structured output · Per-token cost</p>
+      <h2 class="rise" style="--i:1">The mask is cheap. Knowing the mask is the work</h2>
+      <div class="grid2">
+        <div class="card rise" style="--i:2">
+          <h3>What a step actually pays</h3>
+          <ul class="tight">
+            <li><strong>Mask storage:</strong> 128,256 bits = <strong>16 KB</strong> per distinct FSM state. Engines precompute masks per state and cache them; a large grammar's state space is the memory line item.</li>
+            <li><strong>Mask application:</strong> one elementwise pass over the logits tensor on GPU. Against a 42 ms decode step it is noise, well under 1%.</li>
+            <li><strong>State advance:</strong> CPU work per token per sequence: walk the FSM over the sampled token's characters. Microseconds each, but it is <strong>serial CPU work multiplied by every sequence in the batch</strong>.</li>
+            <li><strong>Indexing:</strong> modern backends (XGrammar) precompute a token-trie index over the vocabulary so per-state allowed sets are lookups, not scans.</li>
+          </ul>
+        </div>
+        <div class="card rise" style="--i:3">
+          <h3>Jump-forward: the refund</h3>
+          <p>Where the grammar fully determines the next characters, there is nothing to sample. JSON keys, braces, commas, and fixed enum scaffolding are emitted <strong>without a model step at all</strong>.</p>
+          <div class="bar-row" style="--i:0"><span class="bl">Share of tokens that are structural in the doc QA JSON schema</span><div class="bar-track"><div class="bar-fill gold" style="--w:36%"></div></div><span class="bv">36%</span></div>
+          <p class="small">In the running workload's extraction schema, over a third of output tokens are punctuation, keys, and literals the grammar already knows. Jump-forward converts those from decode steps into string appends: constrained output can be <em>faster</em> than free generation for rigid schemas, a fact that surprises teams budgeting it as pure overhead.</p>
+        </div>
+      </div>
+      <p class="footnote rise" style="--i:4">Net per-token cost on the frozen trace, example run: +0.4 ms TPOT at batch 8 before jump-forward, −3.1 ms effective after it. Report both numbers; engines differ in how aggressively they jump.</p>
+    </div>
+  </section>
+
+  <!-- 16 · CAPACITY QUESTION -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Structured output · The capacity question</p>
+      <h2 class="rise" style="--i:1">Constrained decoding fails at the edges, not the average</h2>
+      <div class="grid3">
+        <div class="card rise" style="--i:2">
+          <h3>Grammar compile latency</h3>
+          <p>A fresh complex schema compiles in <strong>tens of ms to seconds</strong> depending on size and backend. If schemas are per-request (user-supplied extraction shapes), compile time lands on TTFT and an uncached schema storm is a self-inflicted denial of service. Mitigation: schema cache keyed by canonical schema hash, compile off the request path, admission limits on distinct schemas.</p>
+        </div>
+        <div class="card rise" style="--i:3">
+          <h3>CPU saturation at concurrency</h3>
+          <p>Mask prep and FSM advance run on CPU while the GPU decodes. At batch 8 nobody notices. At batch 128 with per-sequence grammars, the scheduler's CPU budget from Chapter 2 becomes the binding constraint and TPOT degrades <strong>even though the GPU has headroom</strong>. Profile it as a CPU problem: it will not appear in GPU utilization.</p>
+        </div>
+        <div class="card rise" style="--i:4">
+          <h3>Quality is not untouched</h3>
+          <p>Zeroing tokens renormalizes the distribution. For rigid extraction that is pure win. For schemas imposed on open text (forced enums over nuanced answers), the constraint pushes probability mass onto tokens the model would not have chosen, and the doc QA synthesis slice shows it first. Gate structured output on the golden sets like any precision change (Chapter 6).</p>
+        </div>
+      </div>
+      <p class="footnote rise" style="--i:5">Capacity rule: budget grammars like KV cache. Distinct active schemas, states per schema, and CPU per token-step belong in the Chapter 3 capacity calculator, not in a postmortem.</p>
+    </div>
+  </section>
+
+  <!-- 17 · ENGINES STRUCTURED -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Structured output · In the two engines</p>
+      <h2 class="rise" style="--i:1">Guided decoding, engine by engine</h2>
+      <div class="card rise" style="--i:2">
+        <table>
+          <tr><th>Dimension</th><th>vLLM</th><th>SGLang</th></tr>
+          <tr><td>API surface</td><td><code>guided_json</code> / <code>guided_regex</code> / <code>guided_choice</code> / grammar in the sampling params (Structured Outputs in newer releases)</td><td><code>json_schema</code> / <code>regex</code> / EBNF grammar on the request; native to the runtime, not a bolt-on</td></tr>
+          <tr><td>Backend</td><td>XGrammar default; Outlines and lm-format-enforcer selectable</td><td>XGrammar default; Outlines selectable</td></tr>
+          <tr><td>Jump-forward</td><td>Via backend for deterministic spans</td><td>Built into the runtime's constrained path; a long-standing design emphasis alongside RadixAttention</td></tr>
+          <tr><td>Grammar cache</td><td>Per-engine compiled-grammar cache; cold schema still pays compile on first use</td><td>Compiled grammar cache with the same cold-start caveat</td></tr>
+          <tr><td>Watch item</td><td>Backend choice changes both compile latency and per-token overhead; benchmark the backend, not just the engine</td><td>Grammar state interacts with radix prefix caching; cache-hit accounting from Chapter 3 must separate grammar-cold runs</td></tr>
+        </table>
+      </div>
+      <p class="footnote rise" style="--i:3">Verdict from the harness, example run: on the frozen extraction schema the two engines land within noise of each other on TPOT; the measurable differences are compile latency on cold schemas and jump-forward aggressiveness. This is a converged feature. Choose on operations, not on a benchmark screenshot.</p>
+    </div>
+  </section>
+
+  <!-- 18 · INTERACTION -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">The interaction nobody prices</p>
+      <h2 class="rise" style="--i:1">Speculation × grammar: the mask applies to the draft too</h2>
+      <div class="grid2">
+        <div class="card rise" style="--i:2">
+          <h3>Why α moves under constraint</h3>
+          <ul class="tight">
+            <li>The draft must propose <strong>grammar-legal</strong> tokens. A draft model that does not know the schema proposes fluent-but-illegal tokens, which are rejected with probability 1: α collapses on exactly the structural spans.</li>
+            <li>Engines handle this by masking the draft's distribution with the same FSM state, so the drafter samples only legal continuations. Then α on structural tokens rises toward 1, because often only one token is legal.</li>
+            <li>Net effect on the extraction workload: constrained α measured <strong>higher</strong> than free-running α (0.83 → 0.88 on the extractive slice, example run), because the grammar does part of the prediction.</li>
+          </ul>
+        </div>
+        <div class="card rise" style="--i:3">
+          <h3>And the traps</h3>
+          <ul class="tight">
+            <li><strong>N-gram + grammar:</strong> lookup proposes copied spans that may violate the schema state mid-span; expect shorter accepted runs inside structured regions than the free-running measurement suggests.</li>
+            <li><strong>Jump-forward + speculation:</strong> deterministic spans should bypass both. If your engine speculates through spans it could have jumped, you pay draft and verify for tokens that were never uncertain.</li>
+            <li><strong>Verify cost grows:</strong> the target's verify pass now also advances γ + 1 FSM states per sequence; the slide 16 CPU term multiplies under speculation at high batch.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="footnote rise" style="--i:4">Measurement rule, added to the schema: any tenant that runs structured output reports α with the grammar on. Free-running α is a different workload.</p>
+    </div>
+  </section>
+
+  <!-- 19 · DELIVERABLE -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Deliverable</p>
+      <h2 class="rise" style="--i:1">The Chapter 8 decision sheet</h2>
+      <div class="card rise" style="--i:2">
+        <table>
+          <tr><th>Slice</th><th>Speculation verdict</th><th>Structured verdict</th></tr>
+          <tr><td>Chat, conversation</td><td>8B draft or EAGLE, γ = 4, <strong>load-gated off once batches pass the single digits</strong></td><td>Constrain only tool-call and JSON modes; leave prose free</td></tr>
+          <tr><td>Chat, code</td><td>Model draft on (α 0.78); n-gram as a cheap second layer</td><td>Grammar for config / DSL outputs only</td></tr>
+          <tr class="hl-row"><td>Doc QA, extractive</td><td>N-gram lookup on at all batches; model draft optional</td><td>Full JSON schema + jump-forward; the chapter's clearest win</td></tr>
+          <tr><td>Doc QA, synthesis</td><td>Model draft at low batch only (α 0.58)</td><td>Light schema (envelope only); heavy grammars cost quality here</td></tr>
+          <tr><td>Doc QA, numeric</td><td><span class="bad">Off</span> (α 0.49 fails break-even at batch ≥ 8)</td><td>Schema on; digit-level constraints are cheap and catch real errors</td></tr>
+        </table>
+      </div>
+      <p class="footnote rise" style="--i:3">Artifact: <span class="mono">spec-curves/</span> in the bench repo: the break-even model with its parameters, α measurements by slice, and this sheet. Every cell traces to a number produced in this chapter; change the workload and the sheet is regenerated, not debated.</p>
+    </div>
+  </section>
+
+  <!-- 20 · CLOSING -->
+  <section class="slide">
+    <div class="slide-inner">
+      <p class="kicker rise" style="--i:0">Chapter 8 · Close</p>
+      <h2 class="rise" style="--i:1">Price the feature, not the demo</h2>
+      <div class="grid3">
+        <div class="card tight rise" style="--i:2"><div class="stat-num">1.86×</div><div class="stat-lab">Chat TPOT speedup at batch 1 with an 8B draft, and 0.55× throughput at batch 128 with a weak one. Both numbers are the same feature.</div></div>
+        <div class="card tight rise" style="--i:3"><div class="stat-num">α first</div><div class="stat-lab">No speculative configuration is evaluated before α is measured per slice, with the production temperature and the production grammar state.</div></div>
+        <div class="card tight rise" style="--i:4"><div class="stat-num">16 KB × N</div><div class="stat-lab">Structured output is a capacity input: masks, states, compile latency, and CPU per token-step, budgeted like KV cache.</div></div>
+      </div>
+      <p class="lead rise" style="--i:5;margin-top:22px">Next: <b>Chapter 9, Running It</b>. SLOs, autoscaling on queue wait instead of GPU utilization, and failure drills, including what happens to every setting chosen in this chapter when a replica dies mid-trace.</p>
+      <hr class="rule rise" style="--i:6" />
+      <p class="footnote rise" style="--i:7">Saloni Garg · vLLM vs SGLang: Production Serving, Measured · Chapter 8 of 9</p>
+    </div>
+  </section>
+
+  </div><!-- /stage -->
+
+  <nav class="chrome" aria-label="Slide navigation">
+    <button class="navbtn" id="btnPrev" aria-label="Previous slide">‹</button>
+    <div class="dots" id="dots"></div>
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="counter" id="counter">1 / 20</div>
+    <button class="navbtn" id="btnNext" aria-label="Next slide">›</button>
+  </nav>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var dotsWrap = document.getElementById('dots');
+  var fill = document.getElementById('progressFill');
+  var counter = document.getElementById('counter');
+  var btnPrev = document.getElementById('btnPrev');
+  var btnNext = document.getElementById('btnNext');
+  var cur = 0, busy = false;
+
+  slides.forEach(function(_, i){
+    var d = document.createElement('button');
+    d.className = 'dot'; d.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    d.addEventListener('click', function(){ go(i); });
+    dotsWrap.appendChild(d);
+  });
+  var dots = Array.prototype.slice.call(dotsWrap.children);
+
+  function render(){
+    slides.forEach(function(s, i){ s.classList.toggle('active', i === cur); });
+    dots.forEach(function(d, i){ d.classList.toggle('on', i === cur); });
+    fill.style.width = ((cur + 1) / slides.length * 100) + '%';
+    counter.textContent = (cur + 1) + ' / ' + slides.length;
+    btnPrev.disabled = cur === 0;
+    btnNext.disabled = cur === slides.length - 1;
+    slides[cur].scrollTop = 0;
+  }
+  function go(n){
+    if (busy || n === cur || n < 0 || n >= slides.length) return;
+    busy = true;
+    var old = slides[cur];
+    old.classList.add('leaving');
+    cur = n;
+    render();
+    slides[cur].classList.add('entering');
+    setTimeout(function(){
+      old.classList.remove('leaving');
+      slides[cur].classList.remove('entering');
+      busy = false;
+    }, 420);
+  }
+  btnPrev.addEventListener('click', function(){ go(cur - 1); });
+  btnNext.addEventListener('click', function(){ go(cur + 1); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown'){ e.preventDefault(); go(cur + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home'){ go(0); }
+    else if (e.key === 'End'){ go(slides.length - 1); }
+  });
+  var tx = null, ty = null;
+  var stage = document.getElementById('stage');
+  stage.addEventListener('touchstart', function(e){ tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, {passive:true});
+  stage.addEventListener('touchend', function(e){
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 1.4){ go(dx < 0 ? cur + 1 : cur - 1); }
+    tx = null;
+  }, {passive:true});
+  render();
+
+  /* mask demo grid (slide 14) */
+  var grid = document.getElementById('maskGrid');
+  if (grid){
+    var cells = [
+      ['"1"','on'],['"2"','on'],['"3"','on'],['"4"','on'],['"5"','on'],
+      ['"0"','off'],['"6"','off'],['"9"','off'],['"-"','off'],['"."','off'],
+      ['"high"','off'],['"low"','off'],['true','off'],['null','off'],['"sev"','off'],['... 128,241 more','off']
+    ];
+    cells.forEach(function(c, i){
+      var s = document.createElement('span');
+      s.className = 'mask-cell ' + c[1];
+      s.style.setProperty('--i', i);
+      s.textContent = c[0];
+      grid.appendChild(s);
+    });
+  }
+
+  /* break-even explorer (slide 11) */
+  var inA = document.getElementById('inAlpha'), inB = document.getElementById('inBatch'),
+      inG = document.getElementById('inGamma'), inD = document.getElementById('inDraft');
+  if (inA){
+    var oA = document.getElementById('oAlpha'), oB = document.getElementById('oBatch'), oG = document.getElementById('oGamma'),
+        outE = document.getElementById('outE'), outS = document.getElementById('outSpeed'),
+        outT = document.getElementById('outTpot'), outBE = document.getElementById('outBE'),
+        outV = document.getElementById('outVerdict');
+    function E(a, g){ return (1 - Math.pow(a, g + 1)) / (1 - a); }
+    function speed(a, B, g, rd){
+      var w = B / (B + 16);
+      return E(a, g) / ((1 - w) * (1 + g * rd + 0.08) + w * (g + 1));
+    }
+    function breakeven(B, g, rd){
+      for (var a = 0.02; a <= 0.995; a += 0.005){ if (speed(a, B, g, rd) >= 1) return a; }
+      return null;
+    }
+    function update(){
+      var a = parseFloat(inA.value), B = Math.pow(2, parseInt(inB.value, 10)),
+          g = parseInt(inG.value, 10), rd = parseFloat(inD.value);
+      var e = E(a, g), s = speed(a, B, g, rd), be = breakeven(B, g, rd);
+      oA.textContent = a.toFixed(2);
+      oB.textContent = B;
+      oG.textContent = g;
+      outE.textContent = e.toFixed(2);
+      outS.textContent = s.toFixed(2) + '×';
+      outT.textContent = (42 / s).toFixed(1) + ' ms';
+      outBE.textContent = be === null ? '> 0.99' : be.toFixed(2);
+      outV.className = 'verdict ' + (s >= 1.05 ? 'win' : (s < 0.97 ? 'lose' : 'flat'));
+      outV.textContent = s >= 1.05 ? 'Pays: keep speculation on for this slice.'
+        : (s < 0.97 ? 'Loses: speculation is a tax at this batch. Turn it off or gate it by load.'
+        : 'Wash: within noise of break-even. Decide on operational cost, not speed.');
+    }
+    [inA, inB, inG, inD].forEach(function(el){ el.addEventListener('input', update); el.addEventListener('change', update); });
+    update();
+  }
+})();
+</script>
+</body>
+</html>
