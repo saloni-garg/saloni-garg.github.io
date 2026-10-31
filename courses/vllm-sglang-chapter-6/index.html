@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>Chapter 6 — Quantization in Production: FP8 and AWQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#140B09; --bg2:#1E100C;
+  --coral:#FF6B5E; --amber:#FFB86B; --gold:#FFD166;
+  --ink:#FFF7F0; --muted:#D8C7BC; --dim:#A68E82;
+  --card:rgba(255,255,255,.065); --card2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.13); --line2:rgba(255,255,255,.08);
+  --good:#7ED491; --warn:#FFD166; --bad:#FF7A6B;
+  --r:26px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:"JetBrains Mono",monospace}
+a{color:var(--amber)}
+/* ambient orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(70px);pointer-events:none;z-index:0;opacity:.55}
+.orb1{width:520px;height:520px;background:#5a2118;top:-180px;left:-120px;animation:drift 18s ease-in-out infinite alternate}
+.orb2{width:460px;height:460px;background:#4a2c10;bottom:-200px;right:-100px;animation:drift 22s ease-in-out infinite alternate-reverse}
+.orb3{width:260px;height:260px;background:#3d1a2e;top:40%;left:55%;opacity:.35;animation:drift 26s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(50px,34px) scale(1.08)}}
+/* deck */
+.deck{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
+.progress{height:3px;background:rgba(255,255,255,.08)}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--coral),var(--amber),var(--gold));width:0;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.stage{flex:1;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;padding:34px clamp(18px,5vw,72px) 26px;overflow-y:auto;opacity:0;pointer-events:none;transform:translateX(46px) scale(.992);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;max-width:1240px;margin:0 auto;width:100%}
+.slide.prev{transform:translateX(-46px) scale(.992)}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.kicker{font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 10px}
+h1{font-size:clamp(2.3rem,6vw,4.4rem);line-height:.98;letter-spacing:-.03em;margin:0 0 18px;font-weight:800}
+h2{font-size:clamp(1.65rem,3.6vw,2.55rem);line-height:1.05;letter-spacing:-.025em;margin:0 0 14px;font-weight:800}
+h3{font-size:1.02rem;margin:0 0 8px}
+p,li{color:var(--muted);line-height:1.55;font-size:clamp(.94rem,1.35vw,1.05rem)}
+.lede{font-size:clamp(1.05rem,1.9vw,1.3rem);color:#EDE0D6;max-width:62ch}
+strong{color:var(--ink)}
+em{color:var(--gold);font-style:normal}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 18px 40px rgba(0,0,0,.28)}
+.card h3{color:var(--ink)}
+.card p,.card li{font-size:.95rem}
+.num{font-family:"JetBrains Mono",monospace;font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:700;color:var(--ink);line-height:1}
+.num small{font-size:.85rem;color:var(--dim)}
+.tag{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--amber);background:rgba(255,184,107,.08)}
+.tag.c{color:var(--coral);background:rgba(255,107,94,.08)} .tag.g{color:var(--good);background:rgba(126,212,145,.08)}
+ul{margin:8px 0 0;padding-left:1.15rem} li{margin:5px 0}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line2);vertical-align:top}
+th{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-weight:600}
+td{color:var(--muted)} td:first-child{color:var(--ink);font-weight:600}
+td.mono,th.mono{font-weight:600;color:var(--ink)}
+tr.hl td{background:rgba(255,184,107,.07)}
+.code{background:#0D0605;border:1px solid var(--line);border-radius:18px;padding:16px 18px;font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.65;color:#F3D9C8;overflow-x:auto;white-space:pre}
+.code .k{color:var(--coral)} .code .s{color:var(--gold)} .code .c{color:#8A7365}
+.flow{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.flow .step{flex:1;min-width:130px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 16px;backdrop-filter:blur(12px)}
+.flow .arr{align-self:center;color:var(--coral);font-size:1.3rem;font-weight:800}
+.bar-row{display:grid;grid-template-columns:150px 1fr 92px;gap:12px;align-items:center;margin:10px 0;font-size:.9rem}
+.bar{height:16px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--coral),var(--amber));transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.bar i.gold{background:linear-gradient(90deg,var(--amber),var(--gold))}
+.bar i.green{background:linear-gradient(90deg,#4da562,var(--good))}
+.bar-row .v{font-family:"JetBrains Mono",monospace;color:var(--ink);text-align:right}
+.bits{display:flex;gap:3px;margin:10px 0}
+.bits span{flex:1;text-align:center;font-family:"JetBrains Mono",monospace;font-size:.7rem;padding:9px 2px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid var(--line2);color:var(--muted)}
+.bits span.sign{background:rgba(255,107,94,.22);color:#FFB3AB}
+.bits span.exp{background:rgba(255,184,107,.22);color:var(--amber)}
+.bits span.man{background:rgba(255,209,102,.16);color:var(--gold)}
+.note{border-left:3px solid var(--coral);background:rgba(255,107,94,.07);border-radius:0 16px 16px 0;padding:13px 16px;color:#EADCD2;font-size:.95rem;line-height:1.55}
+.note.amber{border-color:var(--amber);background:rgba(255,184,107,.07)}
+.foot{margin-top:auto;padding-top:16px;color:var(--dim);font-size:.82rem;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+/* entrance animations */
+[data-a]{opacity:0;transform:translateY(18px)}
+.slide.active [data-a]{animation:rise .65s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--d,0)*90ms)}
+@keyframes rise{to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes flowdash{to{stroke-dashoffset:-28}}
+svg .wire{stroke-dasharray:7 7;animation:flowdash 1.2s linear infinite}
+/* controls */
+.controls{position:relative;z-index:2;display:flex;align-items:center;gap:14px;padding:12px clamp(16px,4vw,40px) calc(12px + env(safe-area-inset-bottom));background:rgba(20,11,9,.72);backdrop-filter:blur(14px);border-top:1px solid var(--line2)}
+.btn{appearance:none;border:1px solid var(--line);background:var(--card2);color:var(--ink);border-radius:999px;padding:10px 18px;font-family:Manrope,sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;min-height:44px}
+.btn:hover{border-color:var(--amber)} .btn:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.dot{width:9px;height:9px;border-radius:50%;border:0;background:rgba(255,255,255,.22);cursor:pointer;padding:0}
+.dot.on{background:var(--amber);transform:scale(1.25)}
+.count{font-family:"JetBrains Mono",monospace;font-size:.82rem;color:var(--dim);min-width:64px;text-align:right}
+/* interactive explorer */
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.seg button{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:9px 16px;font-family:Manrope,sans-serif;font-weight:700;cursor:pointer;min-height:42px}
+.seg button.on{background:linear-gradient(90deg,rgba(255,107,94,.28),rgba(255,184,107,.28));color:var(--ink);border-color:var(--amber)}
+select,input[type=range]{accent-color:var(--coral)}
+input[type=range]{width:100%}
+.verdict{font-size:1.05rem;font-weight:700;color:var(--ink)}
+@media (max-width:760px){
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .bar-row{grid-template-columns:104px 1fr 74px}
+  .slide{padding-top:24px}
+  .dots{display:none}
+  table{font-size:.84rem} th,td{padding:8px 8px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  [data-a]{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+
+<div class="deck">
+  <div class="progress"><i id="prog"></i></div>
+  <div class="stage" id="stage">
+
+  <!-- 1 TITLE -->
+  <section class="slide">
+    <p class="kicker" data-a style="--d:0">vLLM vs SGLang · Production Serving, Measured · Chapter 6</p>
+    <h1 data-a style="--d:1">Quantization in production:<br>FP8 and AWQ</h1>
+    <p class="lede" data-a style="--d:2">Same 70B model, same frozen trace, same harness from Chapter 5. Only the number format changes. This chapter prices that change three ways at once: <strong>quality, goodput, and dollars</strong> — because a precision you cannot score is a precision you cannot ship.</p>
+    <div class="grid g3" style="margin-top:20px">
+      <div class="card" data-a style="--d:3"><div class="num">140 → 35 <small>GB</small></div><p>Weight footprint, BF16 → AWQ-INT4, before scales. The memory you free becomes KV cache — or a smaller bill.</p></div>
+      <div class="card" data-a style="--d:4"><div class="num">2×</div><p>KV token capacity when the cache itself goes FP8. Chapter 3's pool math, rerun with half the bytes per token.</p></div>
+      <div class="card" data-a style="--d:5"><div class="num">6 <small>cells</small></div><p>Two engines × three precisions. Every cell measured, none assumed. The decision table is the deliverable.</p></div>
+    </div>
+    <div class="foot" data-a style="--d:6"><span>Presented by Saloni Garg</span><span class="mono">Llama-3.1-70B-Instruct · 4× H100 80GB · frozen two-tenant trace</span></div>
+  </section>
+
+  <!-- 2 ROADMAP -->
+  <section class="slide">
+    <p class="kicker" data-a>Chapter map</p>
+    <h2 data-a style="--d:1">Four questions, in the order production asks them</h2>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:2"><span class="tag c">01 · Mechanics</span><h3 style="margin-top:10px">What actually changes?</h3><p>Weights, activations, and KV cache are three separate quantization decisions. Conflating them is how teams benchmark one thing and deploy another.</p></div>
+      <div class="card" data-a style="--d:3"><span class="tag c">02 · Kernels</span><h3 style="margin-top:10px">Does the fast path actually run?</h3><p>A format is only as fast as its kernel. Silent fallback to a dequantize-then-BF16 path can make INT4 slower than BF16 — and nothing in the latency graph tells you why.</p></div>
+      <div class="card" data-a style="--d:4"><span class="tag">03 · Quality</span><h3 style="margin-top:10px">Where does the loss concentrate?</h3><p>Not in average perplexity. In long-context retrieval, multi-hop grounding, and the tail of the doc QA golden set — exactly where the paying tenant lives.</p></div>
+      <div class="card" data-a style="--d:5"><span class="tag">04 · Economics</span><h3 style="margin-top:10px">What is it worth?</h3><p>Goodput at SLO and $/1M tokens per cell, from the Chapter 5 harness. Quality delta without a price is trivia; price without quality is a trap.</p></div>
+    </div>
+    <div class="note" data-a style="--d:6">Rule for the whole chapter: every number labeled <em>example run</em> came from one run of the frozen trace on the reference node. Method is stated with the number, so you can reproduce or refute it.</div>
+  </section>
+
+  <!-- 3 THREE DECISIONS -->
+  <section class="slide">
+    <p class="kicker" data-a>Mechanics</p>
+    <h2 data-a style="--d:1">“We quantized the model” is three decisions, not one</h2>
+    <div class="flow" data-a style="--d:2">
+      <div class="step"><span class="tag c">Weights</span><h3 style="margin-top:8px">W</h3><p>Stored precision of the parameters. Decided offline, shipped in the checkpoint. Drives memory footprint and decode bandwidth.</p></div>
+      <div class="arr">+</div>
+      <div class="step"><span class="tag">Activations</span><h3 style="margin-top:8px">A</h3><p>Precision of the tensors flowing between layers, and of the GEMM inputs. Decides whether tensor cores run in the low-precision path at all.</p></div>
+      <div class="arr">+</div>
+      <div class="step"><span class="tag g">KV cache</span><h3 style="margin-top:8px">KV</h3><p>Precision of stored keys and values. Independent of W and A in both engines — and, per Chapter 3, it is your concurrency ceiling.</p></div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card" data-a style="--d:3"><h3>Weight-only (W8A16, W4A16)</h3><p>Weights stored small, dequantized to BF16 before the GEMM. Saves memory and bandwidth; compute stays BF16. AWQ-INT4 lives here.</p></div>
+      <div class="card" data-a style="--d:4"><h3>Weight + activation (W8A8)</h3><p>Both GEMM operands in FP8. Unlocks FP8 tensor cores on H100 — the only variant that speeds up <em>prefill compute</em>, not just decode bandwidth.</p></div>
+      <div class="card" data-a style="--d:5"><h3>KV quantization</h3><p>Orthogonal flag in both engines (<span class="mono">kv_cache_dtype</span> in vLLM, <span class="mono">--kv-cache-dtype fp8_e4m3</span> in SGLang). Can be combined with any W/A choice.</p></div>
+    </div>
+    <p data-a style="--d:6">When a vendor says “FP8 serving,” ask which of the three they mean. The three answers have different speed, quality, and failure profiles.</p>
+  </section>
+
+  <!-- 4 SIZE MATH -->
+  <section class="slide">
+    <p class="kicker" data-a>Mechanics · the arithmetic</p>
+    <h2 data-a style="--d:1">Bits to bytes: the footprint math, worked</h2>
+    <p data-a style="--d:2">70B parameters. Storage is parameters × bits ÷ 8, plus quantization metadata. Per-GPU figures assume tensor parallel 4, the Chapter 3 layout.</p>
+    <div class="card" data-a style="--d:3">
+      <table>
+        <tr><th>Format</th><th>Bits / param</th><th>Total weights</th><th>Per GPU (TP4)</th><th>Metadata overhead</th></tr>
+        <tr><td>BF16</td><td class="mono">16</td><td class="mono">140.0 GB</td><td class="mono">35.0 GB</td><td class="mono">—</td></tr>
+        <tr><td>FP8 (E4M3)</td><td class="mono">8</td><td class="mono">70.0 GB</td><td class="mono">17.5 GB</td><td class="mono">scales ≈ KB–MB</td></tr>
+        <tr class="hl"><td>AWQ-INT4, group 128</td><td class="mono">4 + ~0.14</td><td class="mono">≈ 36.2 GB</td><td class="mono">≈ 9.1 GB</td><td class="mono">BF16 scale + packed zero per 128 weights</td></tr>
+      </table>
+    </div>
+    <div data-a style="--d:4">
+      <div class="bar-row"><span>BF16</span><div class="bar"><i data-w="100%"></i></div><span class="v">140 GB</span></div>
+      <div class="bar-row"><span>FP8</span><div class="bar"><i class="gold" data-w="50%"></i></div><span class="v">70 GB</span></div>
+      <div class="bar-row"><span>AWQ-INT4</span><div class="bar"><i class="green" data-w="26%"></i></div><span class="v">≈36 GB</span></div>
+    </div>
+    <div class="note amber" data-a style="--d:5">The AWQ metadata is not rounding error you can ignore at planning time: 70B ÷ 128 = 547M groups; a 2-byte scale per group is 1.09 GB before zero-points. Quote <em>4.14 effective bits</em>, not 4.00, in the capacity plan.</div>
+  </section>
+
+  <!-- 5 FP8 ANATOMY -->
+  <section class="slide">
+    <p class="kicker" data-a>FP8 · anatomy</p>
+    <h2 data-a style="--d:1">Two FP8s: E4M3 for precision, E5M2 for range</h2>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:2">
+        <h3>E4M3 — 4 exponent, 3 mantissa</h3>
+        <div class="bits"><span class="sign">S</span><span class="exp">E</span><span class="exp">E</span><span class="exp">E</span><span class="exp">E</span><span class="man">M</span><span class="man">M</span><span class="man">M</span></div>
+        <ul>
+          <li>Max normal value: <strong>448</strong>. Relative step near 1.0: 2<sup>−3</sup> = 12.5% granularity per binade, finer than E5M2.</li>
+          <li>The default for <strong>weights, activations, and KV</strong> in both engines on Hopper.</li>
+          <li>No infinity encoding; NaN takes the top pattern. Out-of-range values saturate or corrupt — scaling is not optional.</li>
+        </ul>
+      </div>
+      <div class="card" data-a style="--d:3">
+        <h3>E5M2 — 5 exponent, 2 mantissa</h3>
+        <div class="bits"><span class="sign">S</span><span class="exp">E</span><span class="exp">E</span><span class="exp">E</span><span class="exp">E</span><span class="exp">E</span><span class="man">M</span><span class="man">M</span></div>
+        <ul>
+          <li>Max normal value: <strong>57,344</strong> — same exponent range shape as BF16, coarser mantissa.</li>
+          <li>Historically used for gradients in training, where range beats precision.</li>
+          <li>Rarely the right inference choice: if your tensors need E5M2 range at inference, your scaling strategy is the real bug.</li>
+        </ul>
+      </div>
+    </div>
+    <p data-a style="--d:4">Mantissa bits are where quantization error lives. Going BF16 (7 mantissa bits) → FP8 E4M3 (3) quadruples the rounding step; E5M2 (2) doubles it again. Everything in the next three slides is about keeping the values you care about away from that rounding error.</p>
+  </section>
+
+  <!-- 6 SCALING -->
+  <section class="slide">
+    <p class="kicker" data-a>FP8 · scaling</p>
+    <h2 data-a style="--d:1">Scaling is the whole game</h2>
+    <p data-a style="--d:2">FP8 stores <span class="mono">value ≈ fp8_code × scale</span>. The scale decides which slice of the real line gets the 256 available codes. Granularity of the scale is the main quality knob in FP8 serving:</p>
+    <div class="grid g3">
+      <div class="card" data-a style="--d:3"><span class="tag c">Coarsest</span><h3 style="margin-top:8px">Per-tensor</h3><p>One scale for an entire weight matrix or activation tensor. One outlier channel stretches the range and pushes everything else toward zero codes. Cheapest, and the first suspect when quality drops.</p></div>
+      <div class="card" data-a style="--d:4"><span class="tag">Middle</span><h3 style="margin-top:8px">Per-channel / per-token</h3><p>A scale per output channel (weights) or per token row (activations). The common production default for W8A8 checkpoints: outliers are quarantined to their own scale.</p></div>
+      <div class="card" data-a style="--d:5"><span class="tag g">Finest</span><h3 style="margin-top:8px">Block-wise (128×128)</h3><p>A scale per tile, DeepSeek-style. Best error profile, more scale traffic in the kernel, and engine support is the newest — verify it runs before you plan around it.</p></div>
+    </div>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:6"><h3>Static (calibrated) scales</h3><p>Activation scales measured once on calibration data and frozen. Deterministic, no runtime cost — and silently wrong when production traffic drifts away from the calibration distribution.</p></div>
+      <div class="card" data-a style="--d:7"><h3>Dynamic scales</h3><p>Scale computed from the live tensor's amax each step. Tracks drift, costs a reduction pass per tensor. Both engines default to dynamic activation scaling for FP8 unless the checkpoint ships static scales.</p></div>
+    </div>
+  </section>
+
+  <!-- 7 WHAT FP8 BUYS -->
+  <section class="slide">
+    <p class="kicker" data-a>FP8 · payoff on H100</p>
+    <h2 data-a style="--d:1">Where FP8 actually pays — and where it cannot</h2>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:2">
+        <h3>Decode: bandwidth-bound → weights halve</h3>
+        <p>Chapter 4's roofline: a decode step reads all weights once. At TP4, BF16 reads 35 GB per GPU per step; FP8 reads 17.5 GB.</p>
+        <div class="bar-row"><span>BF16 step floor</span><div class="bar"><i data-w="100%"></i></div><span class="v">10.4 ms</span></div>
+        <div class="bar-row"><span>FP8 step floor</span><div class="bar"><i class="gold" data-w="50%"></i></div><span class="v">5.2 ms</span></div>
+        <p style="font-size:.85rem">Floor = weight bytes ÷ 3.35 TB/s HBM. Real steps sit above the floor; the gap is KV reads, attention, and kernel efficiency.</p>
+      </div>
+      <div class="card" data-a style="--d:3">
+        <h3>Prefill: compute-bound → only W8A8 helps</h3>
+        <ul>
+          <li>H100 dense FP8 tensor-core peak is <strong>≈ 2× BF16</strong> (1,979 vs 989 TFLOPS, sparsity excluded).</li>
+          <li>Weight-only FP8 (W8A16) dequantizes before the GEMM: prefill runs at BF16 speed. The chat tenant feels nothing at TTFT.</li>
+          <li>W8A8 runs the GEMM in FP8 end to end: this is the variant that cuts the 18K-token doc prefill, and the one with activation-outlier exposure.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note" data-a style="--d:4">Decision shorthand: <em>decode-heavy, latency-bound → any FP8 variant helps. Prefill-heavy → only W8A8 helps, and it is the variant that needs the quality gate.</em> Our two-tenant mix has one of each, which is why this chapter measures both.</div>
+  </section>
+
+  <!-- 8 KV FP8 -->
+  <section class="slide">
+    <p class="kicker" data-a>KV cache · FP8</p>
+    <h2 data-a style="--d:1">FP8 KV: Chapter 3's ceiling, doubled</h2>
+    <div class="grid g3">
+      <div class="card" data-a style="--d:2"><div class="num">0.3125 <small>MiB/tok</small></div><p><strong>BF16 KV.</strong> 80 layers × 8 KV heads × 128 head-dim × 2 (K and V) × 2 bytes = 327,680 B per token.</p></div>
+      <div class="card" data-a style="--d:3"><div class="num">0.15625 <small>MiB/tok</small></div><p><strong>FP8 KV.</strong> Same geometry, 1 byte per element: 163,840 B per token. Exactly half, because nothing else in the formula changes.</p></div>
+      <div class="card" data-a style="--d:4"><div class="num">≈ 2×</div><p><strong>Concurrency.</strong> On the Chapter 3 budget, the fleet-wide token pool goes from ≈ 391K to ≈ 782K tokens — before weight savings free even more memory.</p></div>
+    </div>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:5"><h3>The fine print: K is not V</h3><p>Keys pass through RoPE and are compared by dot product, so K quantization error rotates attention logits directly. Several production reports — and our golden set in slide 15 — show K is the more sensitive half. If an engine offers per-tensor KV scales only, expect the long-context tail to pay first.</p></div>
+      <div class="card" data-a style="--d:6"><h3>Interaction with prefix caching</h3><p>FP8 KV halves the cost of <em>keeping</em> cached prefixes, which lengthens the economically sensible retention window from Chapter 3. But cached FP8 blocks are written once at quantized precision — a block shared by 40 sessions carries one quantization error, amplified by reuse.</p></div>
+    </div>
+  </section>
+
+  <!-- 9 SILENT FALLBACK -->
+  <section class="slide">
+    <p class="kicker" data-a>Kernels · the trap</p>
+    <h2 data-a style="--d:1">The silent fallback: when “INT4” runs slower than BF16</h2>
+    <p data-a style="--d:2">A quantized checkpoint does not guarantee a quantized kernel. Shape, group size, activation dtype, and engine version all gate the fast path. The failure mode is quiet: correct outputs, wrong speed.</p>
+    <div class="flow" data-a style="--d:3">
+      <div class="step"><h3>Load</h3><p>Checkpoint declares <span class="mono">quant_method: awq</span>, group 128.</p></div><div class="arr">→</div>
+      <div class="step"><h3>Dispatch</h3><p class="pulse">Engine checks kernel eligibility for each linear layer's shape.</p></div><div class="arr">→</div>
+      <div class="step"><h3>Fallback</h3><p>Odd dimensions or unsupported group size → dequantize to BF16, run BF16 GEMM, pay both costs.</p></div><div class="arr">→</div>
+      <div class="step"><h3>Symptom</h3><p>Throughput ≈ BF16, memory ≈ INT4. Looks like “quantization doesn't help.” It never ran.</p></div>
+    </div>
+    <div class="card" data-a style="--d:4">
+      <h3>Verify, don't trust: three checks per engine × precision cell</h3>
+      <div class="code"><span class="c"># 1. Startup log must name the kernel, not just the format</span>
+vLLM:  <span class="s">"Using MarlinLinearKernel for AwqMarlin"</span>  /  <span class="s">"Using Fp8LinearKernel"</span>
+SGLang: <span class="s">"weight_loader ... fp8"</span> + kernel selection at server init
+
+<span class="c"># 2. Profile one decode step: the GEMM kernel name is the ground truth</span>
+nsys profile --trace=cuda <span class="k">python</span> bench/run.py --precision awq-int4
+<span class="c">#    fast path: marlin_awq_kernel / fp8_scaled_mm</span>
+<span class="c">#    fallback:  dequant + cublas bf16 gemm as separate kernels</span>
+
+<span class="c"># 3. Sanity bound: decode step time must beat the BF16 floor test from slide 7</span></div>
+    </div>
+  </section>
+
+  <!-- 10 AWQ IDEA -->
+  <section class="slide">
+    <p class="kicker" data-a>AWQ · the idea</p>
+    <h2 data-a style="--d:1">AWQ: protect the weights the activations care about</h2>
+    <p class="lede" data-a style="--d:2">Activation-aware Weight Quantization starts from an empirical fact: weight importance is not uniform, and it is predictable from <em>activation</em> statistics, not from the weights alone.</p>
+    <div class="grid g3">
+      <div class="card" data-a style="--d:3"><div class="num">≈ 1%</div><p>of weight channels carry disproportionately large activations — the <strong>salient channels</strong>. Their quantization error dominates output error.</p></div>
+      <div class="card" data-a style="--d:4"><h3>The trick: equivalent scaling</h3><p>Scale a salient weight channel <em>up</em> by s before quantizing, and scale the corresponding activation channel <em>down</em> by s. The product is mathematically unchanged; the weight now sits in a finer region of the INT4 grid.</p></div>
+      <div class="card" data-a style="--d:5"><h3>Choosing s</h3><p>s is searched per layer on calibration data to minimize output error, typically from the channel's average activation magnitude raised to a tuned exponent. No retraining, no gradients through the model — a calibration pass, then search.</p></div>
+    </div>
+    <div class="note amber" data-a style="--d:6">Why this matters for serving: AWQ's protection is <em>baked in at quantization time</em> from calibration activations. Change the traffic, and the channels that matter may change with it. That dependency is slide 12.</div>
+  </section>
+
+  <!-- 11 AWQ MECHANICS -->
+  <section class="slide">
+    <p class="kicker" data-a>AWQ · mechanics</p>
+    <h2 data-a style="--d:1">Inside an AWQ checkpoint: groups, scales, packing</h2>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:2">
+        <h3>Group-wise INT4</h3>
+        <ul>
+          <li>Weights quantized in <strong>groups of 128</strong> along the input dimension; each group gets its own BF16 scale and a packed zero-point.</li>
+          <li>Error is bounded per group: a large weight inflates only its group's scale, not the whole row's.</li>
+          <li>Group 64 halves the metadata efficiency loss but shrinks error further; group 256 does the opposite. 128 is the ecosystem default and the best-supported kernel shape.</li>
+        </ul>
+      </div>
+      <div class="card" data-a style="--d:3">
+        <h3>Packing and the Marlin kernel</h3>
+        <ul>
+          <li>Two INT4 values pack into one byte; the checkpoint stores weights pre-shuffled into the layout the <strong>Marlin</strong> kernel wants, so dequantization fuses into the GEMM's inner loop.</li>
+          <li>Marlin's trick: convert INT4 → FP16 in-register, overlapped with the tensor-core math, so W4A16 decode approaches the bandwidth floor instead of paying a separate dequant pass.</li>
+          <li>That is why slide 9's check matters: without Marlin (or SGLang's equivalent AWQ kernel), AWQ is just extra work wrapped around a BF16 GEMM.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="code" data-a style="--d:4"><span class="c"># What the config is really telling the engine</span>
+{
+  <span class="s">"quantization_config"</span>: {
+    <span class="s">"quant_method"</span>: <span class="s">"awq"</span>, <span class="s">"bits"</span>: 4, <span class="s">"group_size"</span>: 128,
+    <span class="s">"zero_point"</span>: true, <span class="s">"version"</span>: <span class="s">"gemm"</span>   <span class="c">// gemm vs gemv layout: wrong pairing = fallback</span>
+  }
+}</div>
+  </section>
+
+  <!-- 12 CALIBRATION -->
+  <section class="slide">
+    <p class="kicker" data-a>AWQ · calibration dependence</p>
+    <h2 data-a style="--d:1">Calibration data is a production dependency</h2>
+    <p data-a style="--d:2">AWQ (and static-scale FP8) freeze decisions from a calibration corpus. The corpus is small — typically 128–512 sequences — which makes <em>which</em> sequences a first-order quality variable.</p>
+    <div class="card" data-a style="--d:3">
+      <table>
+        <tr><th>Calibration corpus</th><th>Chat golden set</th><th>Doc QA golden set</th><th>Reading</th></tr>
+        <tr><td>Generic web text (Pile-style sample)</td><td class="mono">−0.4 pts</td><td class="mono">−2.8 pts</td><td>Salient channels for chat transfer; document channels do not.</td></tr>
+        <tr><td>Chat transcripts only</td><td class="mono">−0.2 pts</td><td class="mono">−3.4 pts</td><td>Long-context channels never fire in short calibration data.</td></tr>
+        <tr class="hl"><td>Matched mix: both tenants, full length</td><td class="mono">−0.3 pts</td><td class="mono">−0.9 pts</td><td>The only corpus that sees 18K-token activations.</td></tr>
+      </table>
+      <p style="font-size:.82rem;margin-top:8px">Example run: AWQ-INT4 checkpoints quantized from each corpus, scored on the tenant golden sets (slide 14). Same weights, same engine — only the calibration differed.</p>
+    </div>
+    <div class="note" data-a style="--d:4">Operational rule: <em>treat the calibration set like training data.</em> Version it, review it, and re-quantize when the tenant mix shifts. A checkpoint downloaded from a hub carries someone else's calibration bet.</div>
+  </section>
+
+  <!-- 13 WHERE LOSS CONCENTRATES -->
+  <section class="slide">
+    <p class="kicker" data-a>Quality · distribution of harm</p>
+    <h2 data-a style="--d:1">Perplexity barely moves. Retrieval falls over.</h2>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:2">
+        <h3>Why the average lies</h3>
+        <p>Perplexity averages over mostly easy, high-frequency tokens. Quantization error is not uniform: it concentrates where activations are large, contexts are long, and the answer depends on one span among thousands of tokens.</p>
+        <ul>
+          <li><strong>Short chat:</strong> robust. Redundant signal, short KV, errors wash out.</li>
+          <li><strong>Needle retrieval at 18K:</strong> the query must attend to one passage; K/V rounding noise competes with a single weak signal.</li>
+          <li><strong>Multi-hop grounding:</strong> two retrievals chained — errors compound multiplicatively, not additively.</li>
+        </ul>
+      </div>
+      <div class="card" data-a style="--d:3">
+        <h3>Failure signature to look for</h3>
+        <div class="bar-row"><span>Chat exact-match Δ</span><div class="bar"><i class="green" data-w="12%"></i></div><span class="v">−0.3 pts</span></div>
+        <div class="bar-row"><span>Perplexity Δ</span><div class="bar"><i class="green" data-w="18%"></i></div><span class="v">+0.06</span></div>
+        <div class="bar-row"><span>Doc QA overall Δ</span><div class="bar"><i class="gold" data-w="42%"></i></div><span class="v">−1.6 pts</span></div>
+        <div class="bar-row"><span>Needle @ 18K Δ</span><div class="bar"><i data-w="88%"></i></div><span class="v">−5.9 pts</span></div>
+        <div class="bar-row"><span>Multi-hop Δ</span><div class="bar"><i data-w="100%"></i></div><span class="v">−6.8 pts</span></div>
+        <p style="font-size:.82rem">Example run: AWQ-INT4 vs BF16, pooled across engines. Bar length ∝ harm. The tail slices are 20× the headline average.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 QUALITY HARNESS -->
+  <section class="slide">
+    <p class="kicker" data-a>Quality · method</p>
+    <h2 data-a style="--d:1">The golden sets: scored per tenant, sliced by failure mode</h2>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:2"><span class="tag">Chat tenant</span>
+        <ul>
+          <li><strong>400 prompts</strong> drawn from production-shaped chat: short, multi-turn, system prompt shared.</li>
+          <li>Scored: exact-match on structured answers, plus rubric-graded open answers with the grader fixed across cells.</li>
+          <li>Slices: single-turn vs turn ≥ 4 (KV length grows inside a “short” tenant too).</li>
+        </ul>
+      </div>
+      <div class="card" data-a style="--d:3"><span class="tag">Doc QA tenant</span>
+        <ul>
+          <li><strong>300 questions over 18K-token documents</strong>: extractive, needle-at-depth (25% / 50% / 90% of context), and two-hop.</li>
+          <li>Scored: span F1 for extractive, exact retrieval for needles, answer correctness for hops.</li>
+          <li>Every slice reported separately. A cell ships only if <em>every</em> slice clears its floor — no averaging away the tail.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="card" data-a style="--d:4"><h3>Fixed across cells</h3><p>Prompts, sampling (temperature 0), max tokens, grader version, and engine flags other than precision.</p></div>
+      <div class="card" data-a style="--d:5"><h3>Reported per cell</h3><p>Score per slice, delta vs the same engine's BF16 cell, and a paired bootstrap interval on the delta — differences under ~0.5 pts on 700 items are noise until proven otherwise.</p></div>
+      <div class="card" data-a style="--d:6"><h3>The gate</h3><p>Pre-registered floors: chat −0.5 pts, doc QA overall −1.0 pt, any single slice −2.0 pts. A cell that fails the gate is out of the economics table, whatever it costs.</p></div>
+    </div>
+  </section>
+
+  <!-- 15 QUALITY RESULTS -->
+  <section class="slide">
+    <p class="kicker" data-a>Quality · results</p>
+    <h2 data-a style="--d:1">Quality deltas vs BF16, per engine × precision <span class="tag" style="vertical-align:middle">Example run</span></h2>
+    <div class="card" data-a style="--d:2">
+      <table>
+        <tr><th>Cell</th><th>Chat Δ</th><th>Doc QA Δ</th><th>Needle @18K Δ</th><th>Multi-hop Δ</th><th>Gate</th></tr>
+        <tr><td>vLLM · FP8 W8A8 + FP8 KV</td><td class="mono">−0.2</td><td class="mono">−0.7</td><td class="mono">−1.4</td><td class="mono">−1.1</td><td><span class="tag g">Pass</span></td></tr>
+        <tr><td>SGLang · FP8 W8A8 + FP8 KV</td><td class="mono">−0.2</td><td class="mono">−0.6</td><td class="mono">−1.2</td><td class="mono">−1.3</td><td><span class="tag g">Pass</span></td></tr>
+        <tr><td>vLLM · AWQ-INT4 (matched calib.)</td><td class="mono">−0.3</td><td class="mono">−0.9</td><td class="mono">−1.8</td><td class="mono">−1.6</td><td><span class="tag g">Pass</span></td></tr>
+        <tr><td>SGLang · AWQ-INT4 (matched calib.)</td><td class="mono">−0.4</td><td class="mono">−1.1</td><td class="mono">−2.3</td><td class="mono">−1.9</td><td><span class="tag c">Fail: needle slice</span></td></tr>
+        <tr><td>Either · AWQ-INT4 (hub checkpoint)</td><td class="mono">−0.4</td><td class="mono">−2.8</td><td class="mono">−5.9</td><td class="mono">−6.8</td><td><span class="tag c">Fail</span></td></tr>
+      </table>
+    </div>
+    <ul data-a style="--d:3">
+      <li><strong>Engines agree on FP8.</strong> Deltas differ by ≤0.2 pts cell-to-cell — inside the bootstrap interval. FP8 quality is a property of the format and scales, not the engine.</li>
+      <li><strong>AWQ is a property of the checkpoint.</strong> The same format swings from −0.9 to −2.8 on doc QA depending only on calibration. The engine gap on AWQ (needle slice) tracks a kernel-path difference in how KV is handled alongside Marlin weights — the kind of cell-specific interaction the matrix exists to catch.</li>
+    </ul>
+  </section>
+
+  <!-- 16 GOODPUT -->
+  <section class="slide">
+    <p class="kicker" data-a>Economics · goodput rerun</p>
+    <h2 data-a style="--d:1">Same harness, same SLOs, per precision <span class="tag" style="vertical-align:middle">Example run</span></h2>
+    <p data-a style="--d:2">Chapter 5's open-loop Poisson replay, both SLOs enforced (chat TTFT p95 ≤ 800 ms, TPOT p95 ≤ 50 ms; doc completion p99 ≤ 30 s). Goodput = max arrival rate holding all three.</p>
+    <div class="card" data-a style="--d:3">
+      <table>
+        <tr><th>Cell</th><th>Goodput (req/s)</th><th>vs BF16</th><th>Binding constraint</th></tr>
+        <tr><td>vLLM · BF16</td><td class="mono">6.1</td><td class="mono">1.00×</td><td>KV pool exhaustion at burst</td></tr>
+        <tr><td>SGLang · BF16</td><td class="mono">6.4</td><td class="mono">1.00×</td><td>KV pool exhaustion at burst</td></tr>
+        <tr class="hl"><td>vLLM · FP8 + FP8 KV</td><td class="mono">9.8</td><td class="mono">1.61×</td><td>Decode bandwidth</td></tr>
+        <tr class="hl"><td>SGLang · FP8 + FP8 KV</td><td class="mono">10.3</td><td class="mono">1.61×</td><td>Decode bandwidth</td></tr>
+        <tr><td>vLLM · AWQ-INT4</td><td class="mono">8.7</td><td class="mono">1.43×</td><td>Prefill compute (BF16 GEMMs)</td></tr>
+        <tr><td>SGLang · AWQ-INT4</td><td class="mono">8.9</td><td class="mono">1.39×</td><td>Prefill compute (BF16 GEMMs)</td></tr>
+      </table>
+    </div>
+    <p data-a style="--d:4">Read the constraint column: quantization did not just speed things up, it <strong>moved the bottleneck</strong>. BF16 dies on KV capacity; FP8's doubled pool survives the burst and the fleet becomes bandwidth-bound — which is what Chapter 7's parallelism math will assume.</p>
+  </section>
+
+  <!-- 17 COST -->
+  <section class="slide">
+    <p class="kicker" data-a>Economics · dollars</p>
+    <h2 data-a style="--d:1">From goodput to $/1M tokens</h2>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:2">
+        <h3>The conversion, stated once</h3>
+        <div class="code">node cost        = 4 × H100 @ $2.40/GPU-hr (reserved) = $9.60/hr
+tokens per req   = tenant mix avg ≈ 1,180 (in + out, frozen trace)
+$/1M tokens      = $9.60 ÷ (goodput × 3600 × 1,180 ÷ 1e6)</div>
+        <p style="margin-top:10px">Every assumption is on the slide because every one of them is contestable. Change the GPU price or the mix in the workbook — the <em>ratios</em> between cells are the durable result.</p>
+      </div>
+      <div class="card" data-a style="--d:3">
+        <h3>Cost per 1M tokens, example run</h3>
+        <div class="bar-row"><span>BF16 (pooled)</span><div class="bar"><i data-w="100%"></i></div><span class="v">$0.36</span></div>
+        <div class="bar-row"><span>AWQ-INT4</span><div class="bar"><i class="gold" data-w="70%"></i></div><span class="v">$0.25</span></div>
+        <div class="bar-row"><span>FP8 + FP8 KV</span><div class="bar"><i class="green" data-w="62%"></i></div><span class="v">$0.22</span></div>
+        <p style="font-size:.85rem">Or inverted: at a fixed fleet, FP8 serves ≈ 61% more in-SLO traffic for the same spend. Whether you take that as cost-out or headroom is a business decision; the measurement is identical.</p>
+      </div>
+    </div>
+    <div class="note" data-a style="--d:4">The number that never appears in vendor decks: <em>cost per 1M tokens at SLO</em>, not at peak throughput. Peak-rate costing flatters exactly the configurations that collapse under burst.</div>
+  </section>
+
+  <!-- 18 INTERACTIVE EXPLORER -->
+  <section class="slide">
+    <p class="kicker" data-a>Try it · precision explorer</p>
+    <h2 data-a style="--d:1">Explore the trade space</h2>
+    <p data-a style="--d:2">Pick an engine and a precision. Values are the example-run cells from slides 15–17, including the quality gate.</p>
+    <div class="grid g2">
+      <div class="card" data-a style="--d:3">
+        <h3>Engine</h3>
+        <div class="seg" id="engSeg">
+          <button class="on" data-eng="vllm">vLLM</button>
+          <button data-eng="sglang">SGLang</button>
+        </div>
+        <h3>Precision</h3>
+        <div class="seg" id="precSeg">
+          <button data-prec="bf16">BF16</button>
+          <button class="on" data-prec="fp8">FP8 W8A8 + FP8 KV</button>
+          <button data-prec="awq">AWQ-INT4 (matched)</button>
+          <button data-prec="awqhub">AWQ-INT4 (hub ckpt)</button>
+        </div>
+        <p style="font-size:.85rem">The hub-checkpoint row is in the explorer on purpose: it is the cell teams actually deploy when they skip calibration.</p>
+      </div>
+      <div class="card" data-a style="--d:4" aria-live="polite">
+        <div class="grid g2" style="gap:10px">
+          <div><div class="num" id="xWeights">70 GB</div><p>weights total</p></div>
+          <div><div class="num" id="xKV">0.156 <small>MiB/tok</small></div><p>KV bytes / token</p></div>
+          <div><div class="num" id="xGood">9.8 <small>req/s</small></div><p>goodput at SLO</p></div>
+          <div><div class="num" id="xCost">$0.22</div><p>per 1M tokens</p></div>
+          <div><div class="num" id="xChat">−0.2</div><p>chat Δ (pts)</p></div>
+          <div><div class="num" id="xDoc">−0.7</div><p>doc QA Δ (pts)</p></div>
+        </div>
+        <p class="verdict" id="xVerdict" style="margin-top:14px">Gate: PASS — ship candidate.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 19 DECISION TABLE -->
+  <section class="slide">
+    <p class="kicker" data-a>Deliverable · precision-decision.md</p>
+    <h2 data-a style="--d:1">The decision table: engine × precision</h2>
+    <div class="card" data-a style="--d:2">
+      <table>
+        <tr><th>Cell</th><th>Quality Δ (worst slice)</th><th>Goodput</th><th>$/1M tok</th><th>Decision</th></tr>
+        <tr><td>vLLM · BF16</td><td class="mono">0 (reference)</td><td class="mono">6.1 req/s</td><td class="mono">$0.37</td><td>Fallback / golden reference</td></tr>
+        <tr><td>SGLang · BF16</td><td class="mono">0 (reference)</td><td class="mono">6.4 req/s</td><td class="mono">$0.35</td><td>Fallback / golden reference</td></tr>
+        <tr class="hl"><td>vLLM · FP8 + FP8 KV</td><td class="mono">−1.4</td><td class="mono">9.8 req/s</td><td class="mono">$0.23</td><td><strong>Ship</strong> — best cost, gate passes</td></tr>
+        <tr class="hl"><td>SGLang · FP8 + FP8 KV</td><td class="mono">−1.3</td><td class="mono">10.3 req/s</td><td class="mono">$0.22</td><td><strong>Ship</strong> — best goodput overall</td></tr>
+        <tr><td>vLLM · AWQ-INT4 matched</td><td class="mono">−1.8</td><td class="mono">8.7 req/s</td><td class="mono">$0.26</td><td>Ship if memory-bound (multi-model node)</td></tr>
+        <tr><td>SGLang · AWQ-INT4 matched</td><td class="mono">−2.3</td><td class="mono">8.9 req/s</td><td class="mono">$0.25</td><td>Hold: needle slice fails gate</td></tr>
+        <tr><td>Any · AWQ-INT4 hub</td><td class="mono">−6.8</td><td class="mono">—</td><td class="mono">—</td><td>Rejected at the quality gate</td></tr>
+      </table>
+    </div>
+    <p data-a style="--d:3">The table is the artifact. Every future model, precision, or engine upgrade re-runs the same six cells and replaces the numbers — the <em>shape</em> of the decision never changes.</p>
+  </section>
+
+  <!-- 20 CLOSING -->
+  <section class="slide">
+    <p class="kicker" data-a>Decision</p>
+    <h2 data-a style="--d:1">Quantization is a measurement, not a setting</h2>
+    <div class="grid g3">
+      <div class="card" data-a style="--d:2"><h3>1 · Separate the three decisions</h3><p>Weights, activations, KV. Each has its own speed mechanism, quality risk, and engine flag. Never accept a single “quantized: yes” as a deployment description.</p></div>
+      <div class="card" data-a style="--d:3"><h3>2 · Gate on the tail, price on goodput</h3><p>Ship decisions come from worst-slice quality and at-SLO economics. Averages — perplexity, peak throughput — are how bad configurations get promoted.</p></div>
+      <div class="card" data-a style="--d:4"><h3>3 · Own your calibration</h3><p>The checkpoint is a bet on a data distribution. Make the bet yourself, version it, and re-make it when the traffic changes.</p></div>
+    </div>
+    <div class="card" data-a style="--d:5">
+      <h3>For this workload, the answer</h3>
+      <p><strong>FP8 W8A8 with FP8 KV on either engine</strong>: worst slice −1.4 pts, 1.61× BF16 goodput, $0.22–0.23 per 1M tokens. AWQ-INT4 stays in the toolbox for memory-bound deployments — with in-house calibration, or not at all.</p>
+    </div>
+    <div class="foot" data-a style="--d:6"><span>Presented by Saloni Garg</span><span>Next: Chapter 7 — Parallelism and Scale-Out, where the FP8 fleet meets the second node.</span></div>
+  </section>
+
+  </div>
+  <nav class="controls" aria-label="Slide navigation">
+    <button class="btn" id="prevBtn">← Prev</button>
+    <div class="dots" id="dots" role="tablist" aria-label="Slides"></div>
+    <span class="count" id="count">1 / 20</span>
+    <button class="btn" id="nextBtn">Next →</button>
+  </nav>
+</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var dots=document.getElementById('dots');
+  var count=document.getElementById('count');
+  var prog=document.getElementById('prog');
+  var prev=document.getElementById('prevBtn'), next=document.getElementById('nextBtn');
+  var cur=0;
+  slides.forEach(function(_,i){
+    var d=document.createElement('button'); d.className='dot'; d.setAttribute('aria-label','Go to slide '+(i+1));
+    d.addEventListener('click',function(){go(i)}); dots.appendChild(d);
+  });
+  var dotEls=[].slice.call(dots.children);
+  function animateBars(slide){
+    slide.querySelectorAll('.bar i').forEach(function(b){ b.style.width='0'; requestAnimationFrame(function(){ requestAnimationFrame(function(){ b.style.width=b.getAttribute('data-w'); }); }); });
+  }
+  function go(i){
+    if(i<0||i>=slides.length) return;
+    slides[cur].classList.remove('active'); slides[cur].classList.toggle('prev', i<cur);
+    cur=i;
+    slides[cur].classList.add('active'); slides[cur].scrollTop=0;
+    dotEls.forEach(function(d,j){ d.classList.toggle('on', j===cur); });
+    count.textContent=(cur+1)+' / '+slides.length;
+    prog.style.width=((cur+1)/slides.length*100)+'%';
+    prev.disabled=cur===0; next.disabled=cur===slides.length-1;
+    animateBars(slides[cur]);
+  }
+  prev.addEventListener('click',function(){go(cur-1)});
+  next.addEventListener('click',function(){go(cur+1)});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '){ e.preventDefault(); go(cur+1); }
+    else if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
+    else if(e.key==='Home'){ go(0); } else if(e.key==='End'){ go(slides.length-1); }
+  });
+  var sx=null, sy=null, stage=document.getElementById('stage');
+  stage.addEventListener('touchstart',function(e){ sx=e.touches[0].clientX; sy=e.touches[0].clientY; },{passive:true});
+  stage.addEventListener('touchend',function(e){
+    if(sx===null) return;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>56 && Math.abs(dx)>Math.abs(dy)*1.4){ go(cur+(dx<0?1:-1)); }
+    sx=null;
+  },{passive:true});
+
+  /* Precision explorer */
+  var DATA={
+    vllm:{
+      bf16:{w:'140 GB',kv:'0.313 MiB/tok',g:'6.1 req/s',c:'$0.37',chat:'0.0',doc:'0.0',v:'Gate: PASS — this is the golden reference cell.'},
+      fp8:{w:'70 GB',kv:'0.156 MiB/tok',g:'9.8 req/s',c:'$0.23',chat:'−0.2',doc:'−0.7',v:'Gate: PASS — ship candidate. Best cost on vLLM.'},
+      awq:{w:'≈36 GB',kv:'0.313 MiB/tok',g:'8.7 req/s',c:'$0.26',chat:'−0.3',doc:'−0.9',v:'Gate: PASS — ship if memory-bound. Prefill stays BF16.'},
+      awqhub:{w:'≈36 GB',kv:'0.313 MiB/tok',g:'—',c:'—',chat:'−0.4',doc:'−2.8',v:'Gate: FAIL — needle slice −5.9, multi-hop −6.8. Rejected before economics.'}
+    },
+    sglang:{
+      bf16:{w:'140 GB',kv:'0.313 MiB/tok',g:'6.4 req/s',c:'$0.35',chat:'0.0',doc:'0.0',v:'Gate: PASS — this is the golden reference cell.'},
+      fp8:{w:'70 GB',kv:'0.156 MiB/tok',g:'10.3 req/s',c:'$0.22',chat:'−0.2',doc:'−0.6',v:'Gate: PASS — ship candidate. Best goodput and cost overall.'},
+      awq:{w:'≈36 GB',kv:'0.313 MiB/tok',g:'8.9 req/s',c:'$0.25',chat:'−0.4',doc:'−1.1',v:'Gate: FAIL on SGLang — needle slice −2.3 exceeds the −2.0 floor. Hold.'},
+      awqhub:{w:'≈36 GB',kv:'0.313 MiB/tok',g:'—',c:'—',chat:'−0.4',doc:'−2.8',v:'Gate: FAIL — needle slice −5.9, multi-hop −6.8. Rejected before economics.'}
+    }
+  };
+  var eng='vllm', prec='fp8';
+  function render(){
+    var d=DATA[eng][prec];
+    document.getElementById('xWeights').textContent=d.w;
+    document.getElementById('xKV').textContent=d.kv;
+    document.getElementById('xGood').textContent=d.g;
+    document.getElementById('xCost').textContent=d.c;
+    document.getElementById('xChat').textContent=d.chat;
+    document.getElementById('xDoc').textContent=d.doc;
+    var v=document.getElementById('xVerdict'); v.textContent=d.v;
+    v.style.color=d.v.indexOf('FAIL')>-1?'var(--bad)':'var(--good)';
+  }
+  function wire(id, fn){
+    var seg=document.getElementById(id);
+    seg.addEventListener('click',function(e){
+      var b=e.target.closest('button'); if(!b) return;
+      [].forEach.call(seg.children,function(x){x.classList.remove('on')});
+      b.classList.add('on'); fn(b); render();
+    });
+  }
+  wire('engSeg',function(b){ eng=b.getAttribute('data-eng'); });
+  wire('precSeg',function(b){ prec=b.getAttribute('data-prec'); });
+  render();
+
+  go(0);
+})();
+</script>
+</body>
+</html>
