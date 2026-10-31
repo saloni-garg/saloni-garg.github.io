@@ -133,11 +133,31 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 <section id="enroll">
   <h2>Enroll in a future course</h2>
   <p>New courses are being planned. Leave your email and pick the subject you want to learn, and you will be notified when enrollment opens for that course. Responses are sent directly to Saloni.</p>
-  <div class="enroll">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeYNF2eKL7lHk0vB_VabKsVZU2Uwe3IQZhwoBH6x-sp3qZMcA/viewform?embedded=true" width="100%" height="950" frameborder="0" marginheight="0" marginwidth="0" title="Enroll in a Future Course">Loading…</iframe>
-    <p class="note">Your email is only used to notify you about the course you pick. No spam, no sharing. If the form does not load above, <a href="https://forms.gle/q32qq92cZeuHQLt59">open it in a new page</a>.</p>
-  </div>
-  <p style="margin-top:16px"><a class="linkbtn" href="https://forms.gle/q32qq92cZeuHQLt59">Open the enrollment form</a></p>
+  <div id="enrolled-msg">Thank you. Your interest has been recorded. You will be notified when enrollment opens for your chosen subject.</div>
+  <form class="enroll" action="https://formsubmit.co/saloni8996@gmail.com" method="POST">
+    <input type="hidden" name="_subject" value="New enrollment interest: future course (saloni-garg.github.io)">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_next" value="https://saloni-garg.github.io/courses.html?enrolled=1#enroll">
+    <label for="enroll-email">Your email</label>
+    <input id="enroll-email" type="email" name="email" required placeholder="you@example.com" autocomplete="email">
+    <label for="enroll-subject">What do you want to learn?</label>
+    <select id="enroll-subject" name="subject" required>
+      <option value="" disabled selected>Choose a subject</option>
+      <option>Inference Engineering</option>
+      <option>RLHF and Alignment</option>
+      <option>Distributed Training</option>
+      <option>RAG (Retrieval-Augmented Generation)</option>
+      <option>AI Engineer Crash Course</option>
+      <option>Prompt Engineering</option>
+      <option>LLM Evaluation</option>
+      <option>GPU Programming and CUDA</option>
+      <option>Agentic AI Systems</option>
+      <option>Other / Suggest a topic</option>
+    </select>
+    <input class="linkbtn submit" type="submit" value="Notify me when enrollment opens">
+    <p class="note">Your email is only used to notify you about the course you pick. No spam, no sharing.</p>
+  </form>
   <p style="margin-top:20px">Want to see what a course looks like first? The current lecture slides are open:</p>
   <p><a class="linkbtn" href="courses/rag-lecture/">See current course slides</a> <a class="linkbtn" href="#lecture">Browse all lectures and courses</a></p>
 </section>
@@ -210,5 +230,11 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 </footer>
 
 </div>
+<script>
+if (new URLSearchParams(location.search).get('enrolled') === '1') {
+  var m = document.getElementById('enrolled-msg');
+  if (m) m.style.display = 'block';
+}
+</script>
 </body>
 </html>
