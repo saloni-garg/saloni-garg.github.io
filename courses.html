@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>Courses | Saloni Garg</title>
-<meta name="description" content="Lecture and course slides by Saloni Garg: a Virginia Tech distinguished lecture on prompt engineering for RAG, and the LLM Evals From Zero course chapters.">
+<meta name="description" content="Lecture and course slides by Saloni Garg: a Virginia Tech distinguished lecture on prompt engineering for RAG, the LLM Evals From Zero course, and the vLLM vs SGLang production serving course.">
 <link rel="icon" href="https://github.com/saloni-garg.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -127,7 +127,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 <div class="head">
   <h1>Courses</h1>
   <p class="title">Lectures and course slides</p>
-  <p class="summary">Slide decks from invited lectures and from the LLM Evals From Zero course. Each deck is a self-contained HTML presentation; use the arrow keys to move through the slides.</p>
+  <p class="summary">Slide decks from invited lectures and from two courses: LLM Evals From Zero and vLLM vs SGLang: Production Serving, Measured. Each deck is a self-contained HTML presentation; use the arrow keys to move through the slides.</p>
 </div>
 
 <section id="enroll">
@@ -221,6 +221,58 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
       <h3><a href="courses/llm-evals-chapter-9/">Chapter 9: After the Merge</a></h3>
       <p>Online evaluation, drift, and maintenance: production sampling, shadow and canary evaluation, provider fingerprinting, and the eval health dashboard.</p>
       <p><a class="linkbtn sm" href="courses/llm-evals-chapter-9/">View slides</a></p>
+    </li>
+  </ul>
+</section>
+
+<section id="vllm-sglang">
+  <h2><span class="no">03</span>vLLM vs SGLang: Production Serving, Measured</h2>
+  <p>A nine-chapter course on serving LLMs in production: one workload (Llama-3.1-70B on 4x H100, with chat and document QA tenants under a fixed SLO contract) measured on both engines, from KV cache capacity math and batching to quantization, scale-out, speculative decoding, and fleet operations. 178 slides.</p>
+  <ul class="contrib">
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-1/">Chapter 1: The Serving Problem, In Numbers</a></h3>
+      <p>TTFT, TPOT, goodput versus peak throughput, and KV cache headroom. The request lifecycle priced stage by stage, and the workload and SLO contract the whole course is measured against.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-1/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-2/">Chapter 2: Two Engines, Two Architectures</a></h3>
+      <p>PagedAttention and block management versus RadixAttention: one request traced through both engines, both scheduler loops, and an architecture diff anchored to source files.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-2/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-3/">Chapter 3: The KV Cache Is Your Real Capacity Limit</a></h3>
+      <p>Bytes per token derived from the model config, concurrency ceilings per context length, prefix caching economics per tenant, and a working capacity calculator.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-3/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-4/">Chapter 4: Batching, Prefill, and the TTFT/TPOT Trade</a></h3>
+      <p>Roofline analysis of prefill and decode, long-prompt poisoning, and chunked prefill swept at three chunk sizes on the mixed two-tenant trace, ending in the tuning matrix.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-4/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-5/">Chapter 5: Benchmarking Without Lying To Yourself</a></h3>
+      <p>Open-loop Poisson replay versus closed-loop inflation, coordinated omission, cache state controlled between runs, and goodput as the headline metric for both engines.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-5/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-6/">Chapter 6: Quantization In Production: FP8 and AWQ</a></h3>
+      <p>Weights, activations, and KV cache as three separate quantization decisions: quality measured on golden task sets, silent kernel fallbacks, and cost per 1M tokens for every engine and precision cell.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-6/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-7/">Chapter 7: Parallelism and Scale-Out</a></h3>
+      <p>Tensor, pipeline, and data parallelism compared on the same GPU count, interconnect latency measured rather than assumed, and prefill/decode disaggregation priced per request.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-7/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-8/">Chapter 8: Speculative Decoding and Structured Output, Priced</a></h3>
+      <p>Acceptance rates measured per tenant slice, break-even curves against batch size, and the per-token cost of grammar-constrained decoding at production concurrency.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-8/">View slides</a></p>
+    </li>
+    <li>
+      <h3><a href="courses/vllm-sglang-chapter-9/">Chapter 9: Running It: SLOs, Autoscaling, Failure</a></h3>
+      <p>The metrics that page, the saturation order as load climbs, queue-wait autoscaling with cold-start accounting, failure drills, and the completed cost workbook.</p>
+      <p><a class="linkbtn sm" href="courses/vllm-sglang-chapter-9/">View slides</a></p>
     </li>
   </ul>
 </section>
