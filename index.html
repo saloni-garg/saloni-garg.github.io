@@ -313,9 +313,6 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <p class="ghead">Verifiers and evaluation tooling</p>
   <ul class="rows">
     <li><div><h3><a href="https://github.com/openenv/OpenEnv/pull/1477">openenv/OpenEnv</a></h3><p>"fix: stop awm code verifiers from passing on an untouched database." Over a thousand AWM code verifiers passed against a freshly seeded database; the fix adds a no-change guard. Test suite passing.</p><p class="tech">PR #1477</p></div></li>
-  </ul>
-  <p class="ghead">OpenAI and Anthropic</p>
-  <ul class="rows">
     <li><div><h3><a href="https://github.com/openai/human-eval/pull/72">openai/human-eval</a></h3><p>"Fix completions ending in a decorator replacing the test's check()." In the execution harness, a completion ending in a bare decorator could replace the test's own check function and pass without running; the fix isolates the test block.</p><p class="tech">PR #72</p></div></li>
     <li><div><h3><a href="https://github.com/anthropics/jacobian-lens/pull/21">anthropics/jacobian-lens</a></h3><p>"Raise in JacobianLens.save() when the storage dtype would turn finite entries into inf." Saving cast Jacobians to fp16 unchecked, silently turning large finite entries into infinity; the fix raises a clear error naming the layer.</p><p class="tech">PR #21</p></div></li>
   </ul>
