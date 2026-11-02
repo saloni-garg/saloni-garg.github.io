@@ -1,0 +1,106 @@
+# Saloni Garg - Full Public Profile
+
+> Saloni Garg - GPU optimization, RLHF, and multimodal inference engineering. Staff Machine Learning Engineer at Adobe Firefly, San Jose, CA.
+
+Source: https://saloni-garg.github.io/
+Last updated: 2026-11-01
+Contact: salonigarg2318@gmail.com | LinkedIn: https://www.linkedin.com/in/saloni-garg
+
+## Summary
+
+Saloni Garg is a Staff Machine Learning Engineer at Adobe (Firefly) in San Jose, CA. Her primary positioning is GPU optimization, RLHF, and multimodal inference engineering.
+
+She leads development of the post-training and RLHF pipelines for multimodal foundation models, supporting SFT, DPO, and reward model training, along with distributed GPU training and automated evaluation infrastructure at scale. She optimizes GPU training and inference for multimodal models in production, including video diffusion inference.
+
+She previously worked at Wayfair as a Senior ML Infrastructure Engineer in Mountain View, CA, and before that as a Founding ML Engineer at Brisko in Bengaluru, India. She is recipient of the 2026 CITRIS Award by UC Berkeley.
+
+Focus: GPU optimization (CUDA, Triton, kernel profiling, GPU utilization) / RLHF and post-training (SFT, DPO, RLVR, GRPO, reward models) / multimodal inference engineering (TensorRT, Dynamo, vLLM, SGLang, dynamic batching, latency and throughput) / distributed GPU training (PyTorch, FSDP, NCCL) / evaluation infrastructure.
+
+## Experience
+
+### Staff Machine Learning Engineer, Adobe (Firefly) - Jul 2025 to Present, San Jose, CA
+
+- Led development of the post-training and RLHF pipelines for multimodal foundation models, supporting SFT, DPO, and reward model training, with distributed GPU training using PyTorch, CUDA, FSDP, and NCCL.
+- Built distributed training and evaluation infrastructure for large-scale model iteration, model quality, reasoning, and safety.
+- Built RLHF preference data generation and curation pipelines for post-training and alignment.
+- Partnered with research scientists to productionize post-training algorithms for multimodal models, enabling reproducible large-scale experimentation and regular model releases.
+- Optimized video diffusion inference by profiling UNet, attention, VAE, and temporal modules, and by improving GPU execution, batching, and request scheduling for video generation workloads.
+- Note: Detailed employer metrics on the homepage are the site presentation as published by Saloni Garg. No salary, visa, or private employer data is included in this file.
+
+### Senior ML Infrastructure Engineer, Wayfair - Oct 2020 to Jul 2025, Mountain View, CA
+
+- Productized ML systems for search and recommendation, and optimized distributed model-serving pipelines for latency and throughput.
+- Developed high-throughput Python and C++ inference and feature-processing components.
+- Designed scalable offline and online inference pipelines and distributed benchmarking and performance-analysis tooling.
+
+### Founding ML Engineer, Brisko - Jul 2017 to Oct 2020, Bengaluru, India
+
+- Built the core voice AI and NLP stack from scratch: speech-to-text, intent classification, entity extraction, and dialogue understanding.
+- Developed and optimized real-time voice inference pipelines for conversational assistants.
+
+### Education
+
+- B.Tech, Computer Science and Engineering, The LNM Institute of Information Technology, Jaipur, India (LNMIIT).
+
+## Selected Work
+
+- AgentLab (2026): A reproducible laboratory for studying the scaling behavior of LLM agent organizations. Config-driven experiments, calibration gates, deterministic replay, and sealed, auditable results. Version 1.0 released publicly. https://saloni-garg.github.io/agentlab.html
+- gpu-train-debug (2026): RL environment for diagnosing GPU training failures, in Prime Intellect Verifiers format. Published on the Prime Intellect Hub and as a dataset on Hugging Face. https://huggingface.co/datasets/sluuu/gpu-train-debug
+- memfix (2026): Provenance-first, correctable memory layer for AI agents: source pointers, append-only log, tombstones, and an MCP server. MIT. https://github.com/saloni-garg/memfix
+- jev-max (2026): Browser agent for general web tasks: shadow DOM and iframe handling, canvas vision fallback, uploads, drag and drop, multi-tab support, MCP server, and a benchmark suite. MIT. https://github.com/saloni-garg/jev-max
+
+## Open Source Contributions
+
+Contributor to Ray and PyTorch. Recent upstream pull requests include:
+
+- GRPO uniform-reward group fix, sent to five codebases: verl, slime, OpenRLHF, SkyRL, EasyR1. When every response in a GRPO group earns the same reward, the advantage should be exactly zero; float32 group statistics invented a nonzero advantage instead.
+- Triton interpreter: fix for NaN and Inf handling in float conversions.
+- torch_tpu: two fixes for view decomposition.
+- OpenEnv: fix to stop code verifiers from passing on an untouched database.
+- OpenAI human-eval: fix so a completion ending in a decorator cannot replace the test check function.
+- Anthropic jacobian-lens: raise on save when the storage dtype would turn finite entries into infinity.
+- NVIDIA Dynamo: profiler fix for SGLang multinode placement spellings.
+
+Full list: https://saloni-garg.github.io/#oss
+
+## Publications and IP
+
+- The Compression Tax: An Audit of How Post-Training Quantization Redistributes Safety and Fairness Failures in Open Language Models. With Amit Sagtani. ACM FAccT 2027 submission. https://saloni-garg.github.io/compression-tax.html
+- Patent: A System and Method for Automated Drift Detection and Model Retraining in Machine Learning Pipelines. Indian Patent Office, 2025.
+- Patent: AI and Computer Vision-Based Animal Surveillance System. Indian Patent Office, 2024.
+- ECG-Lense: Benchmarking ML and DL Models on PTB-XL Dataset. IEEE, 2024.
+- Climate Change Analytics Using AI. IEEE ETNCC, 2024.
+- Book (not a primary positioning topic): RAG Artificial Intelligence: Retrieval-Augmented Generation in Generative AI, De Gruyter, 2026, with Amit Sagtani and Kamal Kant Hiran. DOI: https://doi.org/10.1515/9783112226780
+
+## Talks
+
+- AI Risk Summit 2026: KV-Cache as Attack Surface: Side Channels in Shared LLM Inference Infrastructure.
+- CloudX 2026: Token Spikes, Timeout Cascades, and Silent Failures: Debugging GenAI Systems in Production.
+- Vector Search Conference 2025: GPU or CPU? Optimizing Vector Search Infrastructure for Cost and Speed.
+- CloudX 2025: How to Build a Blameless Debugging Culture with Observability Tools.
+- NDC London 2024: Neural Style Transfer: The Art and Science of Generative AI.
+- BuildStuff Vilnius 2023, CloudX PRO 2023, Red Hat Summit Boston 2019, Linux App Summit Barcelona 2019, UseData Conf Moscow 2019, PyCon, ILP Summit.
+
+## Awards and Recognition
+
+- 2026 CITRIS Award by UC Berkeley (EDGE in Tech Athena Award, Early Career Leadership).
+- Adobe Employee Spot Bonus, 2026.
+- AI and Data Science Leader of the Year, 2025, WomenTech Global Awards (as listed on homepage).
+- AI for Good Impact Award, 2025 (as listed on homepage).
+- International Women in Open Source Award, 2019, Red Hat.
+- Google Venkat Panchapakesan Memorial Scholar.
+- Silicon Valley Fellowship.
+- Mozilla Open Leader, 2019. Founded MozForce, a community of young developers in India.
+
+## Skills Keywords for Matching
+
+GPU optimization, GPU kernel optimization, CUDA, Triton, GPU profiling, RLHF, Reinforcement Learning from Human Feedback, multimodal inference engineering, multimodal inference, inference optimization, LLM post-training, RLVR, GRPO, SFT, DPO, reward modeling, preference data, distributed GPU training, PyTorch, FSDP, NCCL, TensorRT, Dynamo, vLLM, SGLang, model serving, evaluation infrastructure, LLM evals, multimodal models, video diffusion, ML infrastructure, generative AI.
+
+## Links
+
+- Website: https://saloni-garg.github.io/
+- LinkedIn: https://www.linkedin.com/in/saloni-garg
+- GitHub: https://github.com/saloni-garg
+- Google Scholar: https://scholar.google.com/citations?user=-kidbB0AAAAJ
+- Hugging Face: https://huggingface.co/sluuu
+- OpenReview: https://openreview.net/profile?id=~Saloni_Garg3

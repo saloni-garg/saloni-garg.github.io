@@ -1,0 +1,56 @@
+# Saloni Garg
+
+> Saloni Garg - GPU optimization, RLHF, and multimodal inference engineering. Saloni Garg is a Staff Machine Learning Engineer at Adobe Firefly in San Jose, CA. Her core work is GPU optimization for large-scale training and inference, RLHF and post-training pipelines for multimodal foundation models, and multimodal inference engineering for text, image, and video models in production. Recipient of the 2026 CITRIS Athena Award by UC Berkeley.
+
+This file is the machine-readable index of Saloni Garg's public professional profile, for search engines, recruiter sourcing tools, and LLM agents. The full text version is at /llms-full.txt and a structured profile is at /profile.json. Only public information is included here.
+
+## Identity
+
+- Name: Saloni Garg
+- Title: Staff Machine Learning Engineer, Adobe Firefly
+- Location: San Jose, California, United States
+- Current employer: Adobe (Firefly)
+- Previous employers: Wayfair (Senior ML Infrastructure Engineer, Mountain View, CA), Brisko (Founding ML Engineer, Bengaluru, India)
+- Education: B.Tech, Computer Science and Engineering, The LNM Institute of Information Technology, Jaipur (LNMIIT)
+
+## Expertise for recruiter matching
+
+Primary positioning, in order: GPU optimization, RLHF, multimodal inference engineering.
+
+- GPU optimization: GPU kernel optimization and profiling, CUDA, Triton, PyTorch Profiler, NVIDIA Nsight Systems and Nsight Compute, CUDA Graphs, mixed precision, activation checkpointing, GPU utilization and memory optimization, distributed GPU training on large clusters with FSDP and NCCL
+- RLHF: Reinforcement Learning from Human Feedback, LLM post-training, SFT, DPO, RLVR, GRPO, reward model training, preference data generation and curation pipelines, alignment and post-training evaluation
+- Multimodal inference engineering: inference optimization for multimodal foundation models, video diffusion inference, UNet, attention, VAE and temporal module profiling, dynamic batching, request scheduling, latency and throughput optimization, TensorRT, Dynamo, vLLM, SGLang, model serving in production
+- Evaluation infrastructure: LLM evals, benchmarks, automated evaluation at scale, verifier robustness
+- ML infrastructure: model serving, feature pipelines, ML platforms, observability for GenAI systems in production
+
+## Core pages
+
+- [Homepage and full CV](https://saloni-garg.github.io/): Experience, selected work, open source contributions, publications, talks, awards, and contact
+- [AgentLab](https://saloni-garg.github.io/agentlab.html): A reproducible laboratory for studying the scaling behavior of LLM agent organizations. Version 1.0 released publicly
+- [The Compression Tax](https://saloni-garg.github.io/compression-tax.html): Audit of how post-training quantization redistributes safety and fairness failures in open language models, with Amit Sagtani. ACM FAccT 2027 submission
+- [Courses](https://saloni-garg.github.io/courses.html): LLM Evals From Zero and vLLM vs SGLang production serving
+
+## Profiles
+
+- [LinkedIn](https://www.linkedin.com/in/saloni-garg)
+- [GitHub](https://github.com/saloni-garg)
+- [Google Scholar](https://scholar.google.com/citations?user=-kidbB0AAAAJ)
+- [Hugging Face](https://huggingface.co/sluuu)
+- [OpenReview](https://openreview.net/profile?id=~Saloni_Garg3)
+
+## Selected work
+
+- [gpu-train-debug](https://huggingface.co/datasets/sluuu/gpu-train-debug): RL environment for diagnosing GPU training failures, in Prime Intellect Verifiers format
+- [memfix](https://github.com/saloni-garg/memfix): Provenance-first, correctable memory layer for AI agents, with an MCP server
+- [jev-max](https://github.com/saloni-garg/jev-max): Browser agent for general web tasks, with an MCP server and benchmark suite
+
+## Contact
+
+- Email: salonigarg2318@gmail.com
+- Preferred contact: LinkedIn or email above
+- Location for roles: San Jose / Bay Area, California
+
+## Optional
+
+- [Full text profile for LLMs](https://saloni-garg.github.io/llms-full.txt)
+- [Structured profile JSON](https://saloni-garg.github.io/profile.json)
