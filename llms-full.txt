@@ -55,6 +55,7 @@ Contributor to Ray and PyTorch. Recent upstream pull requests include:
 
 - GRPO uniform-reward group fix, sent to five codebases: verl, slime, OpenRLHF, SkyRL, EasyR1. When every response in a GRPO group earns the same reward, the advantage should be exactly zero; float32 group statistics invented a nonzero advantage instead. All five pull requests open as of November 2026.
 - Triton interpreter: fix for NaN and Inf handling in float conversions. Merged into triton-lang/triton on 30 October 2026 (PR #12489).
+- torch_tpu: two fixes for view decomposition, both landed on main via Copybara (PR #5847 on 29 October 2026, commit 5731cd51; PR #5846 on 30 October 2026, commit dbdccfaf). GitHub shows these PRs as closed with merged=false because Copybara closes the PR when it imports the change to main. Closed here means landed, not rejected.
 - AllenAI open-instruct: fix for the R1-style format reward gate, which compared scores against a literal 1 instead of the configured reward scale (PR #2134, open).
 - OpenEnv: fix to stop code verifiers from passing on an untouched database.
 - OpenAI human-eval: fix so a completion ending in a decorator cannot replace the test check function.

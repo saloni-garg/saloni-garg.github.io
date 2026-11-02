@@ -288,7 +288,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 
 <section id="oss">
   <h2><span class="no">03</span>Open source contributions</h2>
-  <p style="color:var(--soft)">Pull requests I have sent upstream, grouped by the bug or feature. Statuses as of November 2026; every title links to the PR itself. One has merged so far: the Triton interpreter fix below.</p>
+  <p style="color:var(--soft)">Pull requests I have sent upstream, grouped by the bug or feature. Statuses as of November 2026; every title links to the PR itself. Three have landed so far: the Triton interpreter fix (merged), and both torch_tpu fixes (landed on main via Copybara, which closes the GitHub PR without a merged flag).</p>
   <p class="ghead">One bug, five codebases: uniform-reward GRPO groups</p>
   <p style="color:var(--soft)">In GRPO training, when every response in a group earns the same reward, the advantage should be exactly zero. Float32 group statistics invented a nonzero one instead. I found the bug class, fixed it, and sent the same fix upstream five times:</p>
   <ul class="rows">
@@ -302,8 +302,10 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <ul class="rows">
     <li><div><h3><a href="https://github.com/allenai/open-instruct/pull/2134">allenai/open-instruct</a></h3><p>"Fix R1-style format reward gate for non-default reward scales." The format reward gate compared scores against a literal 1 instead of the configured reward scale, so non-default scales were gated wrong; the fix compares against the configured scale, with tests.</p><p class="tech">PR #2134</p></div></li>
   </ul>
-<p class="ghead">Compilers and Triton</p>
+<p class="ghead">Compilers, TPU, and Triton</p>
   <ul class="rows">
+    <li><div><h3><a href="https://github.com/google-pytorch/torch_tpu/pull/5846">google-pytorch/torch_tpu</a></h3><p>"Fix view decomposition returning a base larger than the view storage." The view decomposition fallback could build a base tensor larger than the storage it views; the fix re-checks the base and declines the decomposition. <b>Landed on main via Copybara, 30 October 2026.</b></p><p class="tech">PR #5846 - landed</p></div></li>
+    <li><div><h3><a href="https://github.com/google-pytorch/torch_tpu/pull/5847">google-pytorch/torch_tpu</a></h3><p>"Fix view decomposition IndexError on 0-d views with a storage offset." Zero-dimensional views with a storage offset crashed the decomposition; the fix declines it cleanly instead. <b>Landed on main via Copybara, 29 October 2026.</b></p><p class="tech">PR #5847 - landed</p></div></li>
     <li><div><h3><a href="https://github.com/triton-lang/triton/pull/12489">triton-lang/triton</a></h3><p>"[Interpreter] Fix NaN/Inf handling in interpreter float conversions." The Triton interpreter's float conversions mishandled NaN and infinity; fixed with regression tests. <b>Merged 30 October 2026.</b></p><p class="tech">PR #12489 - merged</p></div></li>
   </ul>
   <p class="ghead">Verifiers and evaluation tooling</p>
