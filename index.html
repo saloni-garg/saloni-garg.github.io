@@ -301,6 +301,8 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <p class="ghead">RLHF reward correctness</p>
   <ul class="rows">
     <li><div><h3><a href="https://github.com/allenai/open-instruct/pull/2134">allenai/open-instruct</a></h3><p>"Fix R1-style format reward gate for non-default reward scales." The format reward gate compared scores against a literal 1 instead of the configured reward scale, so non-default scales were gated wrong; the fix compares against the configured scale, with tests.</p><p class="tech">PR #2134</p></div></li>
+    <li><div><h3><a href="https://github.com/allenai/open-instruct/pull/2159">allenai/open-instruct</a></h3><p>"Fix: Key local dataset directory caches on directory content, not path." Dataset caches for a local directory of shards were keyed on the directory path alone, so rewriting the shards in place silently trained on stale rows; the fix keys the cache on a hash of the directory contents, with tests.</p><p class="tech">PR #2159</p></div></li>
+    <li><div><h3><a href="https://github.com/NovaSky-AI/SkyRL/pull/2603">NovaSky-AI/SkyRL</a></h3><p>"[fix][arctic_rl] detect limit at the top level only when capping bird reward queries." The arctic_rl BIRD reward skipped its 5000-row cap whenever the text LIMIT appeared anywhere in a query, including inside a subquery or a comment; the fix counts only a top level LIMIT clause, with tests.</p><p class="tech">PR #2603</p></div></li>
   </ul>
 <p class="ghead">Compilers, TPU, and Triton</p>
   <ul class="rows">
@@ -320,6 +322,9 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
     <p class="ghead">Inference serving</p>
   <ul class="rows">
     <li><div><h3><a href="https://github.com/ai-dynamo/dynamo/pull/17502">ai-dynamo/dynamo</a></h3><p>"fix(profiler): recognize SGLang --tp-size/--pp-size spellings in multinode placement." The profiler sized SGLang workers launched with the short size spellings as single-GPU instances and stripped their multinode placement; the fix teaches the parser those spellings, with the first unit tests for set_multinode_config.</p><p class="tech">PR #17502</p></div></li>
+    <li><div><h3><a href="https://github.com/ai-dynamo/dynamo/pull/17801">ai-dynamo/dynamo</a></h3><p>"fix(operator): reject backendFramework resolution failures at admission." Admission validation for disaggregated serving configs now resolves each component's backend framework the way the renderer does and rejects what it cannot resolve, including mixed worker frameworks across a graph, with tests.</p><p class="tech">PR #17801</p></div></li>
+    <li><div><h3><a href="https://github.com/sgl-project/sglang/pull/47877">sgl-project/sglang</a></h3><p>"[Feat] metrics: expose detokenizer worker processing time." Adds a processing time histogram for the detokenizer worker (sglang:detokenizer_processing_seconds), one slice of the metric coverage umbrella in issue #43304, with tests.</p><p class="tech">PR #47877</p></div></li>
+    <li><div><h3><a href="https://github.com/NVIDIA/Model-Optimizer/pull/3167">NVIDIA/Model-Optimizer</a></h3><p>"fix static nvfp4 fake quant for unpromoted weight quantizers in TensorQuantizer." Static NVFP4 fake quantization in TensorQuantizer raised NotImplementedError for weight quantizers; the fix routes it through the static blockwise fake quant path, with tests.</p><p class="tech">PR #3167</p></div></li>
   </ul>
 <p style="color:var(--soft);margin-top:14px">Also open: a listing PR adding memfix to <a href="https://github.com/punkpeye/awesome-mcp-servers/pull/16020">punkpeye/awesome-mcp-servers</a> (PR #16020).</p>
 </section>

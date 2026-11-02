@@ -3,7 +3,7 @@
 > Saloni Garg - GPU optimization, RLHF, and multimodal inference engineering. Staff Machine Learning Engineer at Adobe Firefly, San Jose, CA.
 
 Source: https://saloni-garg.github.io/
-Last updated: 2026-11-01
+Last updated: 2026-11-02
 Contact: salonigarg2318@gmail.com | LinkedIn: https://www.linkedin.com/in/saloni-garg
 
 ## Summary
@@ -57,10 +57,15 @@ Contributor to Ray and PyTorch. Recent upstream pull requests include:
 - Triton interpreter: fix for NaN and Inf handling in float conversions. Merged into triton-lang/triton on 30 October 2026 (PR #12489).
 - torch_tpu: two fixes for view decomposition, both landed on main via Copybara (PR #5847 on 29 October 2026, commit 5731cd51; PR #5846 on 30 October 2026, commit dbdccfaf). GitHub shows these PRs as closed with merged=false because Copybara closes the PR when it imports the change to main. Closed here means landed, not rejected.
 - AllenAI open-instruct: fix for the R1-style format reward gate, which compared scores against a literal 1 instead of the configured reward scale (PR #2134, open).
+- AllenAI open-instruct: fix for local dataset directory caches, which were keyed on the directory path alone, so rewriting shards in place silently trained on stale rows; the cache is now keyed on a hash of the directory contents (PR #2159, open).
+- SkyRL: fix for the arctic_rl BIRD reward cap, which was skipped whenever the text LIMIT appeared anywhere in the query; only a top level LIMIT clause now suppresses the cap (PR #2603, open).
 - OpenEnv: fix to stop code verifiers from passing on an untouched database.
 - OpenAI human-eval: fix so a completion ending in a decorator cannot replace the test check function.
 - Anthropic jacobian-lens: raise on save when the storage dtype would turn finite entries into infinity.
 - NVIDIA Dynamo: profiler fix for SGLang multinode placement spellings.
+- NVIDIA Dynamo: admission validation fix, so disaggregated serving configs whose backend framework cannot be resolved are rejected at admission, including mixed worker frameworks across a graph (PR #17801, open).
+- SGLang: detokenizer worker processing time histogram (sglang:detokenizer_processing_seconds), one slice of the metric coverage umbrella in issue #43304 (PR #47877, open).
+- NVIDIA Model-Optimizer: fix for static NVFP4 fake quantization in TensorQuantizer, routed through the static blockwise fake quant path instead of raising NotImplementedError (PR #3167, open).
 
 Full list: https://saloni-garg.github.io/#oss
 
