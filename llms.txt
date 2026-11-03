@@ -28,6 +28,7 @@ Primary positioning, in order: GPU optimization, RLHF, multimodal inference engi
 - [Homepage and full CV](https://saloni-garg.github.io/): Experience, selected work, open source contributions, publications, talks, awards, and contact
 - [AgentLab](https://saloni-garg.github.io/agentlab.html): A reproducible laboratory for studying the scaling behavior of LLM agent organizations. Version 1.0 released publicly
 - [The Compression Tax](https://saloni-garg.github.io/compression-tax.html): Audit of how post-training quantization redistributes safety and fairness failures in open language models, with Amit Sagtani. ACM FAccT 2027 submission. Full paper (PDF): https://saloni-garg.github.io/compression-tax.pdf
+- [ClaimWork](https://saloni-garg.github.io/claimwork.pdf): A reproducible evaluation platform for procedural AI systems; first benchmark is CO-97 denial management in US medical billing. Status paper, 2026
 - [Courses](https://saloni-garg.github.io/courses.html): LLM Evals From Zero and vLLM vs SGLang production serving
 
 ## Profiles
