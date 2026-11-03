@@ -44,6 +44,7 @@ Focus: GPU optimization (CUDA, Triton, kernel profiling, GPU utilization) / RLHF
 
 ## Selected Work
 
+- Memline (2026): Trustworthy memory layer for AI applications: a grounding write gate that rejects memories the source does not support, temporal validity with full revision history, explainable retrieval, and Memory Health reporting. Ships a /v1 REST API, Python and TypeScript SDKs, an MCP server, and a migration and audit tool for existing memory stores. Apache 2.0. https://github.com/saloni-garg/memline
 - AgentLab (2026): A reproducible laboratory for studying the scaling behavior of LLM agent organizations. Config-driven experiments, calibration gates, deterministic replay, and sealed, auditable results. Version 1.0 released publicly. https://saloni-garg.github.io/agentlab.html
 - gpu-train-debug (2026): RL environment for diagnosing GPU training failures, in Prime Intellect Verifiers format. Published on the Prime Intellect Hub and as a dataset on Hugging Face. https://huggingface.co/datasets/sluuu/gpu-train-debug
 - memfix (2026): Provenance-first, correctable memory layer for AI agents: source pointers, append-only log, tombstones, and an MCP server. MIT. https://github.com/saloni-garg/memfix
