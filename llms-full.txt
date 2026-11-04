@@ -74,6 +74,7 @@ Full list: https://saloni-garg.github.io/#oss
 
 - The Compression Tax: An Audit of How Post-Training Quantization Redistributes Safety and Fairness Failures in Open Language Models. With Amit Sagtani. ACM FAccT 2027 submission. https://saloni-garg.github.io/compression-tax.html Full paper (PDF): https://saloni-garg.github.io/compression-tax.pdf
 - ClaimWork: A Reproducible Evaluation Platform for Procedural AI Systems. Status paper, 2026. https://saloni-garg.github.io/claimwork.pdf
+- Phantom Advantages: Float32 Group Statistics Violate the GRPO Estimator Contract. Working paper, 2026. https://saloni-garg.github.io/phantom-advantages.pdf
 - Patent: A System and Method for Automated Drift Detection and Model Retraining in Machine Learning Pipelines. Indian Patent Office, 2025.
 - Patent: AI and Computer Vision-Based Animal Surveillance System. Indian Patent Office, 2024.
 - ECG-Lense: Benchmarking ML and DL Models on PTB-XL Dataset. IEEE, 2024.
