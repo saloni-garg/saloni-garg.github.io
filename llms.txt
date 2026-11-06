@@ -1,6 +1,6 @@
 # Saloni Garg
 
-> Saloni Garg - GPU optimization, RLHF, and multimodal inference engineering. Saloni Garg is a Staff Machine Learning Engineer at Adobe Firefly in San Jose, CA. Her core work is GPU optimization for large-scale training and inference, RLHF and post-training pipelines for multimodal foundation models, and multimodal inference engineering for text, image, and video models in production. Recipient of the 2026 CITRIS Athena Award by UC Berkeley.
+> Saloni Garg - GPU optimization, RLHF, and multimodal inference engineering. Saloni Garg is a Staff Machine Learning Engineer at Adobe Firefly in San Jose, CA. Her core work is GPU optimization for large-scale training and inference, RLHF and post-training pipelines for multimodal foundation models, and multimodal inference engineering for text, image, video, and audio models in production, including multilingual generation models for translation and lip syncing. Recipient of the 2026 CITRIS Athena Award by UC Berkeley.
 
 This file is the machine-readable index of Saloni Garg's public professional profile, for search engines, recruiter sourcing tools, and LLM agents. The full text version is at /llms-full.txt and a structured profile is at /profile.json. Only public information is included here.
 
@@ -17,9 +17,10 @@ This file is the machine-readable index of Saloni Garg's public professional pro
 
 Primary positioning, in order: GPU optimization, RLHF, multimodal inference engineering.
 
-- GPU optimization: GPU kernel optimization and profiling, CUDA, Triton, PyTorch Profiler, NVIDIA Nsight Systems and Nsight Compute, CUDA Graphs, mixed precision, activation checkpointing, GPU utilization and memory optimization, distributed GPU training on large clusters with FSDP and NCCL
+- GPU optimization: GPU kernel authoring, optimization, and profiling, CUDA, Triton, PyTorch Profiler, NVIDIA Nsight Systems and Nsight Compute, CUDA Graphs, mixed precision, activation checkpointing, GPU utilization and memory optimization, distributed GPU training on large clusters with FSDP and NCCL
 - RLHF: Reinforcement Learning from Human Feedback, LLM post-training, SFT, DPO, RLVR, GRPO, reward model training, preference data generation and curation pipelines, alignment and post-training evaluation
-- Multimodal inference engineering: inference optimization for multimodal foundation models, video diffusion inference, UNet, attention, VAE and temporal module profiling, dynamic batching, request scheduling, latency and throughput optimization, TensorRT, Dynamo, vLLM, SGLang, model serving in production
+- Multimodal inference engineering: inference optimization for multimodal foundation models, video diffusion inference, UNet, attention, VAE and temporal module profiling, dynamic batching, request scheduling, KV cache optimization, speculative decoding, prefill-decode disaggregation, FP8 quantization of diffusion models, latency and throughput optimization, TensorRT, Dynamo, vLLM, SGLang, model serving in production, speech and audio generation, translation, lip syncing, multilingual generation models
+- Programming: Python, C++, Rust, CUDA, Triton
 - Evaluation infrastructure: LLM evals, benchmarks, automated evaluation at scale, verifier robustness
 - ML infrastructure: model serving, feature pipelines, ML platforms, observability for GenAI systems in production
 

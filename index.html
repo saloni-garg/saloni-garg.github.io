@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light">
 <title>Saloni Garg | GPU Optimization, RLHF, Multimodal Inference Engineering - Adobe Firefly</title>
 <meta name="description" content="Saloni Garg - GPU optimization, RLHF, and multimodal inference engineering. Staff Machine Learning Engineer at Adobe Firefly in San Jose, CA. GPU optimization for large-scale training and inference, RLHF and post-training pipelines (SFT, DPO, reward models) for multimodal foundation models, and multimodal inference engineering for text, image, and video models in production. 2026 CITRIS Athena Award by UC Berkeley.">
-<meta name="keywords" content="Saloni Garg, GPU optimization, GPU kernel optimization, RLHF, multimodal inference engineering, multimodal inference, inference optimization, LLM post-training, RLVR, GRPO, SFT, DPO, reward models, distributed GPU training, CUDA, Triton, TensorRT, Dynamo, vLLM, SGLang, FSDP, Adobe Firefly, San Jose">
+<meta name="keywords" content="Saloni Garg, GPU optimization, GPU kernel optimization, RLHF, multimodal inference engineering, multimodal inference, inference optimization, LLM post-training, RLVR, GRPO, SFT, DPO, reward models, distributed GPU training, CUDA, Triton, TensorRT, Dynamo, vLLM, SGLang, FSDP, KV cache optimization, speculative decoding, prefill-decode disaggregation, Rust, multilingual generation models, Adobe Firefly, San Jose">
 <meta property="og:title" content="Saloni Garg | GPU Optimization, RLHF, Multimodal Inference Engineering">
 <meta property="og:description" content="Staff Machine Learning Engineer at Adobe Firefly, San Jose. GPU optimization, RLHF and post-training for multimodal foundation models, and multimodal inference engineering in production.">
 <meta property="og:type" content="profile">
@@ -78,6 +78,12 @@
     "SGLang",
     "LLM evaluation infrastructure",
     "Multimodal foundation models",
+    "KV cache optimization",
+    "Speculative decoding",
+    "Prefill-decode disaggregation",
+    "Rust",
+    "Multilingual generation models",
+    "Speech and audio generation",
     "Video diffusion inference"
    ],
    "award": [
@@ -245,7 +251,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <p class="loc">San Jose, California</p>
   <p class="summary">Saloni Garg is a <b>Staff Machine Learning Engineer at Adobe (Firefly)</b> in San Jose, CA. She <b>leads development of the post-training and RLHF pipelines for multimodal foundation models</b>, supporting SFT, DPO, and reward model training, along with distributed training and automated evaluation infrastructure at scale.</p>
   <p class="summary">She previously worked at <b>Wayfair</b> as a Senior ML Infrastructure Engineer in Mountain View, CA, and before that as a Founding ML Engineer at <b>Brisko</b> in Bengaluru, India. She is co-author of a textbook on <b>retrieval-augmented generation</b> (De Gruyter, 2026) and recipient of the <b>2026 CITRIS Award by UC Berkeley</b>.</p>
-  <p class="focus"><span class="k">Focus:</span> post-training and RLHF (SFT, DPO, reward models) / distributed GPU training (PyTorch, CUDA, FSDP, NCCL) / evaluation infrastructure / inference optimization / ML infrastructure</p>
+  <p class="focus"><span class="k">Focus:</span> post-training and RLHF (SFT, DPO, reward models) / distributed GPU training (PyTorch, CUDA, FSDP, NCCL) / evaluation infrastructure / inference optimization (KV cache, speculative decoding, prefill-decode disaggregation) / ML infrastructure</p>
   <p class="links">
     <a href="https://www.linkedin.com/in/saloni-garg">LinkedIn</a> &nbsp;/&nbsp;
     <a href="https://github.com/saloni-garg">GitHub</a> &nbsp;/&nbsp;
@@ -266,10 +272,12 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
     <p>- Developed automated evaluation infrastructure spanning 50+ benchmarks and 10,000+ model evaluations per day, enabling rapid iteration on model quality, reasoning, and safety.</p>
     <p>- Built RLHF preference data generation and curation pipelines processing 100M+ model responses and producing 20M+ preference pairs for post-training and alignment.</p>
     <p>- Improved multi-node training efficiency by increasing GPU utilization from 58% to 86%, reducing GPU compute cost by 40% while improving cluster reliability.</p>
-    <p>- Partnered with research scientists to productionize post-training algorithms for multimodal models ranging from 7B to 30B parameters, enabling weekly model releases and reproducible large-scale experimentation.</p>
+    <p>- Partnered with research scientists to productionize post-training algorithms for multimodal models ranging up to 80B parameters, enabling weekly model releases and reproducible large-scale experimentation.</p>
     <p>- Optimized video diffusion inference by profiling UNet, attention, VAE, and temporal modules with PyTorch Profiler, NVIDIA Nsight Systems/Compute, and CUDA Graphs, identifying GPU synchronization, kernel launch, and memory bottlenecks responsible for 34% of end-to-end latency.</p>
     <p>- Refactored GPU execution to overlap preprocessing, denoising, attention, and VAE stages using asynchronous execution and CPU-GPU pipelining, improving sustained GPU utilization from 55% to 82% and recovering 15-20% additional serving capacity.</p>
-    <p>- Developed dynamic batching and request scheduling policies for variable-length video generation workloads, improving throughput per GPU by 1.8x while maintaining p95 latency under 20 seconds.</p></div></li>
+    <p>- Developed dynamic batching and request scheduling policies for variable-length video generation workloads, including KV cache design and optimization, speculative decoding, and prefill-decode disaggregation, improving throughput per GPU by 1.8x while maintaining p95 latency under 20 seconds.</p>
+    <p>- Quantized diffusion-based models for production inference, making generation serving faster at the same quality bar.</p>
+    <p>- Built and served multilingual generation models in production, including speech and audio generation, translation, and lip syncing, on the same post-training, evaluation, and inference stack.</p></div></li>
     <li><span class="when">Oct 2020 to Jul 2025</span><div><h3>Senior ML Infrastructure Engineer, Wayfair</h3><p>Mountain View, CA</p>
     <p>- Productized ML systems for the search and recommendation platform, serving 5M+ customer interactions daily and improving ranking and recommendation quality for high-traffic surfaces.</p>
     <p>- Optimized distributed model-serving pipelines for latency and throughput, reducing p95 inference latency by 32% and increasing serving throughput by 2.1x through batching, parallel execution, feature-pipeline optimization, and resource tuning.</p>
@@ -394,7 +402,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
 </section>
 
 <footer>
-  <p>Saloni Garg, San Jose, California. Last updated 1 November 2026.</p>
+  <p>Saloni Garg, San Jose, California. Last updated 6 November 2026.</p>
 </footer>
 
 </div>
