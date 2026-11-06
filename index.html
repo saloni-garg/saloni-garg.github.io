@@ -73,12 +73,14 @@
     "PyTorch",
     "FSDP",
     "TensorRT",
+    "Triton Inference Server",
     "Dynamo",
     "vLLM",
     "SGLang",
     "LLM evaluation infrastructure",
     "Multimodal foundation models",
     "KV cache optimization",
+    "Prompt caching",
     "Speculative decoding",
     "Prefill-decode disaggregation",
     "Rust",
@@ -251,7 +253,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
   <p class="loc">San Jose, California</p>
   <p class="summary">Saloni Garg is a <b>Staff Machine Learning Engineer at Adobe (Firefly)</b> in San Jose, CA. She <b>leads development of the post-training and RLHF pipelines for multimodal foundation models</b>, supporting SFT, DPO, and reward model training, along with distributed training and automated evaluation infrastructure at scale.</p>
   <p class="summary">She previously worked at <b>Wayfair</b> as a Senior ML Infrastructure Engineer in Mountain View, CA, and before that as a Founding ML Engineer at <b>Brisko</b> in Bengaluru, India. She is co-author of a textbook on <b>retrieval-augmented generation</b> (De Gruyter, 2026) and recipient of the <b>2026 CITRIS Award by UC Berkeley</b>.</p>
-  <p class="focus"><span class="k">Focus:</span> post-training and RLHF (SFT, DPO, reward models) / distributed GPU training (PyTorch, CUDA, FSDP, NCCL) / evaluation infrastructure / inference optimization (KV cache, speculative decoding, prefill-decode disaggregation) / ML infrastructure</p>
+  <p class="focus"><span class="k">Focus:</span> post-training and RLHF (SFT, DPO, reward models) / distributed GPU training (PyTorch, CUDA, FSDP, NCCL) / evaluation infrastructure / inference optimization (KV cache, prompt caching, speculative decoding, prefill-decode disaggregation) / ML infrastructure</p>
   <p class="links">
     <a href="https://www.linkedin.com/in/saloni-garg">LinkedIn</a> &nbsp;/&nbsp;
     <a href="https://github.com/saloni-garg">GitHub</a> &nbsp;/&nbsp;
@@ -275,11 +277,11 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
     <p>- Partnered with research scientists to productionize post-training algorithms for multimodal models ranging up to 80B parameters, enabling weekly model releases and reproducible large-scale experimentation.</p>
     <p>- Optimized video diffusion inference by profiling UNet, attention, VAE, and temporal modules with PyTorch Profiler, NVIDIA Nsight Systems/Compute, and CUDA Graphs, identifying GPU synchronization, kernel launch, and memory bottlenecks responsible for 34% of end-to-end latency.</p>
     <p>- Refactored GPU execution to overlap preprocessing, denoising, attention, and VAE stages using asynchronous execution and CPU-GPU pipelining, improving sustained GPU utilization from 55% to 82% and recovering 15-20% additional serving capacity.</p>
-    <p>- Developed dynamic batching and request scheduling policies for variable-length video generation workloads, including KV cache design and optimization, speculative decoding, and prefill-decode disaggregation, improving throughput per GPU by 1.8x while maintaining p95 latency under 20 seconds.</p>
+    <p>- Developed dynamic batching and request scheduling policies for variable-length video generation workloads, including KV cache design and optimization, prompt caching, speculative decoding, and prefill-decode disaggregation, improving throughput per GPU by 1.8x while maintaining p95 latency under 20 seconds.</p>
     <p>- Quantized diffusion-based models for production inference, making generation serving faster at the same quality bar.</p>
     <p>- Built and served multilingual generation models in production, including speech and audio generation, translation, and lip syncing, on the same post-training, evaluation, and inference stack.</p></div></li>
     <li><span class="when">Oct 2020 to Jul 2025</span><div><h3>Senior ML Infrastructure Engineer, Wayfair</h3><p>Mountain View, CA</p>
-    <p>- Productized ML systems for the search and recommendation platform, serving 5M+ customer interactions daily and improving ranking and recommendation quality for high-traffic surfaces.</p>
+    <p>- Productized ML systems for high-QPS search and recommendation serving, powering 5M+ customer interactions daily and improving ranking and recommendation quality for high-traffic surfaces.</p>
     <p>- Optimized distributed model-serving pipelines for latency and throughput, reducing p95 inference latency by 32% and increasing serving throughput by 2.1x through batching, parallel execution, feature-pipeline optimization, and resource tuning.</p>
     <p>- Developed high-throughput Python/C++ inference and feature-processing components, profiling CPU, memory, network, and serialization overhead to eliminate bottlenecks in latency-sensitive production services.</p>
     <p>- Designed scalable offline and online inference pipelines processing billions of product, customer, and behavioral signals, improving feature freshness while reducing compute and infrastructure costs by 27%.</p>

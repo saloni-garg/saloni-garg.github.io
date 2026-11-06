@@ -24,13 +24,13 @@ Focus: GPU optimization (CUDA, Triton, kernel profiling, GPU utilization) / RLHF
 - Built distributed training and evaluation infrastructure for large-scale model iteration, model quality, reasoning, and safety.
 - Built RLHF preference data generation and curation pipelines for post-training and alignment.
 - Partnered with research scientists to productionize post-training algorithms for multimodal models up to 80B parameters, enabling reproducible large-scale experimentation and regular model releases.
-- Optimized video diffusion inference by profiling UNet, attention, VAE, and temporal modules, and by improving GPU execution, batching, and request scheduling for video generation workloads, including KV cache optimization, speculative decoding, and prefill-decode disaggregation; quantized diffusion-based models for production inference.
+- Optimized video diffusion inference by profiling UNet, attention, VAE, and temporal modules, and by improving GPU execution, batching, and request scheduling for video generation workloads, including KV cache optimization, prompt caching, speculative decoding, and prefill-decode disaggregation; quantized diffusion-based models for production inference.
 - Built and served multilingual generation models in production, including speech and audio generation, translation, and lip syncing.
 - Note: Detailed employer metrics on the homepage are the site presentation as published by Saloni Garg. No salary, visa, or private employer data is included in this file.
 
 ### Senior ML Infrastructure Engineer, Wayfair - Oct 2020 to Jul 2025, Mountain View, CA
 
-- Productized ML systems for search and recommendation, and optimized distributed model-serving pipelines for latency and throughput.
+- Productized ML systems for high-QPS search and recommendation serving (5M+ customer interactions daily), and optimized distributed model-serving pipelines for latency and throughput (p95 inference latency down 32%, throughput up 2.1x).
 - Developed high-throughput Python and C++ inference and feature-processing components.
 - Designed scalable offline and online inference pipelines and distributed benchmarking and performance-analysis tooling.
 
