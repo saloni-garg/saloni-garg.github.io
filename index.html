@@ -147,7 +147,8 @@ a:hover{background:rgba(246,203,92,.45);text-decoration:none}
 ::selection{background:#f2cf7e}
 
 /* masthead */
-.masthead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;border-bottom:3px double var(--ink);flex-wrap:wrap}
+.masthead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;border-bottom:3px double var(--ink);flex-wrap:wrap;position:sticky;top:0;z-index:60;background:rgba(247,239,219,.95)}
+section[id]{scroll-margin-top:76px}
 .masthead .site{font-family:var(--label);font-size:14.5px;color:var(--faint)}
 .masthead a.site{text-decoration:none;cursor:pointer}
 .masthead a.site:hover{color:var(--accent);text-decoration:underline wavy 1px;text-underline-offset:4px}
@@ -345,6 +346,7 @@ footer{margin-top:52px;border-top:3px double var(--ink);padding-top:14px;font-fa
     <li><b><a href="claimwork.pdf">ClaimWork: A Reproducible Evaluation Platform for Procedural AI Systems</a>.</b> Status paper, 2026.</li>
     <li><b><a href="phantom-advantages.pdf">Phantom Advantages: Float32 Group Statistics Violate the GRPO Estimator Contract</a>.</b> Working paper, 2026.</li>
     <li><b><a href="the-stack-is-part-of-the-benchmark.pdf">The Stack Is Part of the Benchmark: Serving-Induced Evaluation Instability in Vision-Language Models</a>.</b> With Sukhesh Garg. Working paper, 2026.</li>
+    <li><b><a href="https://arxiv.org/abs/2611.07639">Measuring the Marginal Value of Verifier-Based RL Beyond Supervised Fine-Tuning</a>.</b> With Amit Sagtani. arXiv, 2026.</li>
     <li><b>Unsolvability Ceiling in Multi-LLM Routing: An Empirical Study of Evaluation Artifacts.</b> arXiv.</li>
     <li><b>ECG-Lense: Benchmarking ML and DL Models on PTB-XL Dataset.</b> IEEE, 2024.</li>
     <li><b>Climate Change Analytics Using AI.</b> IEEE ETNCC, 2024.</li>

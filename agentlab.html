@@ -50,7 +50,8 @@ a:hover{background:rgba(246,203,92,.45);text-decoration:none}
 ::selection{background:#f2cf7e}
 
 /* masthead */
-.masthead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;border-bottom:3px double var(--ink);flex-wrap:wrap}
+.masthead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:2px 0 10px;border-bottom:3px double var(--ink);flex-wrap:wrap;position:sticky;top:0;z-index:60;background:rgba(247,239,219,.95)}
+section[id]{scroll-margin-top:76px}
 .masthead .site{font-family:var(--label);font-size:14.5px;color:var(--faint)}
 .masthead a.site{text-decoration:none;cursor:pointer}
 .masthead a.site:hover{color:var(--accent);text-decoration:underline wavy 1px;text-underline-offset:4px}
