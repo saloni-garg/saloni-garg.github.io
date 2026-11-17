@@ -1,30 +1,31 @@
 # Saloni Garg - Full Public Profile
 
-> Saloni Garg - GPU optimization, RLHF, and multimodal inference engineering. Staff Machine Learning Engineer at Adobe Firefly, San Jose, CA.
+> Saloni Garg - Post-training, RLHF, and GPU inference optimization, CUDA and Triton. Staff Machine Learning Engineer at Adobe Firefly, San Jose, CA.
 
 Source: https://saloni-garg.github.io/
-Last updated: 2026-11-06
+Last updated: 2026-11-17
 Contact: salonigarg2318@gmail.com | LinkedIn: https://www.linkedin.com/in/saloni-garg
 
 ## Summary
 
-Saloni Garg is a Staff Machine Learning Engineer at Adobe (Firefly) in San Jose, CA. Her primary positioning is GPU optimization, RLHF, and multimodal inference engineering.
+Saloni Garg is a Staff Machine Learning Engineer at Adobe (Firefly) in San Jose, CA. Her primary positioning is LLM post-training, RLHF, and GPU inference optimization, with CUDA and Triton kernel authoring in C++.
 
-She leads development of the post-training and RLHF pipelines for multimodal foundation models, supporting SFT, DPO, and reward model training, along with distributed GPU training and automated evaluation infrastructure at scale. She optimizes GPU training and inference for multimodal models in production, including video diffusion inference.
+She leads development of the post-training and RLHF pipelines for multimodal foundation models, supporting SFT, DPO, GRPO, and reward model training, along with distributed GPU training and automated evaluation infrastructure at scale. She authors CUDA kernels in C++ and Triton and works across PyTorch and JAX framework internals. She optimizes GPU training and inference for multimodal models in production, including video diffusion inference, KV cache design, speculative decoding, and prefill-decode disaggregation.
 
 She previously worked at Wayfair as a Senior ML Infrastructure Engineer in Mountain View, CA, and before that as a Founding ML Engineer at Brisko in Bengaluru, India. She is recipient of the 2026 CITRIS Award by UC Berkeley.
 
-Focus: GPU optimization (CUDA, Triton, kernel profiling, GPU utilization) / RLHF and post-training (SFT, DPO, RLVR, GRPO, reward models) / multimodal inference engineering (TensorRT, Dynamo, vLLM, SGLang, dynamic batching, latency and throughput) / distributed GPU training (PyTorch, FSDP, NCCL) / evaluation infrastructure.
+Focus: RLHF and post-training (SFT, DPO, RLVR, GRPO, reward models, verifiers) / GPU inference optimization (KV cache, speculative decoding, prefill-decode disaggregation, FP8, TensorRT, Dynamo, vLLM, SGLang, dynamic batching, latency and throughput) / CUDA and Triton kernel authoring in C++ (CUDA, Triton, kernel profiling, GPU utilization) / distributed GPU training (PyTorch, JAX, FSDP, NCCL) / evaluation infrastructure.
 
 ## Experience
 
 ### Staff Machine Learning Engineer, Adobe (Firefly) - Jul 2025 to Present, San Jose, CA
 
-- Led development of the post-training and RLHF pipelines for multimodal foundation models, supporting SFT, DPO, and reward model training, with distributed GPU training using PyTorch, CUDA, FSDP, and NCCL.
+- Led development of the post-training and RLHF pipelines for multimodal foundation models, supporting SFT, DPO, GRPO, and reward model training, with distributed GPU training using PyTorch, CUDA, FSDP, and NCCL.
+- Author and optimize CUDA kernels in C++ for inference and training workloads, including low-precision inference kernels (cooperative groups, warp-level intrinsics, Tensor Core paths, kernel fusion, CUB, cuDNN, cuBLAS, Triton), working across PyTorch and JAX framework internals.
 - Built distributed training and evaluation infrastructure for large-scale model iteration, model quality, reasoning, and safety.
 - Built RLHF preference data generation and curation pipelines for post-training and alignment.
 - Partnered with research scientists to productionize post-training algorithms for multimodal models up to 80B parameters, enabling reproducible large-scale experimentation and regular model releases.
-- Optimized video diffusion inference by profiling UNet, attention, VAE, and temporal modules, and by improving GPU execution, batching, and request scheduling for video generation workloads, including KV cache optimization, prompt caching, speculative decoding, and prefill-decode disaggregation; quantized diffusion-based models for production inference.
+- Optimized video diffusion inference by profiling UNet, attention, VAE, and temporal modules, and by improving GPU execution, batching, and request scheduling for video generation workloads, including KV cache optimization, prompt caching, speculative decoding, and prefill-decode disaggregation; quantized diffusion-based models (FP8) for production inference.
 - Built and served multilingual generation models in production, including speech and audio generation, translation, and lip syncing.
 - Note: Detailed employer metrics on the homepage are the site presentation as published by Saloni Garg. No salary, visa, or private employer data is included in this file.
 

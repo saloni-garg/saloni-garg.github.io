@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://saloni-garg.github.io/</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -26,19 +26,19 @@
   </url>
   <url>
     <loc>https://saloni-garg.github.io/llms.txt</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://saloni-garg.github.io/llms-full.txt</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://saloni-garg.github.io/profile.json</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
