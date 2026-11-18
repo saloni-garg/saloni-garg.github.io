@@ -18,7 +18,7 @@ Focus: RLHF and post-training (SFT, DPO, RLVR, GRPO, reward models, verifiers) /
 
 ## Experience
 
-### Staff Machine Learning Engineer, Adobe (Firefly) - Jul 2025 to Present, San Jose, CA
+### Staff Machine Learning Engineer, Adobe (Firefly) - Jan 2025 to Present, San Jose, CA
 
 - Led development of the post-training and RLHF pipelines for multimodal foundation models, supporting SFT, DPO, GRPO, and reward model training, with distributed GPU training using PyTorch, CUDA, FSDP, and NCCL.
 - Author and optimize CUDA kernels in C++ for inference and training workloads, including low-precision inference kernels (cooperative groups, warp-level intrinsics, Tensor Core paths, kernel fusion, CUB, cuDNN, cuBLAS, Triton), working across PyTorch and JAX framework internals.
@@ -29,7 +29,7 @@ Focus: RLHF and post-training (SFT, DPO, RLVR, GRPO, reward models, verifiers) /
 - Built and served multilingual generation models in production, including speech and audio generation, translation, and lip syncing.
 - Note: Detailed employer metrics on the homepage are the site presentation as published by Saloni Garg. No salary, visa, or private employer data is included in this file.
 
-### Senior ML Infrastructure Engineer, Wayfair - Oct 2020 to Jul 2025, Mountain View, CA
+### Senior ML Infrastructure Engineer, Wayfair - Oct 2020 to Jan 2025, Mountain View, CA
 
 - Productized ML systems for high-QPS search and recommendation serving (5M+ customer interactions daily), and optimized distributed model-serving pipelines for latency and throughput (p95 inference latency down 32%, throughput up 2.1x).
 - Developed high-throughput Python and C++ inference and feature-processing components.
